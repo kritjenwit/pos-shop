@@ -1,7 +1,8 @@
 import { useState, useRef } from 'react';
 import { Plus, Pencil, Trash2, Upload, X } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
-import type { Item } from '../../types';
+import type { Item } from '../../lib/supabase';
+import { COLORS } from '../../constants';
 
 function ItemForm({
   item,
@@ -14,6 +15,8 @@ function ItemForm({
   const [name, setName] = useState(item?.name || '');
   const [price, setPrice] = useState(item?.price?.toString() || '');
   const [image, setImage] = useState(item?.image || '');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -27,53 +30,78 @@ function ItemForm({
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const priceNum = parseFloat(price);
-    if (!name || !price || priceNum <= 0) return;
+    setError('');
+    setLoading(true);
+    
+    try {
+      const priceNum = parseFloat(price);
+      if (!name || !price || priceNum <= 0) {
+        setError('Invalid name or price');
+        return;
+      }
 
-    if (item) {
-      updateItem(item.id, { name, price: priceNum, image });
-    } else {
-      addItem({ name, price: priceNum, image, quantity: 100 });
+      if (item) {
+        await updateItem(item.id, { name, price: priceNum, image });
+      } else {
+        await addItem({ name, price: priceNum, image, quantity: 100 });
+      }
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save item');
+    } finally {
+      setLoading(false);
     }
-    onClose();
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[200]">
-      <div className="bg-white rounded-lg w-full max-w-md mx-4 shadow-xl">
-        <div className="flex justify-between items-center px-4 py-3 border-b">
-          <h2 className="text-lg font-semibold">{item ? 'Edit Item' : 'Add New Item'}</h2>
-          <button className="text-slate-400 hover:text-slate-600" onClick={onClose}>
+    <div className="fixed inset-0 flex items-center justify-center z-[200]" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+      <div className="rounded-lg w-full max-w-md mx-4 shadow-xl" style={{ backgroundColor: COLORS.cardBackground }}>
+        <div className="flex justify-between items-center px-4 py-3 border-b" style={{ borderColor: COLORS.border }}>
+          <h2 className="text-lg font-semibold" style={{ color: COLORS.text }}>
+            {item ? 'Edit Item' : 'Add New Item'}
+          </h2>
+          <button
+            onClick={onClose}
+            style={{ color: COLORS.textSecondary }}
+          >
             <X size={20} />
           </button>
         </div>
-        <form onSubmit={handleSubmit} className="p-4">
+<form onSubmit={handleSubmit} className="p-4">
           <div className="mb-4">
-            <label className="block text-xs font-semibold text-slate-500 mb-1">Name</label>
+            <label className="block text-xs font-semibold mb-1" style={{ color: COLORS.textSecondary }}>
+              Name
+            </label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-3 py-2 border rounded text-sm focus:outline-none focus:border-blue-600"
+              className="w-full px-3 py-2 border rounded text-sm focus:outline-none"
+              style={{ borderColor: COLORS.border }}
               required
             />
           </div>
           <div className="mb-4">
-            <label className="block text-xs font-semibold text-slate-500 mb-1">Price</label>
+            <label className="block text-xs font-semibold mb-1" style={{ color: COLORS.textSecondary }}>
+              Price
+            </label>
             <input
               type="number"
               min="0"
               step="0.01"
               value={price}
               onChange={(e) => setPrice(e.target.value)}
-              className="w-full px-3 py-2 border rounded text-sm focus:outline-none focus:border-blue-600"
+              className="w-full px-3 py-2 border rounded text-sm focus:outline-none"
+              style={{ borderColor: COLORS.border }}
               required
             />
           </div>
           <div className="mb-4">
-            <label className="block text-xs font-semibold text-slate-500 mb-1">Image</label>
+            <label className="block text-xs font-semibold mb-1" style={{ color: COLORS.textSecondary }}>
+              Image
+            </label>
             <input
               type="file"
               ref={fileRef}
@@ -83,7 +111,8 @@ function ItemForm({
             />
             <button
               type="button"
-              className="flex items-center gap-2 px-4 py-2 bg-slate-100 border rounded text-sm cursor-pointer hover:bg-slate-200"
+              className="flex items-center gap-2 px-4 py-2 rounded text-sm cursor-pointer"
+              style={{ backgroundColor: '#f1f5f9', border: `1px solid ${COLORS.border}` }}
               onClick={() => fileRef.current?.click()}
             >
               <Upload size={16} /> Upload Image
@@ -94,12 +123,29 @@ function ItemForm({
               </div>
             )}
           </div>
+
+          {error && (
+            <div className="mb-4 p-3 rounded text-sm" style={{ backgroundColor: '#fef2f2', color: '#dc2626' }}>
+              {error}
+            </div>
+          )}
+
           <div className="flex gap-2 justify-end">
-            <button type="button" className="px-4 py-2 bg-slate-100 rounded text-sm hover:bg-slate-200" onClick={onClose}>
+            <button
+              type="button"
+              className="px-4 py-2 rounded text-sm"
+              style={{ backgroundColor: '#f1f5f9' }}
+              onClick={onClose}
+            >
               Cancel
             </button>
-            <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded text-sm font-medium hover:bg-blue-700">
-              {item ? 'Update' : 'Add'}
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-4 py-2 rounded text-sm font-medium disabled:opacity-50"
+              style={{ backgroundColor: COLORS.primary, color: '#ffffff' }}
+            >
+              {loading ? 'Saving...' : item ? 'Update' : 'Add'}
             </button>
           </div>
         </form>
@@ -138,9 +184,10 @@ export default function ItemManagementPage() {
   return (
     <div className="max-w-6xl mx-auto">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Item Management</h1>
+        <h1 className="text-2xl font-bold" style={{ color: COLORS.text }}>Item Management</h1>
         <button
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded text-sm font-medium hover:bg-blue-700"
+          className="flex items-center gap-2 px-4 py-2 rounded text-sm font-medium"
+          style={{ backgroundColor: COLORS.primary, color: '#ffffff' }}
           onClick={() => {
             setEditingItem(undefined);
             setShowModal(true);
@@ -150,19 +197,27 @@ export default function ItemManagementPage() {
         </button>
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+      <div className="rounded-lg shadow-sm overflow-hidden" style={{ backgroundColor: COLORS.cardBackground }}>
         <table className="w-full">
-          <thead className="bg-slate-50">
-            <tr>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Image</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Name</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Price</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Actions</th>
+          <thead>
+            <tr style={{ backgroundColor: '#f1f5f9' }}>
+              <th className="px-4 py-3 text-left text-xs font-semibold uppercase" style={{ color: COLORS.textSecondary }}>
+                Image
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-semibold uppercase" style={{ color: COLORS.textSecondary }}>
+                Name
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-semibold uppercase" style={{ color: COLORS.textSecondary }}>
+                Price
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-semibold uppercase" style={{ color: COLORS.textSecondary }}>
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody>
             {items.map((item) => (
-              <tr key={item.id} className="border-t hover:bg-slate-50">
+              <tr key={item.id} className="border-t hover:bg-slate-50" style={{ borderColor: COLORS.border }}>
                 <td className="px-4 py-3">
                   <img
                     src={
@@ -173,18 +228,20 @@ export default function ItemManagementPage() {
                     className="w-10 h-10 object-cover rounded"
                   />
                 </td>
-                <td className="px-4 py-3">{item.name}</td>
-                <td className="px-4 py-3">฿{item.price}</td>
+                <td className="px-4 py-3" style={{ color: COLORS.text }}>{item.name}</td>
+                <td className="px-4 py-3" style={{ color: COLORS.text }}>฿{item.price}</td>
                 <td className="px-4 py-3">
                   <div className="flex gap-2">
                     <button
-                      className="w-8 h-8 rounded flex items-center justify-center bg-blue-100 text-blue-600 hover:bg-blue-200"
+                      className="w-8 h-8 rounded flex items-center justify-center"
+                      style={{ backgroundColor: '#dbeafe', color: COLORS.primary }}
                       onClick={() => handleEdit(item)}
                     >
                       <Pencil size={16} />
                     </button>
                     <button
-                      className="w-8 h-8 rounded flex items-center justify-center bg-red-100 text-red-600 hover:bg-red-200"
+                      className="w-8 h-8 rounded flex items-center justify-center"
+                      style={{ backgroundColor: '#fee2e2', color: COLORS.danger }}
                       onClick={() => handleDelete(item)}
                     >
                       <Trash2 size={16} />
@@ -200,15 +257,25 @@ export default function ItemManagementPage() {
       {showModal && <ItemForm item={editingItem} onClose={closeModal} />}
 
       {deletingItem && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[200]">
-          <div className="bg-white rounded-lg p-6 max-w-sm mx-4 text-center">
-            <h3 className="text-lg font-semibold mb-2">Delete Item</h3>
-            <p className="text-slate-500 mb-4">Are you sure you want to delete "{deletingItem.name}"?</p>
+        <div className="fixed inset-0 flex items-center justify-center z-[200]" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="rounded-lg p-6 max-w-sm mx-4 text-center" style={{ backgroundColor: COLORS.cardBackground }}>
+            <h3 className="text-lg font-semibold mb-2" style={{ color: COLORS.text }}>Delete Item</h3>
+            <p className="mb-4" style={{ color: COLORS.textSecondary }}>
+              Are you sure you want to delete "{deletingItem.name}"?
+            </p>
             <div className="flex gap-2 justify-center">
-              <button className="px-4 py-2 bg-slate-100 rounded text-sm hover:bg-slate-200" onClick={() => setDeletingItem(undefined)}>
+              <button
+                className="px-4 py-2 rounded text-sm"
+                style={{ backgroundColor: '#f1f5f9' }}
+                onClick={() => setDeletingItem(undefined)}
+              >
                 Cancel
               </button>
-              <button className="px-4 py-2 bg-red-600 text-white rounded text-sm hover:bg-red-700" onClick={confirmDelete}>
+              <button
+                className="px-4 py-2 rounded text-sm"
+                style={{ backgroundColor: COLORS.danger, color: '#ffffff' }}
+                onClick={confirmDelete}
+              >
                 Delete
               </button>
             </div>

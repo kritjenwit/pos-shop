@@ -1,0 +1,48 @@
+export const APP = {
+  name: 'POS Shop',
+  environment: import.meta.env.VITE_ENVIRONMENT || 'development',
+} as const;
+
+export const API = {
+  supabaseUrl: import.meta.env.VITE_SUPABASE_URL,
+  supabaseKey: import.meta.env.VITE_SUPABASE_KEY,
+} as const;
+
+export const UI = {
+  headerHeight: 'auto' as const,
+  stickyTop: '100px' as const,
+  borderRadius: '8px' as const,
+  borderRadiusSm: '4px' as const,
+} as const;
+
+export const COLORS = {
+  primary: '#2563eb',
+  primaryHover: '#1d4ed8',
+  secondary: '#64748b',
+  accent: '#10b981',
+  danger: '#ef4444',
+  background: '#f8fafc',
+  cardBackground: '#ffffff',
+  text: '#1e293b',
+  textSecondary: '#64748b',
+  border: '#e2e8f0',
+} as const;
+
+export const BREAKPOINTS = {
+  sm: '640px',
+  md: '768px',
+  lg: '1024px',
+} as const;
+
+export const GRID = {
+  cols: {
+    sm: 2,
+    md: 3,
+    lg: 4,
+  },
+} as const;
+
+export const PAYMENT = {
+  qrSize: 200,
+  qrLevel: 'H' as const,
+} as const;

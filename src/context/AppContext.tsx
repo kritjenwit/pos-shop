@@ -1,48 +1,30 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import type { Item } from '../types';
-import { v4 as uuidv4 } from 'uuid';
+import { supabase, type Item } from '../lib/supabase';
+import { useAuth } from './AuthContext';
 
 interface AppContextType {
   items: Item[];
   basket: Map<string, number>;
   total: number;
-  addItem: (item: Omit<Item, 'id'>) => void;
-  updateItem: (id: string, item: Partial<Item>) => void;
-  deleteItem: (id: string) => void;
+  loading: boolean;
+  addItem: (item: Omit<Item, 'id'>) => Promise<void>;
+  updateItem: (id: string, item: Partial<Item>) => Promise<void>;
+  deleteItem: (id: string) => Promise<void>;
   addToBasket: (id: string) => void;
   removeFromBasket: (id: string) => void;
   getBasketQuantity: (id: string) => number;
+  clearBasket: () => void;
+  completeOrder: () => Promise<void>;
 }
-
-const defaultItems: Item[] = [
-  { id: uuidv4(), name: 'Coffee', price: 50, image: '', quantity: 100 },
-  { id: uuidv4(), name: 'Tea', price: 40, image: '', quantity: 100 },
-  { id: uuidv4(), name: 'Milk', price: 60, image: '', quantity: 100 },
-  { id: uuidv4(), name: 'Bread', price: 30, image: '', quantity: 100 },
-  { id: uuidv4(), name: 'Cake', price: 80, image: '', quantity: 50 },
-  { id: uuidv4(), name: 'Cookie', price: 25, image: '', quantity: 100 },
-  { id: uuidv4(), name: 'Juice', price: 45, image: '', quantity: 80 },
-  { id: uuidv4(), name: 'Water', price: 20, image: '', quantity: 100 },
-];
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-const STORAGE_KEY = 'pos-shop-items';
 const BASKET_KEY = 'pos-shop-basket';
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<Item[]>(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try {
-        return JSON.parse(stored);
-      } catch {
-        return defaultItems;
-      }
-    }
-    return defaultItems;
-  });
-
+  const { user } = useAuth();
+  const [items, setItems] = useState<Item[]>([]);
+  const [loading, setLoading] = useState(true);
   const [basket, setBasket] = useState<Map<string, number>>(() => {
     const stored = localStorage.getItem(BASKET_KEY);
     if (stored) {
@@ -56,9 +38,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return new Map();
   });
 
+  const fetchItems = async () => {
+    const { data, error } = await supabase.from('items').select('*');
+    if (error) {
+      console.error('Error fetching items:', error);
+    } else {
+      setItems(data || []);
+    }
+    setLoading(false);
+  };
+
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-  }, [items]);
+    fetchItems();
+  }, []);
 
   useEffect(() => {
     const basketObj = Object.fromEntries(basket);
@@ -70,18 +62,34 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return sum + (item ? item.price * qty : 0);
   }, 0);
 
-  const addItem = (item: Omit<Item, 'id'>) => {
-    const newItem: Item = { ...item, id: uuidv4() };
-    setItems((prev) => [...prev, newItem]);
+  const addItem = async (item: Omit<Item, 'id'>) => {
+    const { data, error } = await supabase.from('items').insert(item).select();
+    if (error) {
+      console.error('Error adding item:', error);
+      throw error;
+    }
+    if (data && data.length > 0) {
+      setItems((prev) => [...prev, data[0]]);
+    }
   };
 
-  const updateItem = (id: string, updates: Partial<Item>) => {
+  const updateItem = async (id: string, updates: Partial<Item>) => {
+    const { error } = await supabase.from('items').update(updates).eq('id', id);
+    if (error) {
+      console.error('Error updating item:', error);
+      throw error;
+    }
     setItems((prev) =>
       prev.map((item) => (item.id === id ? { ...item, ...updates } : item))
     );
   };
 
-  const deleteItem = (id: string) => {
+  const deleteItem = async (id: string) => {
+    const { error } = await supabase.from('items').delete().eq('id', id);
+    if (error) {
+      console.error('Error deleting item:', error);
+      throw error;
+    }
     setItems((prev) => prev.filter((item) => item.id !== id));
     setBasket((prev) => {
       const next = new Map(prev);
@@ -114,18 +122,71 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const getBasketQuantity = (id: string) => basket.get(id) || 0;
 
+  const clearBasket = () => {
+    setBasket(new Map());
+    localStorage.removeItem(BASKET_KEY);
+  };
+
+  const completeOrder = async () => {
+    if (basket.size === 0) return;
+
+    const transactionItems = Array.from(basket.entries()).map(([id, qty]) => {
+      const item = items.find((i) => i.id === id);
+      return {
+        transaction_id: '', 
+        item_id: id,
+        item_name: item?.name || '',
+        quantity: qty,
+        unit_price: item?.price || 0,
+        subtotal: (item?.price || 0) * qty,
+      };
+    });
+
+    const { data, error } = await supabase
+      .from('transactions')
+      .insert({ total_amount: total, status: 'completed', created_by: user?.id })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating transaction:', error);
+      throw error;
+    }
+
+    if (data) {
+      const lineItems = transactionItems.map((ti) => ({
+        ...ti,
+        transaction_id: data.id,
+      }));
+
+      const { error: itemsError } = await supabase
+        .from('transaction_items')
+        .insert(lineItems);
+
+      if (itemsError) {
+        console.error('Error creating transaction items:', itemsError);
+        throw itemsError;
+      }
+    }
+
+    clearBasket();
+  };
+
   return (
     <AppContext.Provider
       value={{
         items,
         basket,
         total,
+        loading,
         addItem,
         updateItem,
         deleteItem,
         addToBasket,
         removeFromBasket,
         getBasketQuantity,
+        clearBasket,
+        completeOrder,
       }}
     >
       {children}
