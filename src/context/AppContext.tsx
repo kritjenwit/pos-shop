@@ -21,6 +21,16 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 const BASKET_KEY = 'pos-shop-basket';
 
+const fetchItems = async (setItems: typeof setItems, setLoading: typeof setLoading) => {
+  const { data, error } = await supabase.from('items').select('*');
+  if (error) {
+    console.error('Error fetching items:', error);
+  } else {
+    setItems(data || []);
+  }
+  setLoading(false);
+};
+
 export function AppProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [items, setItems] = useState<Item[]>([]);
@@ -38,18 +48,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return new Map();
   });
 
-  const fetchItems = async () => {
-    const { data, error } = await supabase.from('items').select('*');
-    if (error) {
-      console.error('Error fetching items:', error);
-    } else {
-      setItems(data || []);
-    }
-    setLoading(false);
-  };
-
   useEffect(() => {
-    fetchItems();
+    fetchItems(setItems, setLoading);
   }, []);
 
   useEffect(() => {

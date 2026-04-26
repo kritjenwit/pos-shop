@@ -15,12 +15,6 @@ export default function TransactionDetailPage() {
 
   const shareUrl = `${window.location.origin}/transactions/${id}`;
 
-  useEffect(() => {
-    if (id) {
-      fetchTransaction();
-    }
-  }, [id]);
-
   const fetchTransaction = async () => {
     if (!id) return;
     
@@ -46,6 +40,12 @@ export default function TransactionDetailPage() {
     setItems(itemsData || []);
     setLoading(false);
   };
+
+  useEffect(() => {
+    if (id) {
+      fetchTransaction();
+    }
+  }, [id]);
 
   const handleShare = async () => {
     if (navigator.share) {

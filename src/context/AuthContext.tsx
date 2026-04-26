@@ -14,20 +14,24 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const STORAGE_KEY = 'pos-shop-user';
 
+const loadStoredUser = (setUser: typeof setUser, setLoading: typeof setLoading) => {
+  const stored = localStorage.getItem(STORAGE_KEY);
+  if (stored) {
+    try {
+      setUser(JSON.parse(stored));
+    } catch {
+      localStorage.removeItem(STORAGE_KEY);
+    }
+  }
+  setLoading(false);
+};
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try {
-        setUser(JSON.parse(stored));
-      } catch {
-        localStorage.removeItem(STORAGE_KEY);
-      }
-    }
-    setLoading(false);
+    loadStoredUser(setUser, setLoading);
   }, []);
 
   const signIn = async (email: string, password: string) => {

@@ -1,34 +1,29 @@
 # AGENTS.md
 
 ## Commands
-- `npm run dev` - Start dev server
-- `npm run build` - Type-check then build (`tsc -b && vite build`)
+- `npm run dev` - Start dev server (Vite dev)
+- `npm run build` - Rebuild deps, type-check, then build
 - `npm run lint` - Run ESLint
-- `npm run preview` - Preview production build
+- `npm run preview` - Build then run Cloudflare Wrangler dev
+- `npm run deploy` - Build then deploy to Cloudflare Workers/Pages
+- `npm run test` - Run tests in watch mode
+- `npm run test:run` - Run tests once
+- `npm run test:coverage` - Run tests with coverage
 
 ## Architecture
-- Single-page React 19 + TypeScript + Vite app with React Router
-- Pages: `src/pages/Login/LoginPage.tsx`, `src/pages/ItemList/ItemList.tsx`, `src/pages/ItemManagement/ItemManagement.tsx`, `src/pages/Checkout/Checkout.tsx`
-- Pages: `src/pages/Transactions/TransactionList.tsx`, `src/pages/Transactions/TransactionDetail.tsx`
+- Single-page React 19 + TypeScript ~6.0 + Vite 8 app with React Router 7
+- Pages: `src/pages/Login/`, `src/pages/ItemList/`, `src/pages/ItemManagement/`, `src/pages/Checkout/`
+- Pages: `src/pages/Transactions/` (list + detail)
 - Contexts: `src/context/AuthContext.tsx` (Supabase auth), `src/context/AppContext.tsx` (app state)
 - Supabase client: `src/lib/supabase.ts`
 
 ## Dependencies
-- Supabase for auth/database (`@supabase/supabase-js`)
-- Tailwind CSS for styling (`tailwindcss`, `postcss`, `autoprefixer`)
-- `lucide-react` for icons
-- `qrcode.react` for QR codes
-- `bcryptjs` for password hashing
-- `react-router-dom` for routing
-- `uuid` for client-side UUID generation
+- Supabase (`@supabase/supabase-js`), Tailwind CSS, `lucide-react`, `qrcode.react`, `bcryptjs`, `uuid`
+- Testing: Vitest, `@testing-library/react`, `@testing-library/jest-dom`
 
 ## Supabase
-- Database migrations: Run SQL in Supabase Dashboard > SQL Editor
-- Tables: `items` (id UUID PK), `users` (id UUID PK), `transactions` (id UUID PK), `transaction_items` (id UUID PK, FK to transactions)
-- Items table uses UUID: `id UUID PRIMARY KEY DEFAULT gen_random_uuid()`
-- Order flow: AppContext `completeOrder()` inserts into `transactions` then `transaction_items`
+- Tables: `items`, `users`, `transactions`, `transaction_items` (all use UUID PK)
+- Order flow: `AppContext.completeOrder()` inserts into `transactions` then `transaction_items`
 
 ## Notes
-- No test framework configured
-- TypeScript 6.x uses `tsc -b` for project references
 - `.env` contains Supabase credentials (never commit)

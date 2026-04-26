@@ -33,28 +33,6 @@ export default function TransactionListPage() {
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    fetchTransactions();
-  }, [startDate, endDate, selectedSeller]);
-
-  useEffect(() => {
-    if (sellerQuery.length >= 1) {
-      searchSellers();
-    } else {
-      setSellerOptions([]);
-    }
-  }, [sellerQuery]);
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setShowDropdown(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
   const searchSellers = async () => {
     const { data } = await supabase
       .from('users')
@@ -112,6 +90,28 @@ export default function TransactionListPage() {
     setSellerQuery('');
     setSelectedSeller(null);
   };
+
+  useEffect(() => {
+    fetchTransactions();
+  }, [startDate, endDate, selectedSeller]);
+
+  useEffect(() => {
+    if (sellerQuery.length >= 1) {
+      searchSellers();
+    } else {
+      setSellerOptions([]);
+    }
+  }, [sellerQuery]);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowDropdown(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
