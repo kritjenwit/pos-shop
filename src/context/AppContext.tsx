@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { supabase, type Item } from '../lib/supabase';
 import { useAuth } from './AuthContext';
 
@@ -21,7 +21,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 const BASKET_KEY = 'pos-shop-basket';
 
-const fetchItems = async (setItems: typeof setItems, setLoading: typeof setLoading) => {
+const fetchItems = async (setItems: React.Dispatch<React.SetStateAction<Item[]>>, setLoading: React.Dispatch<React.SetStateAction<boolean>>) => {
   const { data, error } = await supabase.from('items').select('*');
   if (error) {
     console.error('Error fetching items:', error);

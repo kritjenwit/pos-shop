@@ -14,7 +14,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const STORAGE_KEY = 'pos-shop-user';
 
-const loadStoredUser = (setUser: typeof setUser, setLoading: typeof setLoading) => {
+const loadStoredUser = (setUser: React.Dispatch<React.SetStateAction<User | null>>, setLoading: React.Dispatch<React.SetStateAction<boolean>>) => {
   const stored = localStorage.getItem(STORAGE_KEY);
   if (stored) {
     try {
