@@ -3,6 +3,7 @@ import { Plus, Pencil, Trash2, Upload, X } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import type { Item } from '../../lib/supabase';
 import { COLORS } from '../../constants';
+import { uploadImage, deleteImage } from '../../lib/supabase';
 
 function ItemForm({
   item,
@@ -19,7 +20,7 @@ function ItemForm({
   const [loading, setLoading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
@@ -42,10 +43,23 @@ function ItemForm({
         return;
       }
 
+      // Handle image upload if a new file is selected
+      let imageUrl = image; // Keep existing image by default
+      const file = fileRef.current?.files?.[0];
+      
+      if (file) {
+        // Delete old image if exists
+        if (item?.image) {
+          await deleteImage(item.image);
+        }
+        // Upload new image
+        imageUrl = await uploadImage(file);
+      }
+
       if (item) {
-        await updateItem(item.id, { name, price: priceNum, image });
+        await updateItem(item.id, { name, price: priceNum, image: imageUrl });
       } else {
-        await addItem({ name, price: priceNum, image, quantity: 100 });
+        await addItem({ name, price: priceNum, image: imageUrl, quantity: 100 });
       }
       onClose();
     } catch (err) {

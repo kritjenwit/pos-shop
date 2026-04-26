@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import { supabase, type Item } from '../lib/supabase';
+import { supabase, type Item, deleteImage } from '../lib/supabase';
 import { useAuth } from './AuthContext';
 
 interface AppContextType {
@@ -84,19 +84,29 @@ export function AppProvider({ children }: { children: ReactNode }) {
     );
   };
 
-  const deleteItem = async (id: string) => {
-    const { error } = await supabase.from('items').delete().eq('id', id);
-    if (error) {
-      console.error('Error deleting item:', error);
-      throw error;
-    }
-    setItems((prev) => prev.filter((item) => item.id !== id));
-    setBasket((prev) => {
-      const next = new Map(prev);
-      next.delete(id);
-      return next;
-    });
-  };
+   const deleteItem = async (id: string) => {
+     // Get the item to delete to get its image URL
+     const itemToDelete = items.find(item => item.id === id);
+     
+     // Delete item from database
+     const { error } = await supabase.from('items').delete().eq('id', id);
+     if (error) {
+       console.error('Error deleting item:', error);
+       throw error;
+     }
+     
+     // Delete associated image from storage if it exists
+     if (itemToDelete?.image) {
+       await deleteImage(itemToDelete.image);
+     }
+     
+     setItems((prev) => prev.filter((item) => item.id !== id));
+     setBasket((prev) => {
+       const next = new Map(prev);
+       next.delete(id);
+       return next;
+     });
+   };
 
   const addToBasket = (id: string) => {
     setBasket((prev) => {
