@@ -2,7 +2,7 @@
 
 ## Commands
 - `npm run dev` - Start Vite dev server
-- `npm run build` - **Non-standard**: removes node_modules, reinstalls, type-checks, then builds
+- `npm run build` - Type-check and build with Vite
 - `npm run lint` - Run ESLint
 - `npm run preview` - Build then run Cloudflare Wrangler dev
 - `npm run deploy` - Build then deploy to Cloudflare Workers/Pages
@@ -28,7 +28,6 @@
 - .env contains Supabase credentials (never commit)
 
 ## Important Notes
-- Build process explicitly cleans and reinstalls node_modules before building
 - Type checking is part of the build process (tsc -b)
 - Uses Cloudflare Wrangler for preview/deploy
 - Environment variables loaded from .env (gitignored)

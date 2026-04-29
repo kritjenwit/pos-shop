@@ -40,6 +40,7 @@ Thumbs.db
 # Tooling specific
 .wrangler/
 .opencode/
+.process/
 
 # Test coverage
 coverage/

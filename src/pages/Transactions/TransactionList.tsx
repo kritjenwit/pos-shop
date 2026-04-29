@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Calendar, ChevronRight, X, Search } from 'lucide-react';
+import { Calendar, ChevronRight, X, Search, Receipt } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { COLORS } from '../../constants';
 
@@ -22,7 +21,6 @@ interface UserOption {
 }
 
 export default function TransactionListPage() {
-  const navigate = useNavigate();
   const [transactions, setTransactions] = useState<TransactionWithItems[]>([]);
   const [loading, setLoading] = useState(true);
   const [startDate, setStartDate] = useState('');
@@ -124,12 +122,12 @@ export default function TransactionListPage() {
     });
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusStyle = (status: string) => {
     switch (status) {
-      case 'completed': return COLORS.accent;
-      case 'pending': return COLORS.primary;
-      case 'cancelled': return COLORS.danger;
-      default: return COLORS.textSecondary;
+      case 'completed': return { bg: COLORS.primary + '15', color: COLORS.primary };
+      case 'pending': return { bg: COLORS.accent + '15', color: COLORS.accent };
+      case 'cancelled': return { bg: COLORS.danger + '15', color: COLORS.danger };
+      default: return { bg: COLORS.textSecondary + '15', color: COLORS.textSecondary };
     }
   };
 
@@ -139,17 +137,21 @@ export default function TransactionListPage() {
 
   const hasFilters = startDate || endDate || selectedSeller;
 
+  const handleNavigate = (path: string) => {
+    window.location.href = path;
+  };
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 animate-fade-in">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-bold" style={{ color: COLORS.text }}>
+        <h2 className="text-xl font-bold font-heading" style={{ color: COLORS.text }}>
           Transactions
         </h2>
         {hasFilters && (
           <button
             onClick={clearFilters}
-            className="flex items-center gap-1 text-sm px-3 py-1.5 rounded-lg"
-            style={{ color: COLORS.danger, backgroundColor: `${COLORS.danger}10` }}
+            className="flex items-center gap-1 text-sm px-3 py-1.5 rounded-lg transition-all duration-200 cursor-pointer hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger"
+            style={{ color: COLORS.danger, backgroundColor: COLORS.danger + '10' }}
           >
             <X size={14} />
             Clear Filters
@@ -157,58 +159,57 @@ export default function TransactionListPage() {
         )}
       </div>
 
-      <div className="p-4 rounded-lg" style={{ backgroundColor: COLORS.cardBackground, border: `1px solid ${COLORS.border}` }}>
+      <div className="p-4 rounded-lg shadow-sm" style={{ backgroundColor: COLORS.cardBackground, border: `1px solid ${COLORS.border}` }}>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: COLORS.textSecondary }}>
+            <label className="label-base" style={{ color: COLORS.textSecondary }}>
               Start Date
             </label>
             <div className="flex items-center gap-2">
-              <Calendar size={16} style={{ color: COLORS.textSecondary }} />
+              <Calendar size={16} style={{ color: COLORS.textSecondary, flexShrink: 0 }} />
               <input
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="flex-1 px-3 py-2 border rounded text-sm"
-                style={{ borderColor: COLORS.border }}
+                className="input-base"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: COLORS.textSecondary }}>
+            <label className="label-base" style={{ color: COLORS.textSecondary }}>
               End Date
             </label>
             <div className="flex items-center gap-2">
-              <Calendar size={16} style={{ color: COLORS.textSecondary }} />
+              <Calendar size={16} style={{ color: COLORS.textSecondary, flexShrink: 0 }} />
               <input
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="flex-1 px-3 py-2 border rounded text-sm"
-                style={{ borderColor: COLORS.border }}
+                className="input-base"
               />
             </div>
           </div>
 
           <div ref={dropdownRef} className="relative">
-            <label className="block text-xs font-medium mb-1" style={{ color: COLORS.textSecondary }}>
+            <label className="label-base" style={{ color: COLORS.textSecondary }}>
               Seller
             </label>
             <div className="flex items-center gap-2">
-              <Search size={16} style={{ color: COLORS.textSecondary }} />
+              <Search size={16} style={{ color: COLORS.textSecondary, flexShrink: 0 }} />
               {selectedSeller ? (
                 <div
-                  className="flex-1 flex items-center justify-between px-3 py-2 border rounded text-sm"
-                  style={{ borderColor: COLORS.primary, backgroundColor: `${COLORS.primary}10` }}
+                  className="flex-1 flex items-center justify-between px-3 py-2 border rounded text-sm transition-all duration-200"
+                  style={{ borderColor: COLORS.primary, backgroundColor: COLORS.primary + '10' }}
                 >
-                  <span style={{ color: COLORS.text }}>{getSellerDisplayName(selectedSeller)}</span>
+                  <span className="truncate font-medium" style={{ color: COLORS.text }}>{getSellerDisplayName(selectedSeller)}</span>
                   <button
                     onClick={() => {
                       setSelectedSeller(null);
                       setSellerQuery('');
                     }}
-                    className="p-1 hover"
+                    className="p-1 hover:bg-white/50 rounded transition-colors duration-200 cursor-pointer focus-visible:outline-none"
+                    aria-label="Clear seller filter"
                   >
                     <X size={14} style={{ color: COLORS.textSecondary }} />
                   </button>
@@ -220,15 +221,14 @@ export default function TransactionListPage() {
                   onChange={(e) => setSellerQuery(e.target.value)}
                   onFocus={() => setShowDropdown(true)}
                   placeholder="Search seller..."
-                  className="flex-1 px-3 py-2 border rounded text-sm"
-                  style={{ borderColor: COLORS.border }}
+                  className="input-base"
                 />
               )}
             </div>
 
             {showDropdown && sellerOptions.length > 0 && !selectedSeller && (
               <div
-                className="absolute z-10 w-full mt-1 border rounded-lg shadow-lg overflow-hidden"
+                className="absolute z-10 w-full mt-1 border rounded-lg shadow-lg overflow-hidden animate-scale-in"
                 style={{ backgroundColor: COLORS.cardBackground, borderColor: COLORS.border }}
               >
                 {sellerOptions.map((option) => (
@@ -239,12 +239,10 @@ export default function TransactionListPage() {
                       setSellerQuery('');
                       setShowDropdown(false);
                     }}
-                    className="w-full text-left px-3 py-2 text-sm hover"
-                    style={{ color: COLORS.text, backgroundColor: 'transparent' }}
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.background}
-                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                    className="w-full text-left px-3 py-2 text-sm transition-colors duration-150 cursor-pointer hover:bg-slate-50"
+                    style={{ color: COLORS.text }}
                   >
-                    <div>{getSellerDisplayName(option)}</div>
+                    <div className="font-medium">{getSellerDisplayName(option)}</div>
                     <div className="text-xs" style={{ color: COLORS.textSecondary }}>
                       {option.email}
                     </div>
@@ -257,20 +255,34 @@ export default function TransactionListPage() {
       </div>
 
       {loading ? (
-        <div className="text-center py-8" style={{ color: COLORS.textSecondary }}>
-          Loading...
+        <div className="space-y-2">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="p-4 rounded-lg shadow-sm" style={{ backgroundColor: COLORS.cardBackground }}>
+              <div className="flex justify-between items-start">
+                <div className="space-y-2">
+                  <div className="skeleton h-6 w-24"></div>
+                  <div className="skeleton h-4 w-40"></div>
+                </div>
+                <div className="skeleton h-4 w-32"></div>
+              </div>
+            </div>
+          ))}
         </div>
       ) : transactions.length === 0 ? (
-        <div className="text-center py-8" style={{ color: COLORS.textSecondary }}>
-          No transactions found
+        <div className="flex flex-col items-center justify-center py-16 rounded-lg shadow-sm" style={{ backgroundColor: COLORS.cardBackground }}>
+          <Receipt size={48} style={{ color: COLORS.textSecondary }} />
+          <p className="text-lg mt-4 font-medium" style={{ color: COLORS.text }}>No transactions found</p>
+          <p className="text-sm mt-1" style={{ color: COLORS.textSecondary }}>
+            {hasFilters ? 'Try adjusting your filters' : 'Complete an order to see it here'}
+          </p>
         </div>
       ) : (
         <div className="space-y-2">
           {transactions.map((t) => (
             <button
               key={t.id}
-              onClick={() => navigate(`/transactions/${t.id}`)}
-              className="w-full text-left p-4 rounded-lg transition-colors hover:shadow-md"
+              onClick={() => handleNavigate(`/transactions/${t.id}`)}
+              className="w-full text-left p-4 rounded-lg transition-all duration-200 cursor-pointer hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               style={{
                 backgroundColor: COLORS.cardBackground,
                 border: `1px solid ${COLORS.border}`,
@@ -279,15 +291,12 @@ export default function TransactionListPage() {
               <div className="flex justify-between items-start">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="font-semibold" style={{ color: COLORS.text }}>
+                    <span className="font-semibold font-heading" style={{ color: COLORS.text }}>
                       ฿{t.total_amount.toFixed(2)}
                     </span>
                     <span
-                      className="text-xs px-2 py-0.5 rounded-full"
-                      style={{
-                        backgroundColor: `${getStatusColor(t.status)}20`,
-                        color: getStatusColor(t.status),
-                      }}
+                      className="text-xs px-2 py-0.5 rounded-full font-semibold"
+                      style={getStatusStyle(t.status)}
                     >
                       {t.status}
                     </span>

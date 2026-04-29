@@ -1,3 +1,79 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Nunito Sans', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Rubik', sans-serif;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply px-4 py-2 rounded font-medium transition-all duration-200 cursor-pointer;
+    @apply bg-primary text-white hover:opacity-90 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2;
+  }
+
+  .btn-danger {
+    @apply px-4 py-2 rounded font-medium transition-all duration-200 cursor-pointer;
+    @apply bg-danger text-white hover:opacity-90 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger focus-visible:ring-offset-2;
+  }
+
+  .btn-secondary {
+    @apply px-4 py-2 rounded font-medium transition-all duration-200 cursor-pointer;
+    @apply border border-primary text-primary hover:bg-primary hover:text-white active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2;
+  }
+
+  .btn-ghost {
+    @apply px-3 py-2 rounded-lg text-sm transition-all duration-200 cursor-pointer;
+    @apply hover:bg-gray-100 active:scale-[0.98];
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2;
+  }
+
+  .input-base {
+    @apply w-full px-3 py-2 border rounded text-sm transition-all duration-200;
+    @apply border-slate-300 bg-white;
+    @apply focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary;
+    @apply placeholder:text-slate-400;
+  }
+
+  .label-base {
+    @apply block text-xs font-semibold mb-1;
+  }
+
+  .card-base {
+    @apply rounded-lg shadow-card;
+  }
+
+  .modal-backdrop {
+    @apply fixed inset-0 z-50 flex items-center justify-center;
+    @apply bg-black/50 backdrop-blur-sm;
+    @apply animate-fade-in;
+  }
+
+  .modal-content {
+    @apply bg-white rounded-lg shadow-modal w-full max-w-md mx-4 p-4;
+    @apply animate-scale-in;
+  }
+
+  .skeleton {
+    @apply animate-pulse bg-slate-200 rounded;
+  }
+}

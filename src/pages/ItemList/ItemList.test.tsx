@@ -5,7 +5,7 @@ import ItemListPage from './ItemList';
 import { AppProvider } from '../../context/AppContext';
 import { AuthProvider } from '../../context/AuthContext';
 
-vi.mock('../lib/supabase', () => ({
+vi.mock('../../lib/supabase', () => ({
   supabase: {
     from: vi.fn(() => ({
       select: vi.fn(() => Promise.resolve({ data: [
@@ -13,6 +13,7 @@ vi.mock('../lib/supabase', () => ({
       ], error: null })),
     })),
   },
+  getSignedImageUrl: vi.fn(() => Promise.resolve(null)),
 }));
 
 describe('ItemListPage', () => {

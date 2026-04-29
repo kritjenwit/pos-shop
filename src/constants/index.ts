@@ -16,16 +16,23 @@ export const UI = {
 } as const;
 
 export const COLORS = {
-  primary: '#2563eb',
-  primaryHover: '#1d4ed8',
-  secondary: '#64748b',
-  accent: '#10b981',
-  danger: '#ef4444',
-  background: '#f8fafc',
-  cardBackground: '#ffffff',
-  text: '#1e293b',
-  textSecondary: '#64748b',
-  border: '#e2e8f0',
+  primary: '#111111',
+  primaryHover: '#000000',
+  primaryLight: '#333333',
+  secondary: '#666666',
+  accent: '#333333',
+  danger: '#EF4444',
+  dangerHover: '#DC2626',
+  background: '#F5F5F5',
+  cardBackground: '#FFFFFF',
+  text: '#111111',
+  textSecondary: '#666666',
+  border: '#E5E5E5',
+  borderInput: '#D4D4D4',
+  shadowSm: '0 1px 2px rgba(0,0,0,0.05)',
+  shadowMd: '0 4px 6px rgba(0,0,0,0.07)',
+  shadowLg: '0 10px 15px rgba(0,0,0,0.1)',
+  transition: 'all 200ms ease',
 } as const;
 
 export const BREAKPOINTS = {

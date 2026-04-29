@@ -23,14 +23,13 @@ const STORAGE_BUCKET = 'pos-shop';
 /**
  * Upload an image file to Supabase storage
  * @param file The image file to upload
- * @returns Public URL of the uploaded image
+ * @returns File path of the uploaded image
  */
 export const uploadImage = async (file: File): Promise<string> => {
   const fileExt = file.name.split('.').pop();
   const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
   const filePath = `${fileName}`;
 
-  // Upload file to storage
   const { error: uploadError } = await supabase.storage
     .from(STORAGE_BUCKET)
     .upload(filePath, file);
@@ -39,39 +38,47 @@ export const uploadImage = async (file: File): Promise<string> => {
     throw uploadError;
   }
 
-  // Get public URL
-  const { data: { publicUrl } } = supabase.storage
-    .from(STORAGE_BUCKET)
-    .getPublicUrl(filePath);
-
-  return publicUrl;
+  return filePath;
 };
 
 /**
  * Delete an image from Supabase storage
- * @param imageUrl The public URL of the image to delete
+ * @param filePath The file path of the image to delete
  */
-export const deleteImage = async (imageUrl: string): Promise<void> => {
-  if (!imageUrl) return;
+export const deleteImage = async (filePath: string): Promise<void> => {
+  if (!filePath) return;
 
-  try {
-    // Extract file path from URL
-    const url = new URL(imageUrl);
-    const pathParts = url.pathname.split('/');
-    const filePath = pathParts.slice(pathParts.indexOf(STORAGE_BUCKET) + 1).join('/');
+  const { error: deleteError } = await supabase.storage
+    .from(STORAGE_BUCKET)
+    .remove([filePath]);
 
-    // Delete file from storage
-    const { error: deleteError } = await supabase.storage
-      .from(STORAGE_BUCKET)
-      .remove([filePath]);
-
-    if (deleteError) {
-      throw deleteError;
-    }
-  } catch (error) {
-    console.error('Error deleting image:', error);
-    throw error;
+  if (deleteError) {
+    throw deleteError;
   }
+};
+
+/**
+ * Get a signed URL for an image file path
+ * @param filePath The path of the file in storage
+ * @returns Signed URL string or null if no path
+ */
+export const getSignedImageUrl = async (filePath: string | null): Promise<string | null> => {
+  if (!filePath) return null;
+
+  if (filePath.startsWith('data:') || filePath.startsWith('http')) {
+    return filePath;
+  }
+
+  const { data, error } = await supabase.storage
+    .from(STORAGE_BUCKET)
+    .createSignedUrl(filePath, 3600);
+
+  if (error) {
+    console.error('Error getting signed URL:', error);
+    return null;
+  }
+
+  return data.signedUrl;
 };
 
 export interface User {
@@ -79,6 +86,7 @@ export interface User {
   email: string;
   password: string;
   full_name: string | null;
+  phone: string | null;
   created_at: string;
 }
 

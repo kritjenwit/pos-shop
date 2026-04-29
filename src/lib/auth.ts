@@ -39,3 +39,16 @@ export async function signUp(email: string, password: string, fullName?: string)
 
   return { user: data as User, error: null };
 }
+
+export async function updateUserPhone(userId: string, phone: string | null): Promise<{ error: Error | null }> {
+  const { error } = await supabase
+    .from('users')
+    .update({ phone })
+    .eq('id', userId);
+
+  if (error) {
+    return { error: new Error(error.message) };
+  }
+
+  return { error: null };
+}
