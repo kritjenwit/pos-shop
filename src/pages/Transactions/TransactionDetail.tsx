@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
-import { ArrowLeft, Share2, Copy, Check, Receipt } from 'lucide-react';
-import { supabase, type Transaction, type TransactionItem } from '../../lib/supabase';
+import { ArrowLeft, Share2, Copy, Check, Receipt, ImageOff } from 'lucide-react';
+import { supabase, type Transaction, type TransactionItem, getSignedImageUrl } from '../../lib/supabase';
 import { COLORS, PAYMENT } from '../../constants';
 
 export default function TransactionDetailPage() {
@@ -12,6 +12,8 @@ export default function TransactionDetailPage() {
   const [items, setItems] = useState<TransactionItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
+  const [showQR, setShowQR] = useState(false);
 
   const shareUrl = `${window.location.origin}/transactions/${id}`;
 
@@ -38,6 +40,12 @@ export default function TransactionDetailPage() {
 
     setTransaction(txData);
     setItems(itemsData || []);
+
+    if (txData.receipt_url) {
+      const signedUrl = await getSignedImageUrl(txData.receipt_url);
+      setReceiptUrl(signedUrl);
+    }
+
     setLoading(false);
   };
 
@@ -163,40 +171,61 @@ export default function TransactionDetailPage() {
         </div>
       </div>
 
+      {receiptUrl ? (
+        <div className="rounded-lg shadow-card p-5" style={{ backgroundColor: COLORS.cardBackground }}>
+          <h3 className="font-semibold mb-3 font-heading" style={{ color: COLORS.text }}>
+            Receipt
+          </h3>
+          <img src={receiptUrl} alt="Receipt" className="w-full rounded-lg" style={{ maxHeight: '400px', objectFit: 'contain' }} />
+        </div>
+      ) : (
+        <div className="rounded-lg shadow-card p-5" style={{ backgroundColor: COLORS.cardBackground }}>
+          <div className="flex items-center gap-2 mb-3">
+            <ImageOff size={20} style={{ color: COLORS.textSecondary }} />
+            <h3 className="font-semibold font-heading" style={{ color: COLORS.text }}>
+              Receipt
+            </h3>
+          </div>
+          <p className="text-sm" style={{ color: COLORS.textSecondary }}>Receipt not found</p>
+        </div>
+      )}
+
       <div className="rounded-lg shadow-card p-5" style={{ backgroundColor: COLORS.cardBackground }}>
         <div className="flex justify-between items-center mb-4">
           <h3 className="font-semibold font-heading" style={{ color: COLORS.text }}>
             Share Transaction
           </h3>
           <button
-            onClick={handleShare}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all duration-200 cursor-pointer hover:shadow-sm active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            onClick={() => setShowQR(!showQR)}
+            className="p-2 rounded-lg text-sm transition-all duration-200 cursor-pointer hover:shadow-sm active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             style={{ backgroundColor: COLORS.primary + '15', color: COLORS.primary }}
+            aria-label={showQR ? 'Hide QR Code' : 'Show QR Code'}
           >
-            <Share2 size={14} />
-            Share
+            <Share2 size={18} />
           </button>
         </div>
 
-        <div className="text-center">
-          <div className="inline-block p-4 rounded-lg shadow-sm mb-3" style={{ backgroundColor: '#ffffff' }}>
-            <QRCodeSVG value={shareUrl} size={PAYMENT.qrSize} level={PAYMENT.qrLevel} />
+        {showQR && (
+          <div className="text-center animate-fade-in">
+            <div className="inline-block p-4 rounded-lg shadow-sm mb-3" style={{ backgroundColor: '#ffffff' }}>
+              <QRCodeSVG value={shareUrl} size={PAYMENT.qrSize} level={PAYMENT.qrLevel} />
+            </div>
+            <p className="text-xs mb-3" style={{ color: COLORS.textSecondary }}>
+              Scan to view transaction details
+            </p>
+            <button
+              onClick={handleCopyLink}
+              className="flex items-center gap-2 mx-auto text-sm px-3 py-1.5 rounded-lg transition-all duration-200 cursor-pointer hover:shadow-sm active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              style={{
+                backgroundColor: copied ? COLORS.primary + '15' : COLORS.primary + '15',
+                color: copied ? COLORS.primary : COLORS.primary,
+              }}
+            >
+              {copied ? <Check size={14} /> : <Copy size={14} />}
+              {copied ? 'Copied!' : 'Copy Link'}
+            </button>
           </div>
-          <p className="text-xs mb-3" style={{ color: COLORS.textSecondary }}>
-            Scan to view transaction details
-          </p>
-          <button
-            onClick={handleCopyLink}
-            className="flex items-center gap-2 mx-auto text-sm px-3 py-1.5 rounded-lg transition-all duration-200 cursor-pointer hover:shadow-sm active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-            style={{
-              backgroundColor: copied ? COLORS.primary + '15' : COLORS.primary + '15',
-              color: copied ? COLORS.primary : COLORS.primary,
-            }}
-          >
-            {copied ? <Check size={14} /> : <Copy size={14} />}
-            {copied ? 'Copied!' : 'Copy Link'}
-          </button>
-        </div>
+        )}
       </div>
     </div>
   );

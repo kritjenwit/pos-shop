@@ -96,6 +96,7 @@ export interface Transaction {
   status: string;
   created_by: string;
   created_at: string;
+  receipt_url: string | null;
 }
 
 export interface TransactionItem {

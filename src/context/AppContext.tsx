@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import { supabase, type Item, deleteImage } from '../lib/supabase';
+import { supabase, type Item, deleteImage, uploadImage } from '../lib/supabase';
 import { useAuth } from './AuthContext';
 
 interface AppContextType {
@@ -14,7 +14,7 @@ interface AppContextType {
   removeFromBasket: (id: string) => void;
   getBasketQuantity: (id: string) => number;
   clearBasket: () => void;
-  completeOrder: () => Promise<void>;
+  completeOrder: (receiptFile?: File | null) => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -137,8 +137,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem(BASKET_KEY);
   };
 
-  const completeOrder = async () => {
+  const completeOrder = async (receiptFile?: File | null) => {
     if (basket.size === 0) return;
+
+    let receiptUrl = null;
+    if (receiptFile) {
+      receiptUrl = await uploadImage(receiptFile);
+    }
 
     const transactionItems = Array.from(basket.entries()).map(([id, qty]) => {
       const item = items.find((i) => i.id === id);
@@ -154,7 +159,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     const { data, error } = await supabase
       .from('transactions')
-      .insert({ total_amount: total, status: 'completed', created_by: user?.id })
+      .insert({ total_amount: total, status: 'completed', created_by: user?.id, receipt_url: receiptUrl })
       .select()
       .single();
 

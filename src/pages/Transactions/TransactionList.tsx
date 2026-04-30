@@ -12,6 +12,7 @@ interface TransactionWithItems {
   user_email?: string;
   user_full_name?: string;
   item_count?: number;
+  receipt_url?: string | null;
 }
 
 interface UserOption {
@@ -45,7 +46,7 @@ export default function TransactionListPage() {
 
     let query = supabase
       .from('transactions')
-      .select('*, users(email, full_name)')
+      .select('*, users(email, full_name), receipt_url')
       .order('created_at', { ascending: false });
 
     if (startDate) {
@@ -288,30 +289,33 @@ export default function TransactionListPage() {
                 border: `1px solid ${COLORS.border}`,
               }}
             >
-              <div className="flex justify-between items-start">
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-semibold font-heading" style={{ color: COLORS.text }}>
-                      ฿{t.total_amount.toFixed(2)}
-                    </span>
-                    <span
-                      className="text-xs px-2 py-0.5 rounded-full font-semibold"
-                      style={getStatusStyle(t.status)}
-                    >
-                      {t.status}
-                    </span>
-                  </div>
-                  <div className="text-sm" style={{ color: COLORS.textSecondary }}>
-                    {t.item_count} items • {t.user_full_name || t.user_email || 'Unknown'}
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs" style={{ color: COLORS.textSecondary }}>
-                    {formatDate(t.created_at)}
-                  </span>
-                  <ChevronRight size={16} style={{ color: COLORS.textSecondary }} />
-                </div>
-              </div>
+               <div className="flex justify-between items-start">
+                 <div>
+                   <div className="flex items-center gap-2 mb-1">
+                     <span className="font-semibold font-heading" style={{ color: COLORS.text }}>
+                       ฿{t.total_amount.toFixed(2)}
+                     </span>
+                     <span
+                       className="text-xs px-2 py-0.5 rounded-full font-semibold"
+                       style={getStatusStyle(t.status)}
+                     >
+                       {t.status}
+                     </span>
+                     {t.receipt_url && (
+                       <Receipt size={14} style={{ color: COLORS.primary }} />
+                     )}
+                   </div>
+                   <div className="text-sm" style={{ color: COLORS.textSecondary }}>
+                     {t.item_count} items • {t.user_full_name || t.user_email || 'Unknown'}
+                   </div>
+                 </div>
+                 <div className="flex items-center gap-2">
+                   <span className="text-xs" style={{ color: COLORS.textSecondary }}>
+                     {formatDate(t.created_at)}
+                   </span>
+                   <ChevronRight size={16} style={{ color: COLORS.textSecondary }} />
+                 </div>
+               </div>
             </button>
           ))}
         </div>

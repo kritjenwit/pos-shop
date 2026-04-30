@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { CheckCircle, ShoppingCart } from 'lucide-react';
+import { CheckCircle, ShoppingCart, Upload } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
 import { generateThaiQRPayment } from '../../lib/thaiQR';
@@ -12,6 +12,8 @@ export default function CheckoutPage() {
   const [promptPayTarget, setPromptPayTarget] = useState('');
   const [completing, setCompleting] = useState(false);
   const [orderComplete, setOrderComplete] = useState(false);
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
 
   useEffect(() => {
     if (user?.phone) {
@@ -19,10 +21,27 @@ export default function CheckoutPage() {
     }
   }, [user]);
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setReceiptFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setReceiptPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveReceipt = () => {
+    setReceiptFile(null);
+    setReceiptPreview(null);
+  };
+
   const handleCompleteOrder = async () => {
     setCompleting(true);
     try {
-      await completeOrder();
+      await completeOrder(receiptFile);
       setOrderComplete(true);
     } catch (error) {
       console.error('Error completing order:', error);
@@ -123,6 +142,25 @@ export default function CheckoutPage() {
           <div className="text-center py-8 rounded-lg" style={{ backgroundColor: COLORS.background }}>
             <p className="font-medium" style={{ color: COLORS.text }}>Enter PromptPay target</p>
             <p className="text-sm mt-1" style={{ color: COLORS.textSecondary }}>QR code will appear here</p>
+          </div>
+        )}
+      </div>
+
+      <div className="rounded-lg shadow-card p-6 mb-6" style={{ backgroundColor: COLORS.cardBackground }}>
+        <h2 className="text-base font-semibold mb-4 font-heading" style={{ color: COLORS.text }}>Upload Receipt (Optional)</h2>
+        {receiptPreview ? (
+          <div className="mb-4">
+            <img src={receiptPreview} alt="Receipt preview" className="w-full rounded-lg mb-2" style={{ maxHeight: '200px', objectFit: 'contain' }} />
+            <button onClick={handleRemoveReceipt} className="btn-danger text-sm py-1 px-3">Remove</button>
+          </div>
+        ) : (
+          <div className="border-2 border-dashed rounded-lg p-6 text-center" style={{ borderColor: COLORS.border }}>
+            <Upload size={32} className="mx-auto mb-2" style={{ color: COLORS.textSecondary }} />
+            <label htmlFor="receipt-upload" className="cursor-pointer">
+              <span className="text-sm font-medium" style={{ color: COLORS.primary }}>Click to upload receipt</span>
+              <input id="receipt-upload" type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+            </label>
+            <p className="text-xs mt-1" style={{ color: COLORS.textSecondary }}>PNG, JPG up to 10MB</p>
           </div>
         )}
       </div>
