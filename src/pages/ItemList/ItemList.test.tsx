@@ -23,21 +23,21 @@ describe('ItemListPage', () => {
   it('should render Items tab', async () => {
     render(<BrowserRouter><AuthProvider><AppProvider><ItemListPage /></AppProvider></AuthProvider></BrowserRouter>);
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /Items/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Items' })).toBeInTheDocument();
     }, { timeout: 3000 });
   });
 
   it('should render Management tab', async () => {
     render(<BrowserRouter><AuthProvider><AppProvider><ItemListPage /></AppProvider></AuthProvider></BrowserRouter>);
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /Management/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Management' })).toBeInTheDocument();
     }, { timeout: 3000 });
   });
 
   it('should render Checkout tab', async () => {
     render(<BrowserRouter><AuthProvider><AppProvider><ItemListPage /></AppProvider></AuthProvider></BrowserRouter>);
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /Checkout/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Checkout' })).toBeInTheDocument();
     }, { timeout: 3000 });
   });
 });

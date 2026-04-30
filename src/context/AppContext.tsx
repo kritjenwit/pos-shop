@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { supabase, type Item, deleteImage, uploadImage } from '../lib/supabase';
 import { useAuth } from './AuthContext';
+import { getCache, setCache, invalidateCache } from '../lib/cache';
 
 interface AppContextType {
   items: Item[];
@@ -15,18 +16,31 @@ interface AppContextType {
   getBasketQuantity: (id: string) => number;
   clearBasket: () => void;
   completeOrder: (receiptFile?: File | null) => Promise<void>;
+  refreshItems: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 const BASKET_KEY = 'pos-shop-basket';
 
-const fetchItems = async (setItems: React.Dispatch<React.SetStateAction<Item[]>>, setLoading: React.Dispatch<React.SetStateAction<boolean>>) => {
+const CACHE_KEY = 'items';
+
+const fetchItems = async (setItems: React.Dispatch<React.SetStateAction<Item[]>>, setLoading: React.Dispatch<React.SetStateAction<boolean>>, useCache = true) => {
+  if (useCache) {
+    const cached = getCache<Item[]>(CACHE_KEY);
+    if (cached) {
+      setItems(cached);
+      setLoading(false);
+      return;
+    }
+  }
+
   const { data, error } = await supabase.from('items').select('*');
   if (error) {
     console.error('Error fetching items:', error);
   } else {
     setItems(data || []);
+    setCache(CACHE_KEY, data || []);
   }
   setLoading(false);
 };
@@ -49,7 +63,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   });
 
   useEffect(() => {
-    fetchItems(setItems, setLoading);
+    fetchItems(setItems, setLoading, true);
   }, []);
 
   useEffect(() => {
@@ -148,7 +162,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const transactionItems = Array.from(basket.entries()).map(([id, qty]) => {
       const item = items.find((i) => i.id === id);
       return {
-        transaction_id: '', 
+        transaction_id: '',
         item_id: id,
         item_name: item?.name || '',
         quantity: qty,
@@ -187,6 +201,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     clearBasket();
   };
 
+  const refreshItems = async () => {
+    setLoading(true);
+    invalidateCache(CACHE_KEY);
+    await fetchItems(setItems, setLoading, false);
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -202,6 +222,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         getBasketQuantity,
         clearBasket,
         completeOrder,
+        refreshItems,
       }}
     >
       {children}

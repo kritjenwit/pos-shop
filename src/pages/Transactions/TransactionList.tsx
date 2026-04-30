@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
-import { Calendar, ChevronRight, X, Search, Receipt } from 'lucide-react';
+import { useState, useEffect, useRef, useMemo } from 'react';
+import { Calendar, ChevronRight, X, Search, Receipt, RefreshCw } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { COLORS } from '../../constants';
+import { getCache, setCache, invalidateCache } from '../../lib/cache';
 
 interface TransactionWithItems {
   id: string;
@@ -24,6 +25,7 @@ interface UserOption {
 export default function TransactionListPage() {
   const [transactions, setTransactions] = useState<TransactionWithItems[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [sellerQuery, setSellerQuery] = useState('');
@@ -31,6 +33,80 @@ export default function TransactionListPage() {
   const [selectedSeller, setSelectedSeller] = useState<UserOption | null>(null);
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const CACHE_KEY = 'transactions';
+
+  const filteredTransactions = useMemo(() => {
+    let filtered = transactions;
+
+    if (startDate) {
+      filtered = filtered.filter(t => t.created_at >= `${startDate}T00:00:00`);
+    }
+    if (endDate) {
+      filtered = filtered.filter(t => t.created_at <= `${endDate}T23:59:59`);
+    }
+    if (selectedSeller) {
+      filtered = filtered.filter(t => t.created_by === selectedSeller.id);
+    }
+
+    return filtered;
+  }, [transactions, startDate, endDate, selectedSeller]);
+
+  const fetchTransactions = async (useCache = true) => {
+    if (useCache) {
+      const cached = getCache<TransactionWithItems[]>(CACHE_KEY);
+      if (cached) {
+        setTransactions(cached);
+        setLoading(false);
+        return;
+      }
+    }
+
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('transactions')
+      .select('*, users(email, full_name), receipt_url')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching transactions:', error);
+      setLoading(false);
+      return;
+    }
+
+    const withCounts = await Promise.all(
+      (data || []).map(async (t) => {
+        const { count } = await supabase
+          .from('transaction_items')
+          .select('*', { count: 'exact', head: true })
+          .eq('transaction_id', t.id);
+        return {
+          ...t,
+          user_email: (t.users as { email?: string })?.email,
+          user_full_name: (t.users as { full_name?: string | null })?.full_name,
+          item_count: count || 0,
+        };
+      })
+    );
+
+    setCache(CACHE_KEY, withCounts);
+    setTransactions(withCounts);
+    setLoading(false);
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    invalidateCache(CACHE_KEY);
+    await fetchTransactions(false);
+    setRefreshing(false);
+  };
+
+  const clearFilters = () => {
+    setStartDate('');
+    setEndDate('');
+    setSellerQuery('');
+    setSelectedSeller(null);
+  };
 
   const searchSellers = async () => {
     const { data } = await supabase
@@ -41,58 +117,9 @@ export default function TransactionListPage() {
     setSellerOptions(data || []);
   };
 
-  const fetchTransactions = async () => {
-    setLoading(true);
-
-    let query = supabase
-      .from('transactions')
-      .select('*, users(email, full_name), receipt_url')
-      .order('created_at', { ascending: false });
-
-    if (startDate) {
-      query = query.gte('created_at', `${startDate}T00:00:00`);
-    }
-    if (endDate) {
-      query = query.lte('created_at', `${endDate}T23:59:59`);
-    }
-    if (selectedSeller) {
-      query = query.eq('created_by', selectedSeller.id);
-    }
-
-    const { data, error } = await query;
-
-    if (error) {
-      console.error('Error fetching transactions:', error);
-    } else {
-      const withCounts = await Promise.all(
-        (data || []).map(async (t) => {
-          const { count } = await supabase
-            .from('transaction_items')
-            .select('*', { count: 'exact', head: true })
-            .eq('transaction_id', t.id);
-          return {
-            ...t,
-            user_email: (t.users as { email?: string })?.email,
-            user_full_name: (t.users as { full_name?: string | null })?.full_name,
-            item_count: count || 0,
-          };
-        })
-      );
-      setTransactions(withCounts);
-    }
-    setLoading(false);
-  };
-
-  const clearFilters = () => {
-    setStartDate('');
-    setEndDate('');
-    setSellerQuery('');
-    setSelectedSeller(null);
-  };
-
   useEffect(() => {
-    fetchTransactions();
-  }, [startDate, endDate, selectedSeller]);
+    fetchTransactions(true);
+  }, []);
 
   useEffect(() => {
     if (sellerQuery.length >= 1) {
@@ -148,16 +175,27 @@ export default function TransactionListPage() {
         <h2 className="text-xl font-bold font-heading" style={{ color: COLORS.text }}>
           Transactions
         </h2>
-        {hasFilters && (
+        <div className="flex items-center gap-2">
           <button
-            onClick={clearFilters}
-            className="flex items-center gap-1 text-sm px-3 py-1.5 rounded-lg transition-all duration-200 cursor-pointer hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger"
-            style={{ color: COLORS.danger, backgroundColor: COLORS.danger + '10' }}
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="flex items-center gap-1 text-sm px-3 py-1.5 rounded-lg transition-all duration-200 cursor-pointer hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50"
+            style={{ color: COLORS.primary, backgroundColor: COLORS.primary + '10' }}
           >
-            <X size={14} />
-            Clear Filters
+            <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
+            {refreshing ? 'Refreshing...' : 'Refresh'}
           </button>
-        )}
+          {hasFilters && (
+            <button
+              onClick={clearFilters}
+              className="flex items-center gap-1 text-sm px-3 py-1.5 rounded-lg transition-all duration-200 cursor-pointer hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger"
+              style={{ color: COLORS.danger, backgroundColor: COLORS.danger + '10' }}
+            >
+              <X size={14} />
+              Clear Filters
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="p-4 rounded-lg shadow-sm" style={{ backgroundColor: COLORS.cardBackground, border: `1px solid ${COLORS.border}` }}>
@@ -269,7 +307,7 @@ export default function TransactionListPage() {
             </div>
           ))}
         </div>
-      ) : transactions.length === 0 ? (
+      ) : filteredTransactions.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 rounded-lg shadow-sm" style={{ backgroundColor: COLORS.cardBackground }}>
           <Receipt size={48} style={{ color: COLORS.textSecondary }} />
           <p className="text-lg mt-4 font-medium" style={{ color: COLORS.text }}>No transactions found</p>
@@ -279,7 +317,7 @@ export default function TransactionListPage() {
         </div>
       ) : (
         <div className="space-y-2">
-          {transactions.map((t) => (
+          {filteredTransactions.map((t) => (
             <button
               key={t.id}
               onClick={() => handleNavigate(`/transactions/${t.id}`)}

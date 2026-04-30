@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Minus, Plus, ShoppingBag, Package, CreditCard, ShoppingCart } from 'lucide-react';
+import { Minus, Plus, ShoppingBag, Package, CreditCard, ShoppingCart, RefreshCw } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import type { Item } from '../../lib/supabase';
 import { getSignedImageUrl } from '../../lib/supabase';
@@ -84,9 +84,16 @@ function ItemCard({ item }: ItemCardProps) {
 type Tab = 'items' | 'management' | 'checkout';
 
 export default function ItemListPage() {
-  const { items, total, basket, loading: itemsLoading } = useApp();
+  const { items, total, basket, loading: itemsLoading, refreshItems } = useApp();
   const [activeTab, setActiveTab] = useState<Tab>('items');
+  const [refreshing, setRefreshing] = useState(false);
   const totalItems = Array.from(basket.values()).reduce((a, b) => a + b, 0);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await refreshItems();
+    setRefreshing(false);
+  };
 
   if (itemsLoading) {
     return (
@@ -162,6 +169,15 @@ export default function ItemListPage() {
             <ShoppingCart size={20} style={{ color: COLORS.primary }} />
             <span className="font-medium">{totalItems} items</span>
             <span className="ml-auto text-lg font-bold font-heading" style={{ color: COLORS.primary }}>฿{total}</span>
+            <button
+              onClick={handleRefresh}
+              disabled={refreshing || itemsLoading}
+              className="p-2 rounded-lg transition-all duration-200 cursor-pointer hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50"
+              style={{ color: COLORS.primary, backgroundColor: COLORS.primary + '10' }}
+              aria-label="Refresh items"
+            >
+              <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />
+            </button>
           </div>
           {items.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16">
