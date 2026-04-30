@@ -1,25 +1,26 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
-import { ArrowLeft, Share2, Copy, Check, Receipt, ImageOff } from 'lucide-react';
+import { Share2, Copy, Check, Receipt, ImageOff } from 'lucide-react';
 import { supabase, type Transaction, type TransactionItem, getSignedImageUrl } from '../../lib/supabase';
 import { COLORS, PAYMENT } from '../../constants';
 
-export default function TransactionDetailPage() {
+export default function PublicTransactionDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const navigate = (path: string) => window.location.href = path;
+  const location = useLocation();
+  const navigate = (path: string) => (window.location.href = path);
   const [transaction, setTransaction] = useState<Transaction | null>(null);
   const [items, setItems] = useState<TransactionItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [copied, setCopied] = useState(false);
   const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
   const [showQR, setShowQR] = useState(false);
 
-  const shareUrl = `${window.location.origin}/transactions/${id}`;
+  // Public path for sharing
+  const shareUrl = window.location.origin + location.pathname; // /public/transactions/:id
 
   const fetchTransaction = async () => {
     if (!id) return;
-
     const { data: txData, error: txError } = await supabase
       .from('transactions')
       .select('*')
@@ -28,7 +29,7 @@ export default function TransactionDetailPage() {
 
     if (txError) {
       console.error('Error fetching transaction:', txError);
-      navigate('/transactions');
+      navigate('/public/transactions');
       return;
     }
 
@@ -50,11 +51,8 @@ export default function TransactionDetailPage() {
   };
 
   useEffect(() => {
-    if (id) {
-      fetchTransaction();
-    }
+    if (id) fetchTransaction();
   }, [id]);
-
 
   const handleCopyLink = async () => {
     try {
@@ -76,15 +74,6 @@ export default function TransactionDetailPage() {
       hour: '2-digit',
       minute: '2-digit',
     });
-  };
-
-  const getStatusStyle = (status: string) => {
-    switch (status) {
-      case 'completed': return { bg: COLORS.primary + '15', color: COLORS.primary };
-      case 'pending': return { bg: COLORS.accent + '15', color: COLORS.accent };
-      case 'cancelled': return { bg: COLORS.danger + '15', color: COLORS.danger };
-      default: return { bg: COLORS.textSecondary + '15', color: COLORS.textSecondary };
-    }
   };
 
   if (loading) {
@@ -110,14 +99,6 @@ export default function TransactionDetailPage() {
 
   return (
     <div className="max-w-md mx-auto space-y-4 animate-fade-in">
-      <button
-        onClick={() => navigate('/transactions')}
-        className="flex items-center gap-2 text-sm transition-colors duration-200 cursor-pointer hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-md px-2 py-1"
-        style={{ color: COLORS.textSecondary }}
-      >
-        <ArrowLeft size={16} />
-        Back to Transactions
-      </button>
 
       <div className="rounded-lg shadow-card p-5" style={{ backgroundColor: COLORS.cardBackground }}>
         <div className="text-center mb-6">
@@ -127,7 +108,7 @@ export default function TransactionDetailPage() {
             </span>
             <span
               className="text-xs px-2 py-1 rounded-full font-semibold"
-              style={getStatusStyle(transaction.status)}
+              style={{ backgroundColor: COLORS.primary + '15', color: COLORS.primary }}
             >
               {transaction.status}
             </span>
@@ -142,11 +123,7 @@ export default function TransactionDetailPage() {
             Items
           </h3>
           {items.map((item) => (
-            <div
-              key={item.id}
-              className="flex justify-between py-2"
-              style={{ color: COLORS.textSecondary }}
-            >
+            <div key={item.id} className="flex justify-between py-2" style={{ color: COLORS.textSecondary }}>
               <span className="font-medium">{item.item_name} x {item.quantity}</span>
               <span className="font-heading">฿{item.subtotal.toFixed(2)}</span>
             </div>
@@ -199,10 +176,7 @@ export default function TransactionDetailPage() {
             <button
               onClick={handleCopyLink}
               className="flex items-center gap-2 mx-auto text-sm px-3 py-1.5 rounded-lg transition-all duration-200 cursor-pointer hover:shadow-sm active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-              style={{
-                backgroundColor: copied ? COLORS.primary + '15' : COLORS.primary + '15',
-                color: copied ? COLORS.primary : COLORS.primary,
-              }}
+              style={{ backgroundColor: copied ? COLORS.primary + '15' : COLORS.primary + '15', color: copied ? COLORS.primary : COLORS.primary }}
             >
               {copied ? <Check size={14} /> : <Copy size={14} />}
               {copied ? 'Copied!' : 'Copy Link'}

@@ -9,10 +9,10 @@ vi.mock('../lib/auth', () => ({
 }));
 
 describe('LoginPage', () => {
-  it('should render sign in heading', () => {
-    render(<AuthProvider><LoginPage /></AuthProvider>);
-    expect(screen.getByRole('heading', { name: 'Sign In' })).toBeInTheDocument();
-  });
+    it('should render sign in heading', () => {
+      render(<AuthProvider><LoginPage /></AuthProvider>);
+      expect(screen.getByRole('heading', { name: 'Welcome Back' })).toBeInTheDocument();
+    });
 
   it('should render sign in button', () => {
     render(<AuthProvider><LoginPage /></AuthProvider>);

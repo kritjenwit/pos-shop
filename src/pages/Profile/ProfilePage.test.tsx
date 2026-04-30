@@ -42,7 +42,7 @@ describe('ProfilePage', () => {
         </AuthProvider>
       </BrowserRouter>
     );
-    expect(screen.getByRole('heading', { name: 'Profile' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Profile' })).toBeInTheDocument();
   });
 
   it('should render email field as disabled', async () => {
@@ -53,7 +53,7 @@ describe('ProfilePage', () => {
         </AuthProvider>
       </BrowserRouter>
     );
-    const emailInput = screen.getByDisplayValue('test@example.com');
+    const emailInput = await screen.findByDisplayValue('test@example.com');
     expect(emailInput).toBeDisabled();
   });
 
@@ -65,7 +65,7 @@ describe('ProfilePage', () => {
         </AuthProvider>
       </BrowserRouter>
     );
-    const nameInput = screen.getByDisplayValue('Test User');
+    const nameInput = await screen.findByDisplayValue('Test User');
     expect(nameInput).toBeDisabled();
   });
 });

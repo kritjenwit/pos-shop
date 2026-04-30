@@ -29,19 +29,19 @@ describe('constants', () => {
 
   describe('COLORS', () => {
     it('should have primary color', () => {
-      expect(COLORS.primary).toBe('#2563eb');
+      expect(COLORS.primary).toBe('#111111');
     });
-
+    
     it('should have accent color', () => {
-      expect(COLORS.accent).toBe('#10b981');
+      expect(COLORS.accent).toBe('#333333');
     });
-
+    
     it('should have danger color', () => {
-      expect(COLORS.danger).toBe('#ef4444');
+      expect(COLORS.danger).toBe('#EF4444');
     });
-
+    
     it('should have text color', () => {
-      expect(COLORS.text).toBe('#1e293b');
+      expect(COLORS.text).toBe('#111111');
     });
   });
 

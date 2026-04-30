@@ -112,7 +112,8 @@ export default function ItemListPage() {
 
   return (
     <div className="max-w-6xl mx-auto">
-      <nav className="flex gap-2 mb-6">
+      {/* Make tabs responsive: on narrow screens allow horizontal scroll to prevent overflow */}
+      <nav className="flex gap-2 mb-6 overflow-x-auto whitespace-nowrap" style={{ scrollbarWidth: 'thin' }}>
         <button
           className={tabButtonClass('items')}
           style={{

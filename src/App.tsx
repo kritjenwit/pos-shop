@@ -1,14 +1,25 @@
+import { lazy, Suspense } from 'react';
 import { LogOut, User, ShoppingCart } from 'lucide-react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { AppProvider } from './context/AppContext';
-import ItemListPage from './pages/ItemList/ItemList';
-import TransactionListPage from './pages/Transactions/TransactionList';
-import TransactionDetailPage from './pages/Transactions/TransactionDetail';
-import LoginPage from './pages/Login/LoginPage';
-import ProfilePage from './pages/Profile/ProfilePage';
 import { APP, COLORS } from './constants';
 import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
 import './index.css';
+
+const ItemListPage = lazy(() => import('./pages/ItemList/ItemList'));
+const PublicTransactionDetailPage = lazy(() => import('./pages/Public/PublicTransactionDetail'));
+const TransactionListPage = lazy(() => import('./pages/Transactions/TransactionList'));
+const TransactionDetailPage = lazy(() => import('./pages/Transactions/TransactionDetail'));
+const LoginPage = lazy(() => import('./pages/Login/LoginPage'));
+const ProfilePage = lazy(() => import('./pages/Profile/ProfilePage'));
+
+function LoadingFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: COLORS.background }}>
+      <div className="skeleton h-8 w-32"></div>
+    </div>
+  );
+}
 
 function Navigation() {
   const location = useLocation();
@@ -44,6 +55,7 @@ function Navigation() {
 
 function AppContent() {
   const { user, signOut, loading } = useAuth();
+  const location = useLocation();
 
   if (loading) {
     return (
@@ -53,8 +65,23 @@ function AppContent() {
     );
   }
 
+  // Public access route: allow public viewing of a transaction detail via /public/transactions/:id
+  if (!user && location.pathname.startsWith('/public/')) {
+    return (
+      <Suspense fallback={<LoadingFallback />}>
+        <Routes>
+          <Route path="/public/transactions/:id" element={<PublicTransactionDetailPage />} />
+        </Routes>
+      </Suspense>
+    );
+  }
+  
   if (!user) {
-    return <LoginPage />;
+    return (
+      <Suspense fallback={<LoadingFallback />}>
+        <LoginPage />
+      </Suspense>
+    );
   }
 
   return (
@@ -91,12 +118,15 @@ function AppContent() {
           <div className="max-w-6xl mx-auto animate-fade-in">
             <Navigation />
             <div className="mt-4">
-              <Routes>
-                <Route path="/" element={<ItemListPage />} />
-                <Route path="/transactions" element={<TransactionListPage />} />
-                <Route path="/transactions/:id" element={<TransactionDetailPage />} />
-                <Route path="/profile" element={<ProfilePage />} />
-              </Routes>
+              <Suspense fallback={<LoadingFallback />}>
+                <Routes>
+                  <Route path="/" element={<ItemListPage />} />
+                  <Route path="/transactions" element={<TransactionListPage />} />
+                  <Route path="/transactions/:id" element={<TransactionDetailPage />} />
+                  <Route path="/public/transactions/:id" element={<PublicTransactionDetailPage />} />
+                  <Route path="/profile" element={<ProfilePage />} />
+                </Routes>
+              </Suspense>
             </div>
           </div>
         </main>
