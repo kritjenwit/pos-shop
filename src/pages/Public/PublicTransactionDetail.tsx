@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useLocation } from 'react-router-dom';
+import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import { Share2, Copy, Check, Receipt, ImageOff } from 'lucide-react';
 import { supabase, type Transaction, type TransactionItem, getSignedImageUrl } from '../../lib/supabase';
@@ -8,7 +8,7 @@ import { COLORS, PAYMENT } from '../../constants';
 export default function PublicTransactionDetailPage() {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
-  const navigate = (path: string) => (window.location.href = path);
+  const navigate = useNavigate();
   const [transaction, setTransaction] = useState<Transaction | null>(null);
   const [items, setItems] = useState<TransactionItem[]>([]);
   const [loading, setLoading] = useState(true);

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { Calendar, ChevronRight, X, Search, Receipt, RefreshCw } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { COLORS } from '../../constants';
 import { getCache, setCache, invalidateCache } from '../../lib/cache';
@@ -165,10 +166,6 @@ export default function TransactionListPage() {
 
   const hasFilters = startDate || endDate || selectedSeller;
 
-  const handleNavigate = (path: string) => {
-    window.location.href = path;
-  };
-
   return (
     <div className="space-y-4 animate-fade-in">
       <div className="flex justify-between items-center">
@@ -318,13 +315,14 @@ export default function TransactionListPage() {
       ) : (
         <div className="space-y-2">
           {filteredTransactions.map((t) => (
-            <button
+            <Link
               key={t.id}
-              onClick={() => handleNavigate(`/transactions/${t.id}`)}
-              className="w-full text-left p-4 rounded-lg transition-all duration-200 cursor-pointer hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              to={`/transactions/${t.id}`}
+              className="w-full text-left p-4 rounded-lg transition-all duration-200 cursor-pointer hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary block"
               style={{
                 backgroundColor: COLORS.cardBackground,
                 border: `1px solid ${COLORS.border}`,
+                textDecoration: 'none',
               }}
             >
                <div className="flex justify-between items-start">
@@ -354,7 +352,7 @@ export default function TransactionListPage() {
                    <ChevronRight size={16} style={{ color: COLORS.textSecondary }} />
                  </div>
                </div>
-            </button>
+            </Link>
           ))}
         </div>
       )}

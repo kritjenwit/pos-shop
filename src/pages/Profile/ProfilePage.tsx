@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { User, Mail, Phone } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { updateUserPhone } from '../../lib/auth';
 import { supabase, type User as UserType } from '../../lib/supabase';
 import { COLORS } from '../../constants';
 
 export default function ProfilePage() {
+  const navigate = useNavigate();
   const { user: authUser } = useAuth();
   const [profile, setProfile] = useState<UserType | null>(null);
   const [phone, setPhone] = useState('');
@@ -65,9 +67,9 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (!authUser) {
-      window.location.href = '/';
+      navigate('/');
     }
-  }, [authUser]);
+  }, [authUser, navigate]);
 
   if (!authUser) {
     return null;

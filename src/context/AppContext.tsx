@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, type ReactNode }
 import { supabase, type Item, deleteImage, uploadImage } from '../lib/supabase';
 import { useAuth } from './AuthContext';
 import { getCache, setCache, invalidateCache } from '../lib/cache';
+import { generateOrderId } from '../lib/util';
 
 interface AppContextType {
   items: Item[];
@@ -16,7 +17,7 @@ interface AppContextType {
   getBasketQuantity: (id: string) => number;
   clearBasket: () => void;
   completeOrder: (receiptFile?: File | null, status?: string) => Promise<void>;
-  createPendingOrder: (customerName?: string, customerPhone?: string) => Promise<void>;
+  createPendingOrder: (customerName?: string, customerPhone?: string) => Promise<{ id: string, order_id: string } | void>;
   refreshItems: () => Promise<void>;
 }
 
@@ -174,7 +175,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
      const { data, error } = await supabase
        .from('transactions')
-       .insert({ total_amount: total, status, created_by: user?.id, receipt_url: receiptUrl })
+       .insert({ 
+         total_amount: total, 
+         status, 
+         created_by: user?.id, 
+         receipt_url: receiptUrl,
+         order_id: generateOrderId()
+       })
        .select()
        .single();
 
@@ -229,7 +236,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
          status: 'pending', 
          created_by: user?.id,
          customer_name: customerName || null,
-         customer_phone: customerPhone || null
+         customer_phone: customerPhone || null,
+         order_id: generateOrderId()
        })
        .select()
        .single();
@@ -256,6 +264,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
      }
 
      clearBasket();
+     return data;
    };
 
   const refreshItems = async () => {

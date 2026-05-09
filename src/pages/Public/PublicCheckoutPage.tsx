@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { CheckCircle, ShoppingCart, ArrowLeft, User, Phone, CreditCard, ShoppingBag, Loader2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useApp } from '../../context/AppContext';
 
 export default function PublicCheckoutPage() {
@@ -8,13 +9,17 @@ export default function PublicCheckoutPage() {
   const [orderComplete, setOrderComplete] = useState(false);
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
+  const [createdOrder, setCreatedOrder] = useState<{ id: string, order_id: string } | null>(null);
 
   const handleCompleteOrder = async () => {
     if (!customerName.trim()) return;
 
     setCompleting(true);
     try {
-      await createPendingOrder(customerName, customerPhone || undefined);
+      const data = await createPendingOrder(customerName, customerPhone || undefined);
+      if (data) {
+        setCreatedOrder(data as { id: string, order_id: string });
+      }
       setOrderComplete(true);
     } catch (error) {
       console.error('Error creating pending order:', error);
@@ -25,6 +30,7 @@ export default function PublicCheckoutPage() {
 
   const handleReset = () => {
     setOrderComplete(false);
+    setCreatedOrder(null);
     setCustomerName('');
     setCustomerPhone('');
   };
@@ -46,13 +52,13 @@ export default function PublicCheckoutPage() {
         <p className="text-gray-500 mt-2 max-w-xs text-center">
           Looks like you haven't added anything to your basket yet.
         </p>
-        <button 
-          onClick={() => window.location.href = '/menu'}
+        <Link 
+          to="/menu"
           className="mt-8 btn-primary px-8 py-3 rounded-xl flex items-center gap-2 hover:-translate-y-1 transition-all"
         >
           <ArrowLeft size={18} />
           Back to Menu
-        </button>
+        </Link>
       </div>
     );
   }
@@ -76,11 +82,18 @@ export default function PublicCheckoutPage() {
               <p className="text-white/80 font-medium">Thank you for your order</p>
             </div>
           </div>
-
           <div className="p-8 text-center">
-            <div className="mb-8">
-              <div className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-1">Total Amount</div>
-              <div className="text-4xl font-black text-primary font-heading">฿{total.toLocaleString()}</div>
+            <div className="mb-8 flex flex-col items-center gap-4">
+              <div className="w-full">
+                <div className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-1">Order ID</div>
+                <div className="text-xl font-black text-gray-900 font-mono bg-gray-50 py-2 px-4 rounded-xl border border-gray-100">
+                  {createdOrder?.order_id || 'Generating...'}
+                </div>
+              </div>
+              <div className="w-full">
+                <div className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-1">Total Amount</div>
+                <div className="text-4xl font-black text-primary font-heading">฿{total.toLocaleString()}</div>
+              </div>
             </div>
             
             <div className="bg-gray-50 rounded-2xl p-6 mb-8 text-left border border-gray-100">
@@ -104,12 +117,12 @@ export default function PublicCheckoutPage() {
   return (
     <div className="max-w-2xl mx-auto px-4 py-8 animate-fade-in">
       <div className="mb-8 flex items-center gap-4">
-        <button 
-          onClick={() => window.location.href = '/menu'}
+        <Link 
+          to="/menu"
           className="p-3 rounded-full bg-white shadow-sm border border-gray-100 hover:bg-gray-50 transition-all active:scale-90"
         >
           <ArrowLeft size={20} />
-        </button>
+        </Link>
         <div>
           <h1 className="text-3xl font-black font-heading tracking-tight text-gray-900">Checkout</h1>
           <p className="text-gray-500 font-medium">Complete your order details</p>

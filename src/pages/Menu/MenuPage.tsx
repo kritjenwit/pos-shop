@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Minus, Plus, ShoppingBag, ShoppingCart, RefreshCw, Search, X } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { Link } from 'react-router-dom';
 import type { Item } from '../../lib/supabase';
 import { getSignedImageUrl } from '../../lib/supabase';
 
@@ -260,13 +261,13 @@ export default function MenuPage() {
 
       {totalItems > 0 && (
         <div className="mt-16 text-center">
-          <button
-            onClick={() => window.location.href = '/checkout'}
+          <Link
+            to="/checkout"
             className="btn-primary px-12 py-4 text-lg rounded-2xl shadow-2xl hover:shadow-primary/30 transition-all hover:-translate-y-1 active:translate-y-0 inline-flex items-center gap-3"
           >
             Review Order & Checkout
             <Plus size={20} />
-          </button>
+          </Link>
         </div>
       )}
     </div>
