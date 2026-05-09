@@ -99,6 +99,7 @@ export interface Transaction {
   receipt_url: string | null;
   customer_name: string | null;
   customer_phone: string | null;
+  order_id: string | null;
 }
 
 export interface TransactionItem {

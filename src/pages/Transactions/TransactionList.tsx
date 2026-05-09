@@ -15,6 +15,7 @@ interface TransactionWithItems {
   user_full_name?: string;
   item_count?: number;
   receipt_url?: string | null;
+  order_id?: string | null;
 }
 
 interface UserOption {
@@ -337,6 +338,11 @@ export default function TransactionListPage() {
                      >
                        {t.status}
                      </span>
+                     {t.order_id && (
+                       <span className="text-[10px] font-mono font-bold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">
+                         {t.order_id}
+                       </span>
+                     )}
                      {t.receipt_url && (
                        <Receipt size={14} style={{ color: COLORS.primary }} />
                      )}

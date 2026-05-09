@@ -135,6 +135,11 @@ export default function TransactionDetailPage() {
           <div className="text-sm" style={{ color: COLORS.textSecondary }}>
             {formatDate(transaction.created_at)}
           </div>
+          {transaction.order_id && (
+            <div className="text-xs font-mono font-bold mt-2 text-gray-400">
+              {transaction.order_id}
+            </div>
+          )}
         </div>
 
         <div className="border-t pt-4" style={{ borderColor: COLORS.border }}>

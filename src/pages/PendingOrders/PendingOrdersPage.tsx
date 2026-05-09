@@ -146,6 +146,11 @@ export default function PendingOrdersPage() {
                 >
                   {order.status}
                 </span>
+                {order.order_id && (
+                  <span className="text-[10px] font-mono font-bold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">
+                    {order.order_id}
+                  </span>
+                )}
                 {order.receipt_url && (
                   <Receipt size={14} style={{ color: COLORS.primary }} />
                 )}

@@ -16,8 +16,8 @@ interface AppContextType {
   removeFromBasket: (id: string) => void;
   getBasketQuantity: (id: string) => number;
   clearBasket: () => void;
-  completeOrder: (receiptFile?: File | null, status?: string) => Promise<void>;
-  createPendingOrder: (customerName?: string, customerPhone?: string) => Promise<{ id: string, order_id: string } | void>;
+  completeOrder: (receiptFile?: File | null, status?: string) => Promise<{ id: string, total_amount: number } | void>;
+  createPendingOrder: (customerName?: string, customerPhone?: string) => Promise<{ id: string, order_id: string, total_amount: number } | void>;
   refreshItems: () => Promise<void>;
 }
 
@@ -207,6 +207,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
      }
 
      clearBasket();
+     return data;
    };
 
    const createPendingOrder = async (customerName?: string, customerPhone?: string) => {

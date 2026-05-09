@@ -9,7 +9,7 @@ export default function PublicCheckoutPage() {
   const [orderComplete, setOrderComplete] = useState(false);
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
-  const [createdOrder, setCreatedOrder] = useState<{ id: string, order_id: string } | null>(null);
+  const [createdOrder, setCreatedOrder] = useState<{ id: string, order_id: string, total_amount: number } | null>(null);
 
   const handleCompleteOrder = async () => {
     if (!customerName.trim()) return;
@@ -18,7 +18,7 @@ export default function PublicCheckoutPage() {
     try {
       const data = await createPendingOrder(customerName, customerPhone || undefined);
       if (data) {
-        setCreatedOrder(data as { id: string, order_id: string });
+        setCreatedOrder(data as { id: string, order_id: string, total_amount: number });
       }
       setOrderComplete(true);
     } catch (error) {
@@ -92,7 +92,7 @@ export default function PublicCheckoutPage() {
               </div>
               <div className="w-full">
                 <div className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-1">Total Amount</div>
-                <div className="text-4xl font-black text-primary font-heading">฿{total.toLocaleString()}</div>
+                <div className="text-4xl font-black text-primary font-heading">฿{(createdOrder?.total_amount || 0).toLocaleString()}</div>
               </div>
             </div>
             

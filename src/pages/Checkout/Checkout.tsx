@@ -14,6 +14,7 @@ export default function CheckoutPage() {
   const [orderComplete, setOrderComplete] = useState(false);
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
+  const [createdOrder, setCreatedOrder] = useState<{ id: string, total_amount: number } | null>(null);
 
   useEffect(() => {
     if (user?.phone) {
@@ -41,7 +42,10 @@ export default function CheckoutPage() {
   const handleCompleteOrder = async () => {
     setCompleting(true);
     try {
-      await completeOrder(receiptFile);
+      const data = await completeOrder(receiptFile);
+      if (data) {
+        setCreatedOrder(data as { id: string, total_amount: number });
+      }
       setOrderComplete(true);
     } catch (error) {
       console.error('Error completing order:', error);
@@ -52,6 +56,7 @@ export default function CheckoutPage() {
 
   const handleReset = () => {
     setOrderComplete(false);
+    setCreatedOrder(null);
     setPromptPayTarget(user?.phone || '');
   };
 
@@ -84,7 +89,7 @@ export default function CheckoutPage() {
             <CheckCircle size={40} style={{ color: COLORS.primary }} />
           </div>
           <h1 className="text-2xl font-bold font-heading mb-2" style={{ color: COLORS.text }}>Order Complete!</h1>
-          <p className="text-lg font-bold mb-2" style={{ color: COLORS.primary }}>฿{total}</p>
+          <p className="text-lg font-bold mb-2" style={{ color: COLORS.primary }}>฿{createdOrder?.total_amount || 0}</p>
           <p className="mb-6" style={{ color: COLORS.textSecondary }}>Payment has been processed successfully</p>
           <button className="btn-primary w-full font-heading" onClick={handleReset}>
             New Order
