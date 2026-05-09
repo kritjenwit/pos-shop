@@ -24,8 +24,8 @@ vi.mock('./supabase', () => {
       if (path.startsWith('data:') || path.startsWith('http')) return Promise.resolve(path);
       return Promise.resolve('https://supabase.com/signed-url');
     }),
-    uploadImage: vi.fn((_file: File) => Promise.resolve('mock-file-path')),
-    deleteImage: vi.fn((_path: string) => Promise.resolve()),
+    uploadImage: vi.fn(() => Promise.resolve('mock-file-path')),
+    deleteImage: vi.fn(() => Promise.resolve()),
   };
 });
 

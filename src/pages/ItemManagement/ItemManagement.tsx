@@ -4,6 +4,7 @@ import { useApp } from '../../context/AppContext';
 import type { Item } from '../../lib/supabase';
 import { COLORS } from '../../constants';
 import { uploadImage, deleteImage, getSignedImageUrl } from '../../lib/supabase';
+import MenuQRCode from '../../components/MenuQRCode';
 
 function SignedImage({ filePath, alt, className }: { filePath: string | null; alt: string; className?: string }) {
   const [src, setSrc] = useState<string>('');
@@ -238,6 +239,16 @@ export default function ItemManagementPage() {
         >
           <Plus size={16} /> Add New
         </button>
+      </div>
+
+      <div className="rounded-lg shadow-card p-6" style={{ backgroundColor: COLORS.cardBackground }}>
+        <h2 className="text-lg font-semibold mb-4 font-heading" style={{ color: COLORS.text }}>
+          Customer Menu QR Code
+        </h2>
+        <p className="text-sm mb-4" style={{ color: COLORS.textSecondary }}>
+          Print this QR code and display it for customers to scan and place orders
+        </p>
+        <MenuQRCode />
       </div>
 
       {items.length === 0 ? (

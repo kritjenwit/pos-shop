@@ -15,7 +15,8 @@ interface AppContextType {
   removeFromBasket: (id: string) => void;
   getBasketQuantity: (id: string) => number;
   clearBasket: () => void;
-  completeOrder: (receiptFile?: File | null) => Promise<void>;
+  completeOrder: (receiptFile?: File | null, status?: string) => Promise<void>;
+  createPendingOrder: (customerName?: string, customerPhone?: string) => Promise<void>;
   refreshItems: () => Promise<void>;
 }
 
@@ -151,55 +152,111 @@ export function AppProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem(BASKET_KEY);
   };
 
-  const completeOrder = async (receiptFile?: File | null) => {
-    if (basket.size === 0) return;
+   const completeOrder = async (receiptFile?: File | null, status: string = 'completed') => {
+     if (basket.size === 0) return;
 
-    let receiptUrl = null;
-    if (receiptFile) {
-      receiptUrl = await uploadImage(receiptFile);
-    }
+     let receiptUrl = null;
+     if (receiptFile) {
+       receiptUrl = await uploadImage(receiptFile);
+     }
 
-    const transactionItems = Array.from(basket.entries()).map(([id, qty]) => {
-      const item = items.find((i) => i.id === id);
-      return {
-        transaction_id: '',
-        item_id: id,
-        item_name: item?.name || '',
-        quantity: qty,
-        unit_price: item?.price || 0,
-        subtotal: (item?.price || 0) * qty,
-      };
-    });
+     const transactionItems = Array.from(basket.entries()).map(([id, qty]) => {
+       const item = items.find((i) => i.id === id);
+       return {
+         transaction_id: '',
+         item_id: id,
+         item_name: item?.name || '',
+         quantity: qty,
+         unit_price: item?.price || 0,
+         subtotal: (item?.price || 0) * qty,
+       };
+     });
 
-    const { data, error } = await supabase
-      .from('transactions')
-      .insert({ total_amount: total, status: 'completed', created_by: user?.id, receipt_url: receiptUrl })
-      .select()
-      .single();
+     const { data, error } = await supabase
+       .from('transactions')
+       .insert({ total_amount: total, status, created_by: user?.id, receipt_url: receiptUrl })
+       .select()
+       .single();
 
-    if (error) {
-      console.error('Error creating transaction:', error);
-      throw error;
-    }
+     if (error) {
+       console.error('Error creating transaction:', error);
+       throw error;
+     }
 
-    if (data) {
-      const lineItems = transactionItems.map((ti) => ({
-        ...ti,
-        transaction_id: data.id,
-      }));
+     if (data) {
+       const lineItems = transactionItems.map((ti) => ({
+         ...ti,
+         transaction_id: data.id,
+       }));
 
-      const { error: itemsError } = await supabase
-        .from('transaction_items')
-        .insert(lineItems);
+       const { error: itemsError } = await supabase
+         .from('transaction_items')
+         .insert(lineItems);
 
-      if (itemsError) {
-        console.error('Error creating transaction items:', itemsError);
-        throw itemsError;
-      }
-    }
+       if (itemsError) {
+         console.error('Error creating transaction items:', itemsError);
+         throw itemsError;
+       }
+     }
 
-    clearBasket();
-  };
+     clearBasket();
+   };
+
+   const createPendingOrder = async (customerName?: string, customerPhone?: string) => {
+     if (basket.size === 0) return;
+
+     const transactionItems = Array.from(basket.entries()).map(([id, qty]) => {
+       const item = items.find((i) => i.id === id);
+       return {
+         transaction_id: '',
+         item_id: id,
+         item_name: item?.name || '',
+         quantity: qty,
+         unit_price: item?.price || 0,
+         subtotal: (item?.price || 0) * qty,
+       };
+     });
+
+     const total = Array.from(basket.entries()).reduce((sum, [id, qty]) => {
+       const item = items.find((i) => i.id === id);
+       return sum + (item ? item.price * qty : 0);
+     }, 0);
+
+     const { data, error } = await supabase
+       .from('transactions')
+       .insert({ 
+         total_amount: total, 
+         status: 'pending', 
+         created_by: user?.id,
+         customer_name: customerName || null,
+         customer_phone: customerPhone || null
+       })
+       .select()
+       .single();
+
+     if (error) {
+       console.error('Error creating pending transaction:', error);
+       throw error;
+     }
+
+     if (data) {
+       const lineItems = transactionItems.map((ti) => ({
+         ...ti,
+         transaction_id: data.id,
+       }));
+
+       const { error: itemsError } = await supabase
+         .from('transaction_items')
+         .insert(lineItems);
+
+       if (itemsError) {
+         console.error('Error creating pending transaction items:', itemsError);
+         throw itemsError;
+       }
+     }
+
+     clearBasket();
+   };
 
   const refreshItems = async () => {
     setLoading(true);
@@ -222,6 +279,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         getBasketQuantity,
         clearBasket,
         completeOrder,
+        createPendingOrder,
         refreshItems,
       }}
     >

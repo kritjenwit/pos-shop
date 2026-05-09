@@ -8,10 +8,13 @@ import './index.css';
 
 const ItemListPage = lazy(() => import('./pages/ItemList/ItemList'));
 const PublicTransactionDetailPage = lazy(() => import('./pages/Public/PublicTransactionDetail'));
+const PublicCheckoutPage = lazy(() => import('./pages/Public/PublicCheckoutPage'));
 const TransactionListPage = lazy(() => import('./pages/Transactions/TransactionList'));
 const TransactionDetailPage = lazy(() => import('./pages/Transactions/TransactionDetail'));
 const LoginPage = lazy(() => import('./pages/Login/LoginPage'));
 const ProfilePage = lazy(() => import('./pages/Profile/ProfilePage'));
+const MenuPage = lazy(() => import('./pages/Menu/MenuPage'));
+const PendingOrdersPage = lazy(() => import('./pages/PendingOrders/PendingOrdersPage'));
 
 function LoadingFallback() {
   return (
@@ -23,9 +26,9 @@ function LoadingFallback() {
 
 function Navigation() {
   const location = useLocation();
-  
+
   const isActive = (path: string) => location.pathname.startsWith(path);
-  
+
   return (
     <div className="flex gap-2 border-b" style={{ borderColor: COLORS.border }}>
       <Link
@@ -49,6 +52,16 @@ function Navigation() {
       >
         Transactions
       </Link>
+      <Link
+        to="/pending-orders"
+        className="px-4 py-3 text-sm font-medium border-b-2 transition-all duration-200 cursor-pointer font-heading"
+        style={{
+          color: isActive('/pending-orders') ? COLORS.primary : COLORS.textSecondary,
+          borderColor: isActive('/pending-orders') ? COLORS.primary : 'transparent',
+        }}
+      >
+        Pending Orders
+      </Link>
     </div>
   );
 }
@@ -65,14 +78,18 @@ function AppContent() {
     );
   }
 
-  // Public access route: allow public viewing of a transaction detail via /public/transactions/:id
-  if (!user && location.pathname.startsWith('/public/')) {
+  // Public access routes: allow public viewing without authentication
+  if (!user && (location.pathname === '/menu' || location.pathname === '/checkout' || location.pathname.startsWith('/public/'))) {
     return (
-      <Suspense fallback={<LoadingFallback />}>
-        <Routes>
-          <Route path="/public/transactions/:id" element={<PublicTransactionDetailPage />} />
-        </Routes>
-      </Suspense>
+      <AppProvider>
+        <Suspense fallback={<LoadingFallback />}>
+          <Routes>
+            <Route path="/menu" element={<MenuPage />} />
+            <Route path="/checkout" element={<PublicCheckoutPage />} />
+            <Route path="/public/transactions/:id" element={<PublicTransactionDetailPage />} />
+          </Routes>
+        </Suspense>
+      </AppProvider>
     );
   }
   
@@ -118,15 +135,18 @@ function AppContent() {
           <div className="max-w-6xl mx-auto animate-fade-in">
             <Navigation />
             <div className="mt-4">
-              <Suspense fallback={<LoadingFallback />}>
-                <Routes>
-                  <Route path="/" element={<ItemListPage />} />
-                  <Route path="/transactions" element={<TransactionListPage />} />
-                  <Route path="/transactions/:id" element={<TransactionDetailPage />} />
-                  <Route path="/public/transactions/:id" element={<PublicTransactionDetailPage />} />
-                  <Route path="/profile" element={<ProfilePage />} />
-                </Routes>
-              </Suspense>
+<Suspense fallback={<LoadingFallback />}>
+  <Routes>
+    <Route path="/" element={<ItemListPage />} />
+    <Route path="/menu" element={<MenuPage />} />
+    <Route path="/checkout" element={<PublicCheckoutPage />} />
+    <Route path="/transactions" element={<TransactionListPage />} />
+    <Route path="/transactions/:id" element={<TransactionDetailPage />} />
+    <Route path="/public/transactions/:id" element={<PublicTransactionDetailPage />} />
+    <Route path="/profile" element={<ProfilePage />} />
+    <Route path="/pending-orders" element={<PendingOrdersPage />} />
+  </Routes>
+</Suspense>
             </div>
           </div>
         </main>

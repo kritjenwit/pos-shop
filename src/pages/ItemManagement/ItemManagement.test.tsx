@@ -1,15 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import type { ReactNode } from 'react';
 import { AppProvider } from '../../context/AppContext';
 import ItemManagementPage from './ItemManagement';
 
 vi.mock('../../context/AuthContext', () => ({
   useAuth: vi.fn(() => ({ user: { id: 'test-user-id', full_name: 'Test User' } })),
-  AuthProvider: ({ children }: any) => children,
+  AuthProvider: ({ children }: { children: ReactNode }) => children,
 }));
 
 vi.mock('../../lib/supabase', async (importOriginal) => {
-  const actual = await importOriginal() as any;
+  const actual = await importOriginal() as typeof import('../../lib/supabase');
   return {
     ...actual,
     getSignedImageUrl: vi.fn(() => Promise.resolve('https://example.com/image.jpg')),

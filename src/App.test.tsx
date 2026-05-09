@@ -1,19 +1,23 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
+import type { ReactNode } from 'react';
 import { useAuth } from './context/AuthContext';
+import type { AuthContextType } from './context/AuthContext';
 
-// Mock all the dependencies  
+// Mock all the dependencies
 vi.mock('./context/AuthContext', () => ({
-  useAuth: vi.fn(() => ({ 
-    user: null, 
-    signOut: vi.fn(), 
-    loading: false 
-  })),
-  AuthProvider: ({ children }: any) => children,
+  useAuth: vi.fn(() => ({
+    user: null,
+    signOut: vi.fn(),
+    loading: false,
+    signIn: vi.fn(),
+    signUp: vi.fn(),
+  } as AuthContextType)),
+  AuthProvider: ({ children }: { children: ReactNode }) => children,
 }));
 
 vi.mock('./context/AppContext', () => ({
-  AppProvider: ({ children }: any) => children,
+  AppProvider: ({ children }: { children: ReactNode }) => children,
   useApp: vi.fn(() => ({ items: [] })),
 }));
 
@@ -66,7 +70,9 @@ describe('App', () => {
       user: null,
       signOut: vi.fn(),
       loading: false,
-    } as any);
+      signIn: vi.fn(),
+      signUp: vi.fn(),
+    } as AuthContextType);
 
     render(<App />);
     await waitFor(() => {

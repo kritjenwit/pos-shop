@@ -57,4 +57,19 @@ Welcome, AI Agent! This document outlines the critical project standards, archit
 | `npm run test:coverage` | Run tests with coverage |
 
 ---
+
 **⚠️ IMPORTANT:** Always verify types and fix TypeScript errors during implementation, as `npm run build` enforces strict type checking.
+
+## Agent skills
+
+### Issue tracker
+
+Issues are tracked in GitHub Issues. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Labels follow the canonical names: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: `CONTEXT.md` and `docs/adr/` at the repo root. See `docs/agents/domain.md`.

@@ -97,6 +97,8 @@ export interface Transaction {
   created_by: string;
   created_at: string;
   receipt_url: string | null;
+  customer_name: string | null;
+  customer_phone: string | null;
 }
 
 export interface TransactionItem {

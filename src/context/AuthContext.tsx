@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect, type ReactNode } from '
 import type { User } from '../lib/supabase';
 import { signIn as authSignIn, signUp as authSignUp } from '../lib/auth';
 
-interface AuthContextType {
+export interface AuthContextType {
   user: User | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
