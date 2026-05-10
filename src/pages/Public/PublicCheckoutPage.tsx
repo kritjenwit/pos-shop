@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CheckCircle, ShoppingCart, ArrowLeft, User, Phone, CreditCard, ShoppingBag, Loader2 } from 'lucide-react';
+import { CheckCircle, ShoppingCart, ArrowLeft, User, Phone, CreditCard, ShoppingBag, Loader2, MessageSquare } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../../context/AppContext';
 
@@ -9,6 +9,7 @@ export default function PublicCheckoutPage() {
   const [orderComplete, setOrderComplete] = useState(false);
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
+  const [additionalDetail, setAdditionalDetail] = useState('');
   const [createdOrder, setCreatedOrder] = useState<{ id: string, order_id: string, total_amount: number } | null>(null);
 
   const handleCompleteOrder = async () => {
@@ -16,7 +17,7 @@ export default function PublicCheckoutPage() {
 
     setCompleting(true);
     try {
-      const data = await createPendingOrder(customerName, customerPhone || undefined);
+      const data = await createPendingOrder(customerName, customerPhone || undefined, additionalDetail || undefined);
       if (data) {
         setCreatedOrder(data as { id: string, order_id: string, total_amount: number });
       }
@@ -33,6 +34,7 @@ export default function PublicCheckoutPage() {
     setCreatedOrder(null);
     setCustomerName('');
     setCustomerPhone('');
+    setAdditionalDetail('');
   };
 
   const basketDetails = Array.from(basket.entries())
@@ -173,8 +175,25 @@ export default function PublicCheckoutPage() {
                   />
                 </div>
               </div>
+
+              <div>
+                <label htmlFor="additionalDetail" className="block text-xs font-black text-gray-400 uppercase tracking-wider mb-2 ml-1">
+                  Additional Detail
+                </label>
+                <div className="relative group">
+                  <MessageSquare className="absolute left-4 top-4 text-gray-400 group-focus-within:text-primary transition-colors" size={18} />
+                  <textarea
+                    id="additionalDetail"
+                    value={additionalDetail}
+                    onChange={(e) => setAdditionalDetail(e.target.value)}
+                    placeholder="e.g. No onions, extra spicy..."
+                    rows={3}
+                    className="w-full pl-12 pr-5 py-4 bg-gray-50 border-transparent rounded-2xl text-sm focus:bg-white focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all duration-300 outline-none resize-none"
+                  />
+                </div>
+              </div>
             </div>
-            
+
             <p className="mt-6 text-xs text-gray-400 italic">
               * Full Name is required to identify your order.
             </p>
@@ -217,9 +236,28 @@ export default function PublicCheckoutPage() {
                   </div>
                   <div className="text-sm font-black text-gray-900 whitespace-nowrap">
                     ฿{(item.price * item.qty).toLocaleString()}
-                  </div>
                 </div>
-              ))}
+              </div>
+            ))}
+            </div>
+
+            <div className="border-t border-dashed border-gray-200 pt-6 space-y-3">
+              <div>
+                <label htmlFor="additionalDetail" className="block text-xs font-black text-gray-400 uppercase tracking-wider mb-2 ml-1">
+                  Additional Detail
+                </label>
+                <div className="relative group">
+                  <MessageSquare className="absolute left-4 top-4 text-gray-400 group-focus-within:text-primary transition-colors" size={18} />
+                  <textarea
+                    id="additionalDetail"
+                    value={additionalDetail}
+                    onChange={(e) => setAdditionalDetail(e.target.value)}
+                    placeholder="e.g. No onions, extra spicy..."
+                    rows={3}
+                    className="w-full pl-12 pr-5 py-4 bg-gray-50 border-transparent rounded-2xl text-sm focus:bg-white focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all duration-300 outline-none resize-none"
+                  />
+                </div>
+              </div>
             </div>
 
             <div className="border-t border-dashed border-gray-200 pt-6 space-y-3">

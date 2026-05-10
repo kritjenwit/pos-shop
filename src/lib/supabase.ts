@@ -100,6 +100,7 @@ export interface Transaction {
   customer_name: string | null;
   customer_phone: string | null;
   order_id: string | null;
+  additional_detail: string | null;
 }
 
 export interface TransactionItem {

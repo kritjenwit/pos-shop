@@ -16,6 +16,7 @@ interface TransactionWithItems {
   item_count?: number;
   receipt_url?: string | null;
   order_id?: string | null;
+  additional_detail?: string | null;
 }
 
 interface UserOption {
@@ -348,9 +349,14 @@ export default function TransactionListPage() {
                        <Receipt size={14} style={{ color: COLORS.primary }} />
                      )}
                    </div>
-                   <div className="text-sm" style={{ color: COLORS.textSecondary }}>
-                     {t.item_count} items • {t.user_full_name || t.user_email || 'Unknown'}
-                   </div>
+                    <div className="text-sm" style={{ color: COLORS.textSecondary }}>
+                      {t.item_count} items • {t.user_full_name || t.user_email || 'Unknown'}
+                    </div>
+                    {t.additional_detail && (
+                      <div className="text-xs mt-1 truncate max-w-xs" style={{ color: COLORS.textSecondary }}>
+                        {t.additional_detail}
+                      </div>
+                    )}
                  </div>
                  <div className="flex items-center gap-2">
                    <span className="text-xs" style={{ color: COLORS.textSecondary }}>

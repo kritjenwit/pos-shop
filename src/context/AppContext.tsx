@@ -16,8 +16,8 @@ interface AppContextType {
   removeFromBasket: (id: string) => void;
   getBasketQuantity: (id: string) => number;
   clearBasket: () => void;
-  completeOrder: (receiptFile?: File | null, status?: string) => Promise<{ id: string, total_amount: number } | void>;
-  createPendingOrder: (customerName?: string, customerPhone?: string) => Promise<{ id: string, order_id: string, total_amount: number } | void>;
+  completeOrder: (receiptFile?: File | null, status?: string, customerName?: string | null, customerPhone?: string | null, additionalDetail?: string | null) => Promise<{ id: string, total_amount: number } | void>;
+  createPendingOrder: (customerName?: string, customerPhone?: string, additionalDetail?: string) => Promise<{ id: string, order_id: string, total_amount: number } | void>;
   approveOrder: (orderId: string) => Promise<void>;
   confirmPayment: (orderId: string) => Promise<void>;
   refreshItems: () => Promise<void>;
@@ -155,7 +155,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem(BASKET_KEY);
   };
 
-  const completeOrder = async (receiptFile?: File | null, status: string = 'completed') => {
+  const completeOrder = async (receiptFile?: File | null, status: string = 'completed', customerName?: string | null, customerPhone?: string | null, additionalDetail?: string | null) => {
     if (basket.size === 0) return;
 
     let receiptUrl = null;
@@ -182,6 +182,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         status,
         created_by: user?.id,
         receipt_url: receiptUrl,
+        customer_name: customerName || null,
+        customer_phone: customerPhone || null,
+        additional_detail: additionalDetail || null,
         order_id: generateOrderId()
       })
       .select()
@@ -212,7 +215,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return data;
   };
 
-  const createPendingOrder = async (customerName?: string, customerPhone?: string) => {
+  const createPendingOrder = async (customerName?: string, customerPhone?: string, additionalDetail?: string) => {
     if (basket.size === 0) return;
 
     const transactionItems = Array.from(basket.entries()).map(([id, qty]) => {
@@ -240,6 +243,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         created_by: user?.id,
         customer_name: customerName || null,
         customer_phone: customerPhone || null,
+        additional_detail: additionalDetail || null,
         order_id: generateOrderId()
       })
       .select()

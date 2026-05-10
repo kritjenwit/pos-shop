@@ -171,6 +171,7 @@ export default function PendingOrderDetailPage() {
             <div>By {order.user_full_name || order.user_email || 'Unknown'}</div>
             {order.customer_name && <div>Customer: {order.customer_name}</div>}
             {order.customer_phone && <div>Phone: {order.customer_phone}</div>}
+            {order.additional_detail && <div className="mt-2 text-xs italic">Note: {order.additional_detail}</div>}
             <div>Placed: {formatDate(order.created_at)}</div>
           </div>
         </div>

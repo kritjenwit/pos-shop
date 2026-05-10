@@ -160,6 +160,17 @@ export default function TransactionDetailPage() {
         </div>
       </div>
 
+      {transaction.additional_detail && (
+        <div className="rounded-lg shadow-card p-5" style={{ backgroundColor: COLORS.cardBackground }}>
+          <h3 className="font-semibold mb-2 font-heading" style={{ color: COLORS.text }}>
+            Additional Detail
+          </h3>
+          <p className="text-sm whitespace-pre-wrap" style={{ color: COLORS.textSecondary }}>
+            {transaction.additional_detail}
+          </p>
+        </div>
+      )}
+
       {receiptUrl ? (
         <div className="rounded-lg shadow-card p-5" style={{ backgroundColor: COLORS.cardBackground }}>
           <h3 className="font-semibold mb-3 font-heading" style={{ color: COLORS.text }}>

@@ -22,6 +22,9 @@ export default function CheckoutPage() {
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
   const [createdOrder, setCreatedOrder] = useState<{ id: string; order_id: string; total_amount: number } | null>(null);
+  const [customerName, setCustomerName] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
+  const [additionalDetail, setAdditionalDetail] = useState('');
 
   // Admin order state
   const [adminOrder, setAdminOrder] = useState<{
@@ -34,6 +37,7 @@ export default function CheckoutPage() {
     user_email?: string;
     user_full_name?: string | null;
     user_phone?: string | null;
+    additional_detail?: string | null;
   } | null>(null);
   const [adminLoading, setAdminLoading] = useState(false);
 
@@ -43,13 +47,6 @@ export default function CheckoutPage() {
       setPromptPayTarget(user.phone);
     }
   }, [user]);
-
-  // Fetch admin order details when orderId is present
-  useEffect(() => {
-    if (isAdminMode && orderId) {
-      loadAdminOrder();
-    }
-  }, [orderId]);
 
   const loadAdminOrder = async () => {
     setAdminLoading(true);
@@ -88,7 +85,12 @@ export default function CheckoutPage() {
         user_email: tx.user_email,
         user_full_name: tx.user_full_name,
         user_phone: tx.user_phone,
+        additional_detail: tx.additional_detail,
       });
+
+      setCustomerName(tx.customer_name || '');
+      setCustomerPhone(tx.customer_phone || '');
+      setAdditionalDetail(tx.additional_detail || '');
 
       // Set prompt pay target to customer's phone if available
       if (tx.customer_phone) {
@@ -100,6 +102,13 @@ export default function CheckoutPage() {
       setAdminLoading(false);
     }
   };
+
+  // Fetch admin order details when orderId is present
+  useEffect(() => {
+    if (isAdminMode && orderId) {
+      loadAdminOrder();
+    }
+  }, [orderId]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -123,6 +132,15 @@ export default function CheckoutPage() {
       // Admin mode: confirm payment for approved order
       setCompleting(true);
       try {
+        await supabase
+          .from('transactions')
+          .update({
+            customer_name: customerName || null,
+            customer_phone: customerPhone || null,
+            additional_detail: additionalDetail || null,
+          })
+          .eq('id', orderId);
+
         if (receiptFile) {
           const receiptUrl = await uploadImage(receiptFile);
           await supabase
@@ -147,7 +165,7 @@ export default function CheckoutPage() {
 
     // Normal customer checkout
     try {
-      const data = await completeOrder(receiptFile);
+      const data = await completeOrder(receiptFile, 'completed', customerName || null, customerPhone || null, additionalDetail || null);
       if (data) {
         setCreatedOrder(data as { id: string; order_id: string; total_amount: number });
       }
@@ -167,6 +185,9 @@ export default function CheckoutPage() {
     setOrderComplete(false);
     setCreatedOrder(null);
     setPromptPayTarget(user?.phone || '');
+    setCustomerName('');
+    setCustomerPhone('');
+    setAdditionalDetail('');
     setReceiptFile(null);
     setReceiptPreview(null);
   };
@@ -292,12 +313,6 @@ export default function CheckoutPage() {
                 Approved
               </span>
             </div>
-            {adminOrder.customer_name && (
-              <p className="text-sm" style={{ color: COLORS.textSecondary }}>
-                Customer: <span className="font-medium" style={{ color: COLORS.text }}>{adminOrder.customer_name}</span>
-                {adminOrder.customer_phone && ` (${adminOrder.customer_phone})`}
-              </p>
-            )}
             {adminOrder.user_full_name && (
               <p className="text-xs" style={{ color: COLORS.textSecondary }}>
                 Placed by: {adminOrder.user_full_name || adminOrder.user_email}
@@ -324,6 +339,49 @@ export default function CheckoutPage() {
             <span style={{ color: COLORS.text }}>Total</span>
             <span style={{ color: COLORS.primary }}>฿{total.toFixed(2)}</span>
           </div>
+
+          <div className="mt-4 pt-4 border-t space-y-3" style={{ borderColor: COLORS.border }}>
+            <div>
+              <label htmlFor="customerName" className="label-base" style={{ color: COLORS.textSecondary }}>
+                Customer Name
+              </label>
+              <input
+                id="customerName"
+                type="text"
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+                placeholder="e.g. John Doe"
+                className="input-base"
+              />
+            </div>
+            <div>
+              <label htmlFor="customerPhone" className="label-base" style={{ color: COLORS.textSecondary }}>
+                Phone Number
+              </label>
+              <input
+                id="customerPhone"
+                type="tel"
+                value={customerPhone}
+                onChange={(e) => setCustomerPhone(e.target.value)}
+                placeholder="08X-XXX-XXXX"
+                className="input-base font-mono"
+              />
+            </div>
+            <div>
+              <label htmlFor="additionalDetail" className="label-base" style={{ color: COLORS.textSecondary }}>
+                Additional Detail
+              </label>
+              <textarea
+                id="additionalDetail"
+                value={additionalDetail}
+                onChange={(e) => setAdditionalDetail(e.target.value)}
+                placeholder="e.g. No onions, extra spicy, gift wrap..."
+                rows={3}
+                className="input-base"
+              />
+            </div>
+          </div>
+
           {adminOrder && (
             <div className="mt-4 pt-4 border-t" style={{ borderColor: COLORS.border }}>
               <div className="grid grid-cols-2 gap-2 text-sm">

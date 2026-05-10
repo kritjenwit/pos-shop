@@ -141,6 +141,11 @@ export default function PendingOrdersPage() {
                   </span>
                 )}
               </div>
+              {order.additional_detail && (
+                <div className="text-xs mt-1 truncate max-w-xs" style={{ color: COLORS.textSecondary }}>
+                  {order.additional_detail}
+                </div>
+              )}
             </div>
             <div className="flex items-center gap-2">
               <span className="text-xs" style={{ color: COLORS.textSecondary }}>
