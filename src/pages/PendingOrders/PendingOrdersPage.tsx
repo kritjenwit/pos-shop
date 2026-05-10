@@ -1,17 +1,19 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { COLORS } from '../../constants';
-import { Receipt, Check, X, RefreshCw } from 'lucide-react';
+import { Receipt, RefreshCw, Eye } from 'lucide-react';
 import type { Transaction } from '../../lib/supabase';
 
 interface TransactionWithUser extends Transaction {
   user_email?: string;
   user_full_name?: string | null;
+  user_phone?: string | null;
   item_count?: number;
 }
 
 export default function PendingOrdersPage() {
-  const [pendingOrders, setPendingOrders] = useState<TransactionWithUser[]>([]);
+  const [orders, setOrders] = useState<TransactionWithUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -26,7 +28,7 @@ export default function PendingOrdersPage() {
     if (error) {
       console.error('Error fetching pending orders:', error);
     } else {
-      setPendingOrders(data || []);
+      setOrders(data || []);
     }
     setLoading(false);
   };
@@ -40,32 +42,6 @@ export default function PendingOrdersPage() {
   useEffect(() => {
     fetchPendingOrders();
   }, []);
-
-  const approveOrder = async (id: string) => {
-    const { error } = await supabase
-      .from('transactions')
-      .update({ status: 'completed' })
-      .eq('id', id);
-
-    if (error) {
-      console.error('Error approving order:', error);
-    } else {
-      await fetchPendingOrders();
-    }
-  };
-
-  const cancelOrder = async (id: string) => {
-    const { error } = await supabase
-      .from('transactions')
-      .update({ status: 'cancelled' })
-      .eq('id', id);
-
-    if (error) {
-      console.error('Error canceling order:', error);
-    } else {
-      await fetchPendingOrders();
-    }
-  };
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -96,7 +72,7 @@ export default function PendingOrdersPage() {
     );
   }
 
-  if (pendingOrders.length === 0) {
+  if (orders.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16">
         <Receipt size={48} style={{ color: COLORS.textSecondary }} />
@@ -112,7 +88,7 @@ export default function PendingOrdersPage() {
     <div className="space-y-4 animate-fade-in">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-bold font-heading" style={{ color: COLORS.text }}>
-          Pending Orders
+          Pending Orders ({orders.length})
         </h2>
         <button
           onClick={handleRefresh}
@@ -125,13 +101,13 @@ export default function PendingOrdersPage() {
         </button>
       </div>
 
-      {pendingOrders.map((order) => (
+      {orders.map((order) => (
         <div
           key={order.id}
-          className="w-full text-left p-4 rounded-lg transition-all duration-200 cursor-default hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          className="w-full text-left p-4 rounded-lg transition-all duration-200 border"
           style={{
             backgroundColor: COLORS.cardBackground,
-            border: `1px solid ${COLORS.border}`,
+            borderColor: COLORS.border,
           }}
         >
           <div className="flex justify-between items-start">
@@ -142,7 +118,7 @@ export default function PendingOrdersPage() {
                 </span>
                 <span
                   className="text-xs px-2 py-0.5 rounded-full font-semibold"
-                  style={{ backgroundColor: COLORS.accent + '15', color: COLORS.accent }}
+                  style={{ backgroundColor: COLORS.textSecondary + '15', color: COLORS.textSecondary }}
                 >
                   {order.status}
                 </span>
@@ -150,9 +126,6 @@ export default function PendingOrdersPage() {
                   <span className="text-[10px] font-mono font-bold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">
                     {order.order_id}
                   </span>
-                )}
-                {order.receipt_url && (
-                  <Receipt size={14} style={{ color: COLORS.primary }} />
                 )}
               </div>
               <div className="text-sm" style={{ color: COLORS.textSecondary }}>
@@ -173,22 +146,14 @@ export default function PendingOrdersPage() {
               <span className="text-xs" style={{ color: COLORS.textSecondary }}>
                 {formatDate(order.created_at)}
               </span>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => approveOrder(order.id)}
-                  className="p-2 rounded-lg text-sm transition-all duration-200 cursor-pointer hover:shadow-sm active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-                  style={{ backgroundColor: COLORS.accent + '15', color: COLORS.accent }}
-                >
-                  <Check size={14} />
-                </button>
-                <button
-                  onClick={() => cancelOrder(order.id)}
-                  className="p-2 rounded-lg text-sm transition-all duration-200 cursor-pointer hover:shadow-sm active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger"
-                  style={{ backgroundColor: COLORS.danger + '15', color: COLORS.danger }}
-                >
-                  <X size={14} />
-                </button>
-              </div>
+              <Link
+                to={`/pending-orders/${order.id}`}
+                className="flex items-center gap-1 text-sm px-3 py-1.5 rounded-lg transition-all duration-200 hover:shadow-sm active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                style={{ color: COLORS.primary, backgroundColor: COLORS.primary + '10' }}
+              >
+                <Eye size={14} />
+                View
+              </Link>
             </div>
           </div>
         </div>

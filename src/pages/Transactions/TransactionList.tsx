@@ -155,7 +155,8 @@ export default function TransactionListPage() {
   const getStatusStyle = (status: string) => {
     switch (status) {
       case 'completed': return { bg: COLORS.primary + '15', color: COLORS.primary };
-      case 'pending': return { bg: COLORS.accent + '15', color: COLORS.accent };
+      case 'approved': return { bg: COLORS.accent + '15', color: COLORS.accent };
+      case 'pending': return { bg: COLORS.textSecondary + '15', color: COLORS.textSecondary };
       case 'cancelled': return { bg: COLORS.danger + '15', color: COLORS.danger };
       default: return { bg: COLORS.textSecondary + '15', color: COLORS.textSecondary };
     }

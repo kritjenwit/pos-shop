@@ -15,6 +15,8 @@ const LoginPage = lazy(() => import('./pages/Login/LoginPage'));
 const ProfilePage = lazy(() => import('./pages/Profile/ProfilePage'));
 const MenuPage = lazy(() => import('./pages/Menu/MenuPage'));
 const PendingOrdersPage = lazy(() => import('./pages/PendingOrders/PendingOrdersPage'));
+const PendingOrderDetailPage = lazy(() => import('./pages/PendingOrders/PendingOrderDetail'));
+const CheckoutPage = lazy(() => import('./pages/Checkout/Checkout'));
 
 function LoadingFallback() {
   return (
@@ -79,7 +81,7 @@ function AppContent() {
   }
 
   // Public access routes: allow public viewing without authentication
-  if (!user && (location.pathname === '/menu' || location.pathname === '/checkout' || location.pathname.startsWith('/public/'))) {
+  if (!user && (location.pathname === '/menu' || location.pathname === '/checkout' || location.pathname.startsWith('/public/') || location.pathname.startsWith('/checkout/'))) {
     return (
       <AppProvider>
         <Suspense fallback={<LoadingFallback />}>
@@ -139,12 +141,14 @@ function AppContent() {
   <Routes>
     <Route path="/" element={<ItemListPage />} />
     <Route path="/menu" element={<MenuPage />} />
-    <Route path="/checkout" element={<PublicCheckoutPage />} />
+    <Route path="/checkout" element={<CheckoutPage />} />
+    <Route path="/checkout/:orderId" element={<CheckoutPage />} />
     <Route path="/transactions" element={<TransactionListPage />} />
     <Route path="/transactions/:id" element={<TransactionDetailPage />} />
     <Route path="/public/transactions/:id" element={<PublicTransactionDetailPage />} />
     <Route path="/profile" element={<ProfilePage />} />
     <Route path="/pending-orders" element={<PendingOrdersPage />} />
+    <Route path="/pending-orders/:id" element={<PendingOrderDetailPage />} />
   </Routes>
 </Suspense>
             </div>
