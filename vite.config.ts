@@ -8,7 +8,7 @@ export default defineConfig({
   plugins: [react(), cloudflare()],
   test: {
     environment: 'jsdom',
-    setupFiles: ['./src/test/setup.ts'],
+    setupFiles: ['./src/shared/test/setup.ts'],
     globals: true,
   },
 })

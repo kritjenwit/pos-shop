@@ -4,8 +4,14 @@ Welcome, AI Agent! This document outlines the critical project standards, archit
 
 ## 1. 🏗️ Architecture & Stack
 - **Core:** React 19 + TypeScript + Vite.
-- **Routing:** React Router 7 (nested routes in `src/App.tsx`).
+- **Routing:** React Router 7 (nested routes in `src/app/App.tsx`).
 - **Pages:** Login, ItemList (+ ItemManagement tab), Checkout, Profile, Transactions (list + detail).
+- **Folder Structure:**
+  - `src/app/` — Entry point and root component.
+  - `src/routes/` — Staff POS pages (authenticated).
+  - `src/customer/` — Public self-ordering pages (unauthenticated).
+  - `src/shared/` — Reusable code (contexts, lib, components, constants, test setup).
+  - `src/assets/` — Static assets.
 - **State Management:** 
   - Contexts: `AuthContext` (auth state via `localStorage`), `AppContext` (app state + basket).
 - **Deployment:** Cloudflare Workers.
@@ -14,7 +20,7 @@ Welcome, AI Agent! This document outlines the critical project standards, archit
 
 ## 2. 🔐 Authentication & Security
 - **Custom Auth:** Auth is handled **custom** via bcrypt + direct Supabase DB queries. Do **NOT** use Supabase Auth.
-- **Auth Flow:** `src/lib/auth.ts` handles `signIn` and `signUp`.
+- **Auth Flow:** `src/shared/lib/auth.ts` handles `signIn` and `signUp`.
 - **Session:** User is stored in `localStorage` with the key `pos-shop-user`. No real session management.
 - **Secrets:** `.env` contains `VITE_SUPABASE_URL` and `VITE_SUPABASE_KEY`. **Never commit `.env` files.**
 
@@ -43,7 +49,7 @@ Welcome, AI Agent! This document outlines the critical project standards, archit
 ## 6. 🧪 Testing (Vitest)
 - **Tools:** Vitest + React Testing Library.
 - **Environment:** If tests fail with `localStorage is not defined` or `document is not defined`, add `{ test: { environment: 'jsdom' } }` to `vite.config.ts` or `vitest.config.ts`.
-- **Mocks:** You must mock `supabase` and `auth` modules (refer to existing test files for patterns).
+- **Mocks:** You must mock `supabase` and `auth` modules (refer to existing test files for patterns). Modules live in `src/shared/lib/`.
 
 ## 7. 🚀 Scripts & Commands
 | Command | Description |
@@ -72,4 +78,4 @@ Labels follow the canonical names: `needs-triage`, `needs-info`, `ready-for-agen
 
 ### Domain docs
 
-Single-context: `CONTEXT.md` and `docs/adr/` at the repo root. See `docs/agents/domain.md`.
+Single-context: `docs/CONTEXT.md` and `docs/adr/` at the repo root. See `docs/agents/domain.md`.
