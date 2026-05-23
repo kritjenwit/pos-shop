@@ -419,67 +419,73 @@ export default function CheckoutPage() {
           )}
         </div>
 
-        <div className="rounded-lg shadow-card p-6 mb-6" style={{ backgroundColor: COLORS.cardBackground }}>
-          <h2 className="text-base font-semibold mb-4 font-heading" style={{ color: COLORS.text }}>Scan to Pay</h2>
+        <div className="rounded-lg shadow-card mb-6 overflow-hidden" style={{ backgroundColor: COLORS.cardBackground }}>
+          <div className="p-6">
+            <h2 className="text-base font-semibold mb-4 font-heading" style={{ color: COLORS.text }}>Scan to Pay</h2>
 
-          <div className="mb-4">
-            <label htmlFor="promptPay" className="label-base" style={{ color: COLORS.textSecondary }}>
-              PromptPay Target (phone number)
-            </label>
-            <input
-              id="promptPay"
-              type="text"
-              value={promptPayTarget}
-              onChange={(e) => setPromptPayTarget(e.target.value)}
-              placeholder="0812345678"
-              className="input-base font-mono"
-            />
+            <div className="mb-4">
+              <label htmlFor="promptPay" className="label-base" style={{ color: COLORS.textSecondary }}>
+                PromptPay Target (phone number)
+              </label>
+              <input
+                id="promptPay"
+                type="text"
+                value={promptPayTarget}
+                onChange={(e) => setPromptPayTarget(e.target.value)}
+                placeholder="0812345678"
+                className="input-base font-mono"
+              />
+            </div>
           </div>
 
           {qrValue ? (
-            <div className="text-center">
-              {thaiQrLogoUrl && (
-                <img
-                  src={thaiQrLogoUrl}
-                  alt="Thai QR Payment"
-                  className="mx-auto mb-3"
-                  style={{ maxWidth: '180px', height: 'auto' }}
-                />
-              )}
-              {promptPayBadgeUrl && (
-                <img
-                  src={promptPayBadgeUrl}
-                  alt="PromptPay"
-                  className="mx-auto mb-4"
-                  style={{ maxWidth: '120px', height: 'auto' }}
-                />
-              )}
-              <div className="relative inline-block">
-                <div className="inline-block p-4 rounded-lg shadow-sm" style={{ backgroundColor: '#ffffff' }}>
-                  <QRCodeSVG value={qrValue} size={PAYMENT.qrSize} level={PAYMENT.qrLevel} />
-                </div>
-                {qrOverlayUrl && (
+            <>
+              <div className="text-center py-4" style={{ backgroundColor: '#003D6B' }}>
+                {thaiQrLogoUrl && (
                   <img
-                    src={qrOverlayUrl}
-                    alt=""
-                    className="absolute"
-                    style={{
-                      width: '48px',
-                      height: '48px',
-                      top: '50%',
-                      left: '50%',
-                      transform: 'translate(-50%, -50%)',
-                      objectFit: 'contain',
-                    }}
+                    src={thaiQrLogoUrl}
+                    alt="Thai QR Payment"
+                    className="mx-auto"
+                    style={{ maxWidth: '180px', height: 'auto' }}
                   />
                 )}
               </div>
-              <p className="text-xl font-bold font-heading mt-4" style={{ color: COLORS.primary }}>
-                Amount: ฿{total.toFixed(2)}
-              </p>
-            </div>
+              <div className="p-6 pt-4 text-center">
+                {promptPayBadgeUrl && (
+                  <img
+                    src={promptPayBadgeUrl}
+                    alt="PromptPay"
+                    className="mx-auto mb-4"
+                    style={{ maxWidth: '120px', height: 'auto' }}
+                  />
+                )}
+                <div className="relative inline-block">
+                  <div className="inline-block p-4 rounded-lg shadow-sm" style={{ backgroundColor: '#ffffff' }}>
+                    <QRCodeSVG value={qrValue} size={PAYMENT.qrSize} level={PAYMENT.qrLevel} />
+                  </div>
+                  {qrOverlayUrl && (
+                    <img
+                      src={qrOverlayUrl}
+                      alt=""
+                      className="absolute"
+                      style={{
+                        width: '48px',
+                        height: '48px',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        objectFit: 'contain',
+                      }}
+                    />
+                  )}
+                </div>
+                <p className="text-xl font-bold font-heading mt-4" style={{ color: COLORS.primary }}>
+                  Amount: ฿{total.toFixed(2)}
+                </p>
+              </div>
+            </>
           ) : (
-            <div className="text-center py-8 rounded-lg" style={{ backgroundColor: COLORS.background }}>
+            <div className="p-6 pt-0 text-center py-8">
               <p className="font-medium" style={{ color: COLORS.text }}>Enter PromptPay target</p>
               <p className="text-sm mt-1" style={{ color: COLORS.textSecondary }}>QR code will appear here</p>
             </div>

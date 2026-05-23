@@ -50,6 +50,8 @@ Implement a customer self-ordering menu feature that allows customers to browse 
 - **File paths in bucket**: `Thai_QR_Payment_Logo-01.jpg`, `PromptPay2.png`, `Thai_QR_Payment_Logo-06.png` (unchanged filenames)
 - **Images lazy-loaded**: Only fetched when a valid QR value is present (PromptPay target + total > 0)
 - **Overlay badge**: 48×48px, absolutely centered on QR via `top: 50%; left: 50%; transform: translate(-50%, -50%)`
+- **Teal banner**: Thai QR logo sits on full-width `#003D6B` background inside card (achieved via `overflow-hidden` on card + separate div sections)
+- **Card structure**: Three stacked sections inside single card — padded header (heading + input), teal full-width banner (logo), padded footer (badge + QR + amount)
 - **Fallback**: If images fail to load, QR displays without them (no blocking)
 - **Input/Amount preserved**: PromptPay phone input stays above the branded stack; amount display stays below
 
