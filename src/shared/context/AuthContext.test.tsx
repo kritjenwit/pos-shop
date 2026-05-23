@@ -6,8 +6,8 @@ const mockSignIn = vi.fn();
 const mockSignUp = vi.fn();
 
 vi.mock('../lib/auth', () => ({
-  signIn: (...args: any[]) => mockSignIn(...args),
-  signUp: (...args: any[]) => mockSignUp(...args),
+  signIn: mockSignIn,
+  signUp: mockSignUp,
 }));
 
 describe('AuthContext', () => {
@@ -94,12 +94,12 @@ describe('AuthContext', () => {
       expect(result.current.loading).toBe(false);
     });
 
-    let signInResult;
+    let signInResult: { error: unknown } | undefined;
     await act(async () => {
       signInResult = await result.current.signIn('test@example.com', 'password');
     });
 
-    expect(signInResult.error).toBeNull();
+    expect(signInResult!.error).toBeNull();
     expect(result.current.user).toEqual(mockUser);
     expect(JSON.parse(localStorage.getItem('pos-shop-user')!)).toEqual(mockUser);
   });
@@ -112,12 +112,12 @@ describe('AuthContext', () => {
       expect(result.current.loading).toBe(false);
     });
 
-    let signInResult;
+    let signInResult: { error: unknown } | undefined;
     await act(async () => {
       signInResult = await result.current.signIn('test@example.com', 'wrong');
     });
 
-    expect(signInResult.error).toBeDefined();
+    expect(signInResult!.error).toBeDefined();
     expect(result.current.user).toBeNull();
   });
 
@@ -130,12 +130,12 @@ describe('AuthContext', () => {
       expect(result.current.loading).toBe(false);
     });
 
-    let signUpResult;
+    let signUpResult: { error: unknown } | undefined;
     await act(async () => {
       signUpResult = await result.current.signUp('new@example.com', 'password', 'New User');
     });
 
-    expect(signUpResult.error).toBeNull();
+    expect(signUpResult!.error).toBeNull();
     expect(result.current.user).toEqual(mockUser);
     expect(JSON.parse(localStorage.getItem('pos-shop-user')!)).toEqual(mockUser);
   });
@@ -148,12 +148,12 @@ describe('AuthContext', () => {
       expect(result.current.loading).toBe(false);
     });
 
-    let signUpResult;
+    let signUpResult: { error: unknown } | undefined;
     await act(async () => {
       signUpResult = await result.current.signUp('existing@example.com', 'password');
     });
 
-    expect(signUpResult.error).toBeDefined();
+    expect(signUpResult!.error).toBeDefined();
     expect(result.current.user).toBeNull();
   });
 

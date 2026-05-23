@@ -14,12 +14,12 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
-const { mockSingle, mockEq, mockSelect, mockFrom } = vi.hoisted(() => {
+const { mockSingle, mockFrom } = vi.hoisted(() => {
   const mockSingle = vi.fn().mockResolvedValue({ data: null, error: null });
   const mockEq = vi.fn(() => ({ single: mockSingle }));
   const mockSelect = vi.fn(() => ({ eq: mockEq }));
   const mockFrom = vi.fn(() => ({ select: mockSelect }));
-  return { mockSingle, mockEq, mockSelect, mockFrom };
+  return { mockSingle, mockFrom };
 });
 
 vi.mock('../../shared/lib/supabase', () => ({
@@ -29,7 +29,7 @@ vi.mock('../../shared/lib/supabase', () => ({
 }));
 
 vi.mock('../../shared/lib/auth', () => ({
-  updateUserPhone: (...args: any[]) => mockUpdateUserPhone(...args),
+  updateUserPhone: mockUpdateUserPhone,
 }));
 
 vi.mock('../../shared/context/AuthContext', () => ({

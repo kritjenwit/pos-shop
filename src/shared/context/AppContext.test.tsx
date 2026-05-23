@@ -33,7 +33,7 @@ const { mockFrom, mockSelect, mockInsert, mockUpdate, mockDelete, mockEq, mockSi
     eq: mockEq,
   }));
 
-  const mockFrom = vi.fn((_table: string) => ({
+  const mockFrom = vi.fn(() => ({
     select: mockSelect,
     insert: mockInsert,
     update: mockUpdate,
@@ -277,8 +277,10 @@ describe('AppContext', () => {
 
   it('should complete order with items in basket', async () => {
     mockSelect.mockImplementation(() => {
-      const p = Promise.resolve({ data: [] as any[], error: null });
-      (p as any).single = mockSingle;
+      const p = Object.assign(
+        Promise.resolve({ data: [] as unknown[], error: null }),
+        { single: mockSingle }
+      );
       return p;
     });
     mockSingle.mockResolvedValue({ data: { id: 'tx-1', total_amount: 400, order_id: 'ORD-001' }, error: null });
@@ -298,8 +300,10 @@ describe('AppContext', () => {
 
   it('should clear basket after completing order', async () => {
     mockSelect.mockImplementation(() => {
-      const p = Promise.resolve({ data: [] as any[], error: null });
-      (p as any).single = mockSingle;
+      const p = Object.assign(
+        Promise.resolve({ data: [] as unknown[], error: null }),
+        { single: mockSingle }
+      );
       return p;
     });
     mockSingle.mockResolvedValue({ data: { id: 'tx-1', total_amount: 100, order_id: 'ORD-001' }, error: null });
@@ -317,8 +321,10 @@ describe('AppContext', () => {
 
   it('should create pending order with items', async () => {
     mockSelect.mockImplementation(() => {
-      const p = Promise.resolve({ data: [] as any[], error: null });
-      (p as any).single = mockSingle;
+      const p = Object.assign(
+        Promise.resolve({ data: [] as unknown[], error: null }),
+        { single: mockSingle }
+      );
       return p;
     });
     mockSingle.mockResolvedValue({ data: { id: 'pending-1', total_amount: 200, order_id: 'ORD-PENDING' }, error: null });

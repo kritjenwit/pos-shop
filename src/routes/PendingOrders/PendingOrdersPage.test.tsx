@@ -3,12 +3,12 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import PendingOrdersPage from './PendingOrdersPage';
 
-const { mockOrder, mockEq, mockSelect, mockFrom } = vi.hoisted(() => {
+const { mockOrder, mockFrom } = vi.hoisted(() => {
   const mockOrder = vi.fn().mockResolvedValue({ data: [], error: null });
   const mockEq = vi.fn(() => ({ order: mockOrder }));
   const mockSelect = vi.fn(() => ({ eq: mockEq }));
   const mockFrom = vi.fn(() => ({ select: mockSelect }));
-  return { mockOrder, mockEq, mockSelect, mockFrom };
+  return { mockOrder, mockFrom };
 });
 
 vi.mock('../../shared/lib/supabase', () => ({

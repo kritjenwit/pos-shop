@@ -22,9 +22,9 @@ vi.mock('../../shared/context/AppContext', () => ({
 
 vi.mock('../../shared/lib/supabase', () => ({
   supabase: {},
-  uploadImage: (...args: any[]) => mockUploadImage(...args),
-  deleteImage: (...args: any[]) => mockDeleteImage(...args),
-  getSignedImageUrl: (...args: any[]) => mockGetSignedImageUrl(...args),
+  uploadImage: mockUploadImage,
+  deleteImage: mockDeleteImage,
+  getSignedImageUrl: mockGetSignedImageUrl,
 }));
 
 vi.mock('../../shared/constants', () => ({

@@ -23,11 +23,11 @@ vi.mock('../../shared/context/AppContext', () => ({ useApp: mockUseAppState }));
 vi.mock('../../shared/context/AuthContext', () => ({ useAuth: mockUseAuthState }));
 vi.mock('../../shared/lib/supabase', () => ({
   supabase: { from: mockSupabaseFrom },
-  uploadImage: (...args: any[]) => mockUploadImage(...args),
-  getSignedImageUrl: (...args: any[]) => mockGetSignedImageUrl(...args),
+  uploadImage: mockUploadImage,
+  getSignedImageUrl: mockGetSignedImageUrl,
 }));
 vi.mock('../../shared/lib/thaiQR', () => ({
-  generateThaiQRPayment: (...args: any[]) => mockGenerateThaiQRPayment(...args),
+  generateThaiQRPayment: mockGenerateThaiQRPayment,
 }));
 vi.mock('qrcode.react', () => ({
   QRCodeSVG: () => <div data-testid="qr-code">QR</div>,
@@ -278,11 +278,13 @@ describe('CheckoutPage', () => {
 
     it('should redirect when order not found', async () => {
       makeAdminMocks({ singleResolve: false });
-      const { mockSingle } = vi.hoisted(() => ({ mockSingle: vi.fn() }));
+      vi.hoisted(() => ({ mockSingle: vi.fn() }));
+
+      const mockSingleFn = vi.fn();
       const baseEq = vi.fn();
       const baseObj = {
         eq: baseEq,
-        single: vi.fn().mockResolvedValue({ data: null, error: { message: 'Not found' } }),
+        single: mockSingleFn.mockResolvedValue({ data: null, error: { message: 'Not found' } }),
       };
       baseEq.mockReturnValue(baseObj);
       mockSupabaseFrom.mockImplementation(() => ({ select: vi.fn(() => baseObj) }));

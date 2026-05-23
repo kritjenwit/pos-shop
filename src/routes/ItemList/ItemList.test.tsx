@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import ItemListPage from './ItemList';
@@ -16,7 +16,7 @@ vi.mock('../../shared/lib/supabase', () => ({
       ], error: null })),
     })),
   },
-  getSignedImageUrl: (...args: any[]) => mockGetSignedImageUrl(...args),
+  getSignedImageUrl: mockGetSignedImageUrl,
 }));
 
 vi.mock('../../shared/context/AuthContext', async () => {

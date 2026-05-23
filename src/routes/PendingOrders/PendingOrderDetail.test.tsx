@@ -13,7 +13,7 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
-const { mockSingle, mockItemsEq, mockItemsOrder, mockTxEq, mockTxSelect, mockFrom } = vi.hoisted(() => {
+const { mockSingle, mockItemsOrder, mockFrom } = vi.hoisted(() => {
   const mockItemsOrder = vi.fn().mockResolvedValue({ data: [], error: null });
   const mockItemsEq = vi.fn(() => ({ order: mockItemsOrder }));
   const mockSingle = vi.fn().mockResolvedValue({ data: null, error: null });
@@ -25,7 +25,7 @@ const { mockSingle, mockItemsEq, mockItemsOrder, mockTxEq, mockTxSelect, mockFro
     }
     return { select: mockTxSelect };
   });
-  return { mockSingle, mockItemsEq, mockItemsOrder, mockTxEq, mockTxSelect, mockFrom };
+  return { mockSingle, mockItemsOrder, mockFrom };
 });
 
 vi.mock('../../shared/lib/supabase', () => ({

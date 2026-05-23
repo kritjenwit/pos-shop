@@ -7,8 +7,8 @@ const mockSignIn = vi.fn();
 const mockSignUp = vi.fn();
 
 vi.mock('../../shared/lib/auth', () => ({
-  signIn: (...args: any[]) => mockSignIn(...args),
-  signUp: (...args: any[]) => mockSignUp(...args),
+  signIn: mockSignIn,
+  signUp: mockSignUp,
 }));
 
 vi.mock('../../shared/constants', () => ({

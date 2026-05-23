@@ -13,20 +13,20 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
-const { mockSingle, mockItemsOrder, mockItemsEq, mockTxEq, mockTxSelect, mockFrom, mockGetSignedImageUrl } = vi.hoisted(() => {
+const { mockSingle, mockItemsOrder, mockFrom, mockGetSignedImageUrl } = vi.hoisted(() => {
   const mockItemsOrder = vi.fn().mockResolvedValue({ data: [], error: null });
   const mockItemsEq = vi.fn(() => ({ order: mockItemsOrder }));
   const mockSingle = vi.fn().mockResolvedValue({ data: null, error: null });
   const mockTxEq = vi.fn(() => ({ single: mockSingle }));
   const mockTxSelect = vi.fn(() => ({ eq: mockTxEq }));
-  const mockGetSignedImageUrl = vi.fn(() => Promise.resolve(null));
+  const mockGetSignedImageUrl = vi.fn<(...args: unknown[]) => Promise<string | null>>();
   const mockFrom = vi.fn((table: string) => {
     if (table === 'transaction_items') {
       return { select: vi.fn(() => ({ eq: mockItemsEq })) };
     }
     return { select: mockTxSelect };
   });
-  return { mockSingle, mockItemsOrder, mockItemsEq, mockTxEq, mockTxSelect, mockFrom, mockGetSignedImageUrl };
+  return { mockSingle, mockItemsOrder, mockFrom, mockGetSignedImageUrl };
 });
 
 vi.mock('../../shared/lib/supabase', () => ({

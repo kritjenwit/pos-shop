@@ -5,7 +5,7 @@ import MenuPage from './MenuPage';
 
 const mockAddToBasket = vi.fn();
 const mockRemoveFromBasket = vi.fn();
-const mockGetBasketQuantity = vi.fn(() => 0);
+const mockGetBasketQuantity = vi.fn<(id: string) => number>();
 const mockClearBasket = vi.fn();
 const mockRefreshItems = vi.fn();
 
@@ -48,7 +48,7 @@ vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
   return {
     ...actual,
-    Link: ({ children, to, className, ...props }: any) => (
+    Link: ({ children, to, className, ...props }: { children: React.ReactNode; to: string; className?: string }) => (
       <a href={to} className={className} {...props}>{children}</a>
     ),
   };
