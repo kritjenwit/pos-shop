@@ -1,4 +1,4 @@
-import { supabase, type Item, type TransactionItem, uploadImage } from './supabase';
+import { supabase, type Item, type TransactionItem, getSignedImageUrl, uploadImage } from './supabase';
 import { generateOrderId } from './util';
 
 export interface OrderQuery {
@@ -189,7 +189,6 @@ export async function getOrderDetail(id: string) {
 
     let receiptUrl: string | null = null;
     if ((txData as Record<string, unknown>).receipt_url) {
-      const { getSignedImageUrl } = await import('./supabase');
       receiptUrl = await getSignedImageUrl(
         (txData as Record<string, unknown>).receipt_url as string,
       );
