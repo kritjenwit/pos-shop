@@ -104,6 +104,13 @@ Implement a customer self-ordering menu feature that allows customers to browse 
 - The `MockQueryBuilder` pattern in `auth.test.ts` could be extracted to `src/test-utils.ts` if similar typed mocks are needed in other test files
 - The deprecation warning for `punycode` module is a Node.js/Vite dependency issue and is out of scope for this upgrade
 
+### Dev/Test/Prod Database Strategy (ADR-0021)
+- **Single Supabase project**, two PostgreSQL schemas: `public` (production) and `dev` (development/test)
+- **Schema selection**: Supabase client switches via `db.schema` option — `VITE_ENVIRONMENT=production` uses `public`, anything else uses `dev`
+- **Extra Search Path**: Supabase Settings → API → Extra Search Path set to `"public, dev"` for dev environment; defaults to `"public"` for production
+- **Schema bootstrap**: `supabase/setup_dev_schema.sql` creates identical table copies with permissive RLS; must be kept in sync with migrations
+- **No cost increase**: Single project, single database, no second Supabase project needed
+
 ### Customer Self-Ordering Menu
 - No changes needed to existing database schema
 - Orders will use the existing `transactions` table with `status` field set to 'pending' initially
