@@ -19,8 +19,31 @@ const AnalyticsPage = lazy(() => import('../routes/Analytics/AnalyticsPage'));
 
 function LoadingFallback() {
   return (
-    <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: COLORS.background }}>
-      <div className="skeleton h-8 w-32"></div>
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: COLORS.background }}>
+      <div className="px-4 sm:px-6 py-4" style={{ backgroundColor: COLORS.cardBackground, borderBottom: `1px solid ${COLORS.border}` }}>
+        <div className="flex justify-between items-center max-w-6xl mx-auto">
+          <div className="skeleton h-8 w-32"></div>
+          <div className="flex items-center gap-4">
+            <div className="skeleton h-6 w-6 rounded-full"></div>
+            <div className="skeleton h-6 w-24"></div>
+            <div className="skeleton h-6 w-16"></div>
+          </div>
+        </div>
+      </div>
+      <div className="flex-1 p-4 sm:p-6">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex gap-2 border-b pb-2" style={{ borderColor: COLORS.border }}>
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="skeleton h-8 w-20"></div>
+            ))}
+          </div>
+          <div className="mt-8 space-y-4">
+            <div className="skeleton h-12 w-full rounded-lg"></div>
+            <div className="skeleton h-12 w-full rounded-lg"></div>
+            <div className="skeleton h-12 w-full rounded-lg"></div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

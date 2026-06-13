@@ -178,6 +178,7 @@ export default function AnalyticsPage() {
                       width: `${maxDailyRevenue > 0 ? (day.revenue / maxDailyRevenue) * 100 : 0}%`,
                       backgroundColor: COLORS.primary,
                     }}
+                    aria-label={`฿${day.revenue.toFixed(2)} on ${day.date}`}
                   ></div>
                 </div>
                 <span className="text-xs w-20 text-right shrink-0 font-medium" style={{ color: COLORS.text }}>
@@ -202,7 +203,7 @@ export default function AnalyticsPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left" style={{ color: COLORS.textSecondary }}>
-                  <th className="pb-2 pr-4 font-medium">#</th>
+                  <th className="pb-2 pr-4 font-medium">Rank</th>
                   <th className="pb-2 pr-4 font-medium">Item</th>
                   <th className="pb-2 pr-4 font-medium text-right">Qty Sold</th>
                   <th className="pb-2 pr-4 font-medium text-right">Revenue</th>

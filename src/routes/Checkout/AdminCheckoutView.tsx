@@ -1,7 +1,7 @@
 import { useState, useEffect, memo, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
-import { CheckCircle, ArrowLeft, Receipt } from 'lucide-react';
+import { CheckCircle, ArrowLeft, Receipt, Copy, Check } from 'lucide-react';
 import { useAuth } from '../../shared/context/AuthContext';
 import { getSignedImageUrl } from '../../shared/lib/images';
 import { generateThaiQRPayment } from '../../shared/lib/thaiQR';
@@ -27,6 +27,7 @@ const AdminCheckoutView = /*#__PURE__*/memo(function AdminCheckoutView({ orderId
   const [thaiQrLogoUrl, setThaiQrLogoUrl] = useState<string | null>(null);
   const [promptPayBadgeUrl, setPromptPayBadgeUrl] = useState<string | null>(null);
   const [qrOverlayUrl, setQrOverlayUrl] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const [adminOrder, setAdminOrder] = useState<{
     id: string;
@@ -249,13 +250,21 @@ const AdminCheckoutView = /*#__PURE__*/memo(function AdminCheckoutView({ orderId
     <div className="max-w-md mx-auto">
       <div className="mb-6 p-4 rounded-lg" style={{ backgroundColor: COLORS['primary-10'] }}>
         <div className="flex justify-between items-center mb-2">
-          <button
-            onClick={handleReset}
-            className="flex items-center gap-2 text-sm text-primary hover:opacity-80 transition-colors"
-          >
-            <ArrowLeft size={16} />
-            Back
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleReset}
+              className="flex items-center gap-2 text-sm text-primary hover:opacity-80 transition-colors"
+            >
+              <ArrowLeft size={16} />
+              Back
+            </button>
+            <button
+              onClick={() => navigate('/pending-orders')}
+              className="btn-ghost text-xs py-1 px-2"
+            >
+              Cancel
+            </button>
+          </div>
           <span
             className="text-xs px-2 py-0.5 rounded-full font-semibold"
             style={{ backgroundColor: COLORS['accent-15'], color: COLORS.accent }}
@@ -327,7 +336,9 @@ const AdminCheckoutView = /*#__PURE__*/memo(function AdminCheckoutView({ orderId
               placeholder="e.g. No onions, extra spicy, gift wrap..."
               rows={3}
               className="input-base"
+              readOnly
             />
+            <p className="text-xs mt-1" style={{ color: COLORS.textSecondary }}>From order request</p>
           </div>
         </div>
 
@@ -336,7 +347,22 @@ const AdminCheckoutView = /*#__PURE__*/memo(function AdminCheckoutView({ orderId
             {adminOrder.order_id && (
               <div>
                 <span className="text-gray-400">Order ID</span>
-                <div className="font-mono font-semibold text-sm">{adminOrder.order_id}</div>
+                <div className="font-mono font-semibold text-sm flex items-center gap-1">
+                  {adminOrder.order_id}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText(adminOrder.order_id);
+                      setCopied(true);
+                      setTimeout(() => setCopied(false), 2000);
+                    }}
+                    className="p-1 rounded hover:bg-gray-100 transition-colors cursor-pointer"
+                    aria-label="Copy order ID"
+                  >
+                    {copied ? <Check size={14} className="text-green-600" /> : <Copy size={14} />}
+                  </button>
+                  {copied && <span className="text-xs text-green-600">Copied!</span>}
+                </div>
               </div>
             )}
             {adminOrder.user_full_name && (

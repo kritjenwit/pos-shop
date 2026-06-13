@@ -12,10 +12,17 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [signUpSuccess, setSignUpSuccess] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError('Please enter a valid email address');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -27,6 +34,16 @@ export default function LoginPage() {
         }
         const { error } = await signUp(email, password, fullName);
         if (error) throw error;
+        setSignUpSuccess(true);
+        setTimeout(() => {
+          setSignUpSuccess(false);
+          setIsSignUp(false);
+          setEmail('');
+          setPassword('');
+          setFullName('');
+        }, 2000);
+        setLoading(false);
+        return;
       } else {
         const { error } = await signIn(email, password);
         if (error) throw error;
@@ -110,6 +127,12 @@ export default function LoginPage() {
                 </button>
               </div>
             </div>
+
+            {signUpSuccess && (
+              <div className="p-3 rounded text-sm" style={{ backgroundColor: '#ECFDF5', color: '#065F46', border: '1px solid #A7F3D0' }} role="status">
+                Account created! Please sign in.
+              </div>
+            )}
 
             {error && (
               <div className="p-3 rounded text-sm" style={{ backgroundColor: '#FEF2F2', color: '#DC2626', border: '1px solid #FECACA' }} role="alert">

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { COLORS } from '../../shared/constants';
 import { Receipt, RefreshCw, Eye } from 'lucide-react';
@@ -31,8 +31,23 @@ export default function PendingOrdersPage() {
     setRefreshing(false);
   };
 
+  const mountedRef = useRef(true);
+
   useEffect(() => {
     fetchPendingOrders();
+  }, []);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    const interval = setInterval(() => {
+      if (mountedRef.current) {
+        fetchPendingOrders();
+      }
+    }, 30000);
+    return () => {
+      mountedRef.current = false;
+      clearInterval(interval);
+    };
   }, []);
 
   const formatDate = (dateStr: string) => {

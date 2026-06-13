@@ -176,11 +176,11 @@ describe('CustomerCheckoutPage', () => {
       target: { value: 'John Doe' },
     });
 
-    fireEvent.change(screen.getAllByLabelText(/Phone Number/)[0], {
+    fireEvent.change(screen.getByLabelText(/Phone Number/), {
       target: { value: '0812345678' },
     });
 
-    fireEvent.change(screen.getAllByLabelText(/Additional Detail/)[0], {
+    fireEvent.change(screen.getByLabelText(/Additional Detail/), {
       target: { value: 'No onions' },
     });
 
@@ -188,6 +188,24 @@ describe('CustomerCheckoutPage', () => {
 
     await waitFor(() => {
       expect(mockCreatePendingOrder).toHaveBeenCalledWith('John Doe', '0812345678', 'No onions');
+    });
+  });
+
+  it('should show phone format error when phone is invalid', async () => {
+    renderPage();
+
+    fireEvent.change(screen.getByLabelText(/Full Name/), {
+      target: { value: 'John' },
+    });
+
+    fireEvent.change(screen.getByLabelText(/Phone Number/), {
+      target: { value: '1234567890' },
+    });
+
+    fireEvent.click(screen.getByText('Place Order'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Invalid phone format. Use 0XXXXXXXXX')).toBeInTheDocument();
     });
   });
 });

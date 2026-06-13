@@ -159,7 +159,7 @@ describe('ItemManagementPage', () => {
     fireEvent.submit(form);
 
     await waitFor(() => {
-      expect(screen.getByText('Invalid name or price')).toBeInTheDocument();
+      expect(screen.getByText('Name is required')).toBeInTheDocument();
     });
   });
 
@@ -174,7 +174,7 @@ describe('ItemManagementPage', () => {
     fireEvent.submit(form);
 
     await waitFor(() => {
-      expect(screen.getByText('Invalid name or price')).toBeInTheDocument();
+      expect(screen.getByText('Price must be greater than 0')).toBeInTheDocument();
     });
   });
 
@@ -333,5 +333,47 @@ describe('ItemManagementPage', () => {
     fireEvent.keyDown(backdrop, { key: 'Escape' });
 
     expect(screen.queryByText(/Are you sure/)).not.toBeInTheDocument();
+  });
+
+  it('should show success message after adding item', async () => {
+    render(<ItemManagementPage />);
+    fireEvent.click(screen.getByText('Add New'));
+
+    const nameInput = screen.getByLabelText('Name');
+    const priceInput = screen.getByLabelText('Price');
+
+    fireEvent.change(nameInput, { target: { value: 'New Item' } });
+    fireEvent.change(priceInput, { target: { value: '99' } });
+
+    const form = document.querySelector('form')!;
+    fireEvent.submit(form);
+
+    await waitFor(() => {
+      expect(screen.getByText('Item saved successfully')).toBeInTheDocument();
+    });
+  });
+
+  it('should show success message after deleting item', async () => {
+    render(<ItemManagementPage />);
+    const deleteButton = screen.getByLabelText('Delete Pizza');
+    fireEvent.click(deleteButton);
+    fireEvent.click(screen.getByText('Delete'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Item deleted successfully')).toBeInTheDocument();
+    });
+  });
+
+  it('should show image removal warning in delete confirmation for items with image', () => {
+    render(<ItemManagementPage />);
+    const deleteButton = screen.getByLabelText('Delete Burger');
+    fireEvent.click(deleteButton);
+    expect(screen.getByText((content) => content.includes('This will also remove the image'))).toBeInTheDocument();
+  });
+
+  it('should show helper text under upload button', () => {
+    render(<ItemManagementPage />);
+    fireEvent.click(screen.getByText('Add New'));
+    expect(screen.getByText('Max 5MB, JPG/PNG/WebP')).toBeInTheDocument();
   });
 });

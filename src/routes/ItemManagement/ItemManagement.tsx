@@ -28,9 +28,11 @@ function SignedImage({ filePath, alt, className }: { filePath: string | null; al
 function ItemForm({
   item,
   onClose,
+  onSuccess,
 }: {
   item?: Item;
   onClose: () => void;
+  onSuccess?: () => void;
 }) {
   const { addItem, updateItem } = useApp();
   const [name, setName] = useState(item?.name || '');
@@ -83,10 +85,18 @@ function ItemForm({
     
     try {
       const priceNum = parseFloat(price);
-    if (!name || name.length > VALIDATION.maxItemNameLength || !price || priceNum <= 0) {
-      setError('Invalid name or price');
-      return;
-    }
+      if (!name || !name.trim()) {
+        setError('Name is required');
+        return;
+      }
+      if (name.length > VALIDATION.maxItemNameLength) {
+        setError('Name is too long');
+        return;
+      }
+      if (!price || priceNum <= 0) {
+        setError('Price must be greater than 0');
+        return;
+      }
 
       let imageUrl = imagePath || item?.image || '';
       const file = fileRef.current?.files?.[0];
@@ -103,6 +113,7 @@ function ItemForm({
       } else {
         await addItem({ name, price: priceNum, image: imageUrl, quantity: 100 });
       }
+      onSuccess?.();
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save item');
@@ -153,17 +164,20 @@ function ItemForm({
             <label htmlFor="itemPrice" className="label-base" style={{ color: COLORS.textSecondary }}>
               Price
             </label>
-            <input
-              id="itemPrice"
-              type="number"
-              min="0"
-              step="0.01"
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
-              className="input-base"
-              placeholder="0.00"
-              required
-            />
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">฿</span>
+              <input
+                id="itemPrice"
+                type="number"
+                min="0"
+                step="0.01"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                className="input-base pl-7"
+                placeholder="0.00"
+                required
+              />
+            </div>
           </div>
           <div>
             <label className="label-base" style={{ color: COLORS.textSecondary }}>
@@ -184,6 +198,7 @@ function ItemForm({
             >
               <Upload size={16} /> Upload Image
             </button>
+            <p className="text-xs mt-1" style={{ color: COLORS.textSecondary }}>Max 5MB, JPG/PNG/WebP</p>
             {imagePreview && (
               <div className="mt-2">
                 <img src={imagePreview} alt="Preview" className="w-24 h-24 object-cover rounded-lg shadow-sm" />
@@ -225,6 +240,14 @@ export default function ItemManagementPage() {
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState<Item | undefined>();
   const [deletingItem, setDeletingItem] = useState<Item | undefined>();
+  const [successMessage, setSuccessMessage] = useState('');
+
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => setSuccessMessage(''), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage]);
 
   const handleEdit = (item: Item) => {
     setEditingItem(item);
@@ -239,12 +262,18 @@ export default function ItemManagementPage() {
     if (deletingItem) {
       deleteItem(deletingItem.id);
       setDeletingItem(undefined);
+      setSuccessMessage('Item deleted successfully');
     }
   };
 
   const closeModal = () => {
     setShowModal(false);
     setEditingItem(undefined);
+  };
+
+  const handleSaveSuccess = () => {
+    setSuccessMessage('Item saved successfully');
+    closeModal();
   };
 
   return (
@@ -340,7 +369,13 @@ export default function ItemManagementPage() {
         </div>
       )}
 
-      {showModal && <ItemForm item={editingItem} onClose={closeModal} />}
+      {successMessage && (
+        <div className="p-3 rounded text-sm" style={{ backgroundColor: '#ECFDF5', color: '#065F46', border: '1px solid #A7F3D0' }} role="status">
+          {successMessage}
+        </div>
+      )}
+
+      {showModal && <ItemForm item={editingItem} onClose={closeModal} onSuccess={handleSaveSuccess} />}
 
       {deletingItem && (
         <div
@@ -358,6 +393,7 @@ export default function ItemManagementPage() {
             <h3 className="text-lg font-semibold font-heading mb-2" style={{ color: COLORS.text }}>Delete Item</h3>
             <p className="mb-6" style={{ color: COLORS.textSecondary }}>
               Are you sure you want to delete <span className="font-semibold">{deletingItem.name}</span>?
+              {deletingItem.image && <><br />This will also remove the image</>}
             </p>
             <div className="flex gap-3 justify-center">
               <button

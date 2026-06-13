@@ -13,6 +13,7 @@ export default function CustomerCheckoutPage() {
   const [customerPhone, setCustomerPhone] = useState('');
   const [additionalDetail, setAdditionalDetail] = useState('');
   const [error, setError] = useState('');
+  const [phoneError, setPhoneError] = useState('');
   const [createdOrder, setCreatedOrder] = useState<{ id: string, order_id: string, total_amount: number } | null>(null);
 
   const handleCompleteOrder = async () => {
@@ -28,6 +29,10 @@ export default function CustomerCheckoutPage() {
       setError(`Phone must be ${VALIDATION.maxPhoneLength} characters or less`);
       return;
     }
+    if (customerPhone && !/^0[0-9]{9}$/.test(customerPhone)) {
+      setPhoneError('Invalid phone format. Use 0XXXXXXXXX');
+      return;
+    }
     if (additionalDetail.length > VALIDATION.maxAdditionalDetailLength) {
       setError(`Additional detail must be ${VALIDATION.maxAdditionalDetailLength} characters or less`);
       return;
@@ -35,6 +40,7 @@ export default function CustomerCheckoutPage() {
 
     setCompleting(true);
     setError('');
+    setPhoneError('');
     try {
       const data = await createPendingOrder(customerName, customerPhone || undefined, additionalDetail || undefined);
       if (data) {
@@ -186,10 +192,16 @@ export default function CustomerCheckoutPage() {
                     id="customerPhone"
                     type="tel"
                     value={customerPhone}
-                    onChange={(e) => setCustomerPhone(e.target.value)}
+                    onChange={(e) => { setCustomerPhone(e.target.value); setPhoneError(''); }}
                     placeholder="08X-XXX-XXXX"
                     className="w-full pl-12 pr-5 py-4 bg-gray-50 border-transparent rounded-2xl text-sm focus:bg-white focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all duration-300 outline-none font-mono"
                   />
+                </div>
+                <div className="flex justify-between items-center mt-1">
+                  {phoneError && (
+                    <span className="text-xs text-red-500" role="alert">{phoneError}</span>
+                  )}
+                  <span className="text-xs text-gray-400 ml-auto">{customerPhone.length}/{VALIDATION.maxPhoneLength}</span>
                 </div>
               </div>
 
@@ -207,6 +219,9 @@ export default function CustomerCheckoutPage() {
                     rows={3}
                     className="w-full pl-12 pr-5 py-4 bg-gray-50 border-transparent rounded-2xl text-sm focus:bg-white focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all duration-300 outline-none resize-none"
                   />
+                </div>
+                <div className="flex justify-end mt-1">
+                  <span className="text-xs text-gray-400">{additionalDetail.length}/{VALIDATION.maxAdditionalDetailLength}</span>
                 </div>
               </div>
             </div>
@@ -258,24 +273,14 @@ export default function CustomerCheckoutPage() {
             ))}
             </div>
 
-            <div className="border-t border-dashed border-gray-200 pt-6 space-y-3">
-              <div>
-                <label htmlFor="additionalDetail-summary" className="block text-xs font-black text-gray-400 uppercase tracking-wider mb-2 ml-1">
-                  Additional Detail
-                </label>
-                <div className="relative group">
-                  <MessageSquare className="absolute left-4 top-4 text-gray-400 group-focus-within:text-primary transition-colors" size={18} />
-                  <textarea
-                    id="additionalDetail-summary"
-                    value={additionalDetail}
-                    onChange={(e) => setAdditionalDetail(e.target.value)}
-                    placeholder="e.g. No onions, extra spicy..."
-                    rows={3}
-                    className="w-full pl-12 pr-5 py-4 bg-gray-50 border-transparent rounded-2xl text-sm focus:bg-white focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all duration-300 outline-none resize-none"
-                  />
+            {additionalDetail && (
+              <div className="border-t border-dashed border-gray-200 pt-6 space-y-3">
+                <div>
+                  <div className="text-xs font-black text-gray-400 uppercase tracking-wider mb-2">Additional Detail</div>
+                  <p className="text-sm text-gray-700">{additionalDetail}</p>
                 </div>
               </div>
-            </div>
+            )}
 
             <div className="border-t border-dashed border-gray-200 pt-6 space-y-3">
               <div className="flex justify-between items-center">

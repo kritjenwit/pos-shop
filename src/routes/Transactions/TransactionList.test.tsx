@@ -296,6 +296,73 @@ describe('TransactionListPage', () => {
     expect(screen.getByText('Shop Seller')).toBeInTheDocument();
   });
 
+  it('should set date presets when Today button is clicked', async () => {
+    mockGetOrders.mockResolvedValue({ data: [], error: null });
+
+    render(<MemoryRouter><TransactionListPage /></MemoryRouter>);
+
+    await waitFor(() => {
+      expect(screen.getByText('No transactions found')).toBeInTheDocument();
+    });
+
+    mockGetOrders.mockClear();
+    mockGetOrders.mockResolvedValue({ data: [], error: null });
+
+    fireEvent.click(screen.getByText('Today'));
+
+    await waitFor(() => {
+      const today = new Date().toISOString().split('T')[0];
+      expect(mockGetOrders).toHaveBeenCalledWith(
+        expect.objectContaining({
+          dateRange: expect.objectContaining({ start: `${today}T00:00:00`, end: `${today}T23:59:59` }),
+        }),
+      );
+    });
+  });
+
+  it('should clear dates when All preset is clicked', async () => {
+    mockGetOrders.mockResolvedValue({ data: [], error: null });
+
+    render(<MemoryRouter><TransactionListPage /></MemoryRouter>);
+
+    await waitFor(() => {
+      expect(screen.getByText('No transactions found')).toBeInTheDocument();
+    });
+
+    const dateInputs = document.querySelectorAll('input[type="date"]');
+    fireEvent.change(dateInputs[0], { target: { value: '2026-06-01' } });
+    fireEvent.change(dateInputs[1], { target: { value: '2026-06-15' } });
+
+    await waitFor(() => {
+      expect(screen.getByText('Clear Filters')).toBeInTheDocument();
+    });
+
+    mockGetOrders.mockClear();
+    mockGetOrders.mockResolvedValue({ data: [], error: null });
+
+    fireEvent.click(screen.getByText('All'));
+
+    await waitFor(() => {
+      expect(mockGetOrders).toHaveBeenCalledWith(
+        expect.not.objectContaining({ dateRange: expect.anything() }),
+      );
+    });
+  });
+
+  it('should render date preset buttons', async () => {
+    mockGetOrders.mockResolvedValue({ data: [], error: null });
+    render(<MemoryRouter><TransactionListPage /></MemoryRouter>);
+
+    await waitFor(() => {
+      expect(screen.getByText('No transactions found')).toBeInTheDocument();
+    });
+
+    expect(screen.getByText('Today')).toBeInTheDocument();
+    expect(screen.getByText('This Week')).toBeInTheDocument();
+    expect(screen.getByText('This Month')).toBeInTheDocument();
+    expect(screen.getByText('All')).toBeInTheDocument();
+  });
+
   it('should render with additional_detail when present', async () => {
     const transactions = [
       {

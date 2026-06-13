@@ -4,6 +4,7 @@ import { useApp } from '../../shared/context/AppContext';
 import { Link } from 'react-router-dom';
 import type { Item } from '../../shared/lib/supabase';
 import { getSignedImageUrl } from '../../shared/lib/images';
+import { UI } from '../../shared/constants';
 
 interface ItemCardProps {
   item: Item;
@@ -223,9 +224,11 @@ export default function MenuPage() {
       </header>
 
       {totalItems > 0 && (
-        <div className="flex items-center gap-4 px-6 py-4 rounded-2xl shadow-xl sticky mb-8 transition-all duration-300 border border-white/20 backdrop-blur-md bg-white/80"
+        <Link
+          to="/checkout"
+          className="flex items-center gap-4 px-6 py-4 rounded-2xl shadow-xl sticky mb-8 transition-all duration-300 border border-white/20 backdrop-blur-md bg-white/80 cursor-pointer hover:shadow-2xl"
           style={{
-            top: '20px',
+            top: UI.stickyTop,
             zIndex: 40,
           }}
         >
@@ -241,9 +244,7 @@ export default function MenuPage() {
             <div className="text-xs font-bold text-gray-400 uppercase tracking-wider">Total</div>
             <div className="text-xl font-black text-primary font-heading">฿{total.toLocaleString()}</div>
           </div>
-
-
-        </div>
+        </Link>
       )}
 
       {filteredItems.length === 0 ? (

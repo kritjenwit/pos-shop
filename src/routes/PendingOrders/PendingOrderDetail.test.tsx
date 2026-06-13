@@ -328,6 +328,19 @@ describe('PendingOrderDetailPage', () => {
     });
   });
 
+  it('should show back button and navigate from not-found error', async () => {
+    mockGetOrderDetail.mockResolvedValue({ data: null, error: 'Order not found' });
+
+    renderWithRouter();
+
+    await waitFor(() => {
+      expect(screen.getByText('Order not found')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText('Back to Pending Orders'));
+    expect(mockNavigate).toHaveBeenCalledWith('/pending-orders');
+  });
+
   it('should navigate back when back button is clicked while loading', () => {
     mockGetOrderDetail.mockResolvedValue(new Promise(() => {}));
     renderWithRouter();

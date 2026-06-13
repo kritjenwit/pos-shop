@@ -19,6 +19,7 @@ export default function TransactionListPage() {
   const [selectedSeller, setSelectedSeller] = useState<SellerOption | null>(null);
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const pageSize = 20;
@@ -92,11 +93,17 @@ export default function TransactionListPage() {
   }, [currentPage, startDate, endDate, selectedSeller]);
 
   useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
     if (sellerQuery.length >= 1) {
-      searchSellers();
+      debounceRef.current = setTimeout(() => {
+        searchSellers();
+      }, 300);
     } else {
       setSellerOptions([]);
     }
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
   }, [sellerQuery]);
 
   useEffect(() => {
@@ -135,6 +142,35 @@ export default function TransactionListPage() {
   };
 
   const hasFilters = startDate || endDate || selectedSeller;
+
+  const setDatePreset = (preset: 'today' | 'week' | 'month' | 'all') => {
+    const today = new Date();
+    if (preset === 'all') {
+      setStartDate('');
+      setEndDate('');
+      return;
+    }
+    const todayStr = today.toISOString().split('T')[0];
+    if (preset === 'today') {
+      setStartDate(todayStr);
+      setEndDate(todayStr);
+      return;
+    }
+    const endStr = todayStr;
+    if (preset === 'week') {
+      const startOfWeek = new Date(today);
+      startOfWeek.setDate(today.getDate() - today.getDay());
+      setStartDate(startOfWeek.toISOString().split('T')[0]);
+      setEndDate(endStr);
+      return;
+    }
+    if (preset === 'month') {
+      const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+      setStartDate(startOfMonth.toISOString().split('T')[0]);
+      setEndDate(endStr);
+      return;
+    }
+  };
 
   return (
     <div className="space-y-4 animate-fade-in">
@@ -257,6 +293,19 @@ export default function TransactionListPage() {
               </div>
             )}
           </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-2 mt-3">
+          <span className="text-xs font-medium" style={{ color: COLORS.textSecondary }}>Quick:</span>
+          {(['today', 'week', 'month', 'all'] as const).map((preset) => (
+            <button
+              key={preset}
+              onClick={() => setDatePreset(preset)}
+              className="px-2.5 py-1 text-xs rounded-md transition-all duration-200 cursor-pointer font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              style={{ backgroundColor: COLORS['primary-10'], color: COLORS.primary }}
+            >
+              {preset === 'today' ? 'Today' : preset === 'week' ? 'This Week' : preset === 'month' ? 'This Month' : 'All'}
+            </button>
+          ))}
         </div>
       </div>
 

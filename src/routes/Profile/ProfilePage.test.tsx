@@ -166,6 +166,48 @@ describe('ProfilePage', () => {
     });
   });
 
+  it('should render back button', async () => {
+    renderPage();
+    await waitFor(() => {
+      expect(screen.getByText('Back')).toBeInTheDocument();
+    });
+  });
+
+  it('should navigate back on back button click', async () => {
+    renderPage();
+    await waitFor(() => {
+      fireEvent.click(screen.getByText('Back'));
+    });
+    expect(mockNavigate).toHaveBeenCalledWith('/');
+  });
+
+  it('should show helper text under disabled fields', async () => {
+    renderPage();
+    await waitFor(() => {
+      const helperTexts = screen.getAllByText('Contact admin to change');
+      expect(helperTexts).toHaveLength(2);
+    });
+  });
+
+  it('should auto-dismiss success message after 4 seconds', { timeout: 15000 }, async () => {
+    renderPage();
+    await waitFor(() => {
+      expect(screen.getByDisplayValue('0812345678')).toBeInTheDocument();
+    });
+
+    const phoneInput = screen.getByLabelText('Phone Number');
+    fireEvent.change(phoneInput, { target: { value: '0898765432' } });
+    fireEvent.click(screen.getByText('Save'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Phone number updated')).toBeInTheDocument();
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByText('Phone number updated')).not.toBeInTheDocument();
+    }, { timeout: 6000, interval: 200 });
+  });
+
   it('should handle error when fetching profile', async () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     mockGetProfile.mockResolvedValue({ data: null, error: { message: 'Profile fetch error' } });

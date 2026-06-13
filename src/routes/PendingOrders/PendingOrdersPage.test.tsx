@@ -79,6 +79,23 @@ describe('PendingOrdersPage', () => {
     consoleSpy.mockRestore();
   });
 
+  it('should poll for new orders every 30 seconds', async () => {
+    vi.useFakeTimers();
+    mockGetOrders.mockResolvedValue({ data: [], error: null });
+
+    renderPage();
+
+    expect(mockGetOrders).toHaveBeenCalledTimes(1);
+
+    vi.advanceTimersByTime(30000);
+
+    await Promise.resolve();
+
+    expect(mockGetOrders).toHaveBeenCalledTimes(2);
+
+    vi.useRealTimers();
+  });
+
   it('should render order with customer info when no user info', async () => {
     const orders = [
       {

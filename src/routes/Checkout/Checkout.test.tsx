@@ -438,6 +438,22 @@ describe('CheckoutPage', () => {
       });
     });
 
+    it('should show cancel button that navigates to menu', () => {
+      renderCheckout();
+      const cancelBtn = screen.getByText('Cancel');
+      expect(cancelBtn).toBeInTheDocument();
+      fireEvent.click(cancelBtn);
+      expect(mockNavigate).toHaveBeenCalledWith('/menu');
+    });
+
+    it('should show phone format validation error', () => {
+      renderCheckout();
+      fireEvent.change(screen.getByLabelText('Customer Name'), { target: { value: 'John' } });
+      fireEvent.change(screen.getByLabelText('Phone Number'), { target: { value: '1234567890' } });
+      fireEvent.click(screen.getByText('Complete Order'));
+      expect(screen.getByText('Invalid phone format. Use 0XXXXXXXXX')).toBeInTheDocument();
+    });
+
     it('should show validation error when fields exceed max length', async () => {
       mockOrdersGetOrderDetail.mockResolvedValue({ data: mockOrderDetail, error: null });
       renderCheckout(['/checkout/tx-1']);
@@ -471,6 +487,48 @@ describe('CheckoutPage', () => {
 
       expect(consoleSpy).toHaveBeenCalledWith('Error confirming order:', expect.any(Error));
       consoleSpy.mockRestore();
+    });
+
+    it('should show cancel button in admin view', async () => {
+      mockOrdersGetOrderDetail.mockResolvedValue({ data: mockOrderDetail, error: null });
+      renderCheckout(['/checkout/tx-1']);
+
+      await waitFor(() => {
+        expect(screen.getByText('Cancel')).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByText('Cancel'));
+
+      expect(mockNavigate).toHaveBeenCalledWith('/pending-orders');
+    });
+
+    it('should copy order id to clipboard', async () => {
+      const clipboardWriteText = vi.fn();
+      Object.defineProperty(navigator, 'clipboard', {
+        value: { writeText: clipboardWriteText },
+        configurable: true,
+        writable: true,
+      });
+
+      mockOrdersGetOrderDetail.mockResolvedValue({ data: mockOrderDetail, error: null });
+      renderCheckout(['/checkout/tx-1']);
+
+      await waitFor(() => {
+        expect(screen.getByLabelText('Copy order ID')).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByLabelText('Copy order ID'));
+
+      expect(clipboardWriteText).toHaveBeenCalledWith('ORD-001');
+    });
+
+    it('should show from order request for additional detail', async () => {
+      mockOrdersGetOrderDetail.mockResolvedValue({ data: mockOrderDetail, error: null });
+      renderCheckout(['/checkout/tx-1']);
+
+      await waitFor(() => {
+        expect(screen.getByText('From order request')).toBeInTheDocument();
+      });
     });
   });
 });

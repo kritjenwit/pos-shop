@@ -151,4 +151,32 @@ describe('LoginPage', () => {
 
     expect(screen.getByText('Processing...')).toBeInTheDocument();
   });
+
+  it('should show email format validation error', async () => {
+    renderLoginPage();
+
+    fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'invalid-email' } });
+    fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'Password1!' } });
+    fireEvent.submit(document.querySelector('form')!);
+
+    await waitFor(() => {
+      expect(screen.getByText('Please enter a valid email address')).toBeInTheDocument();
+    });
+  });
+
+  it('should show success message after sign up', async () => {
+    mockSignUp.mockResolvedValue({ user: { id: '2', email: 'new@test.com' }, error: null });
+
+    renderLoginPage();
+    fireEvent.click(screen.getByText('Sign Up'));
+
+    fireEvent.change(screen.getByLabelText('Full Name'), { target: { value: 'New User' } });
+    fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'new@test.com' } });
+    fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'Password1!' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Sign Up' }));
+
+    await waitFor(() => {
+      expect(screen.getByText('Account created! Please sign in.')).toBeInTheDocument();
+    });
+  });
 });

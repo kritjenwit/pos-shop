@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { User, Mail, Phone } from 'lucide-react';
+import { ArrowLeft, User, Mail, Phone } from 'lucide-react';
 import { useAuth } from '../../shared/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { updateUserPhone } from '../../shared/lib/auth';
@@ -64,6 +64,13 @@ export default function ProfilePage() {
   };
 
   useEffect(() => {
+    if (message?.type === 'success') {
+      const timer = setTimeout(() => setMessage(null), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [message]);
+
+  useEffect(() => {
     if (!authUser) {
       navigate('/');
     }
@@ -83,6 +90,14 @@ export default function ProfilePage() {
 
   return (
     <div className="max-w-md mx-auto animate-fade-in">
+      <button
+        onClick={() => navigate('/')}
+        className="flex items-center gap-2 mb-6 text-sm font-medium hover:opacity-80 transition-colors"
+        style={{ color: COLORS.textSecondary }}
+      >
+        <ArrowLeft size={18} />
+        Back
+      </button>
       <h1 className="text-2xl font-bold mb-6 font-heading" style={{ color: COLORS.text }}>Profile</h1>
 
       <div className="rounded-lg shadow-card p-6" style={{ backgroundColor: COLORS.cardBackground }}>
@@ -110,6 +125,7 @@ export default function ProfilePage() {
               className="input-base bg-slate-50"
               style={{ color: COLORS.textSecondary }}
             />
+            <p className="text-xs mt-1" style={{ color: COLORS.textSecondary }}>Contact admin to change</p>
           </div>
 
           <div>
@@ -125,6 +141,7 @@ export default function ProfilePage() {
               className="input-base bg-slate-50"
               style={{ color: COLORS.textSecondary }}
             />
+            <p className="text-xs mt-1" style={{ color: COLORS.textSecondary }}>Contact admin to change</p>
           </div>
 
           <div>

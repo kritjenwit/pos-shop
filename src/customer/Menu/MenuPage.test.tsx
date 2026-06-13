@@ -137,6 +137,16 @@ describe('MenuPage', () => {
     expect(screen.getByText('1 Item')).toBeInTheDocument();
   });
 
+  it('should make basket bar a link to /checkout', () => {
+    mockState.basket = new Map([['item-1', 1]]);
+    mockState.total = 200;
+    mockGetBasketQuantity.mockImplementation((id: string) => id === 'item-1' ? 1 : 0);
+
+    renderPage();
+    const basketLink = screen.getByRole('link', { name: /Your Basket/i });
+    expect(basketLink).toHaveAttribute('href', '/checkout');
+  });
+
   it('should show basket bar with multiple items', () => {
     mockState.basket = new Map([['item-1', 2], ['item-2', 1]]);
     mockState.total = 450;

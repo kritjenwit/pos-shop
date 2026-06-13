@@ -65,6 +65,32 @@ describe('TransactionDetailView', () => {
     expect(mockNavigate).not.toHaveBeenCalled();
   });
 
+  it('should show back button and navigate on click in transaction not found state', async () => {
+    mockGetOrderDetail.mockResolvedValue({ data: null, error: null });
+    render(<TransactionDetailView transactionId="tx-1" shareUrl="https://example.com/tx/1" errorRedirectUrl="/transactions" />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Transaction not found')).toBeInTheDocument();
+    });
+
+    const backBtn = screen.getByText('Back');
+    expect(backBtn).toBeInTheDocument();
+    fireEvent.click(backBtn);
+    expect(mockNavigate).toHaveBeenCalledWith('/transactions');
+  });
+
+  it('should fallback to / for back navigation when errorRedirectUrl is not absolute', async () => {
+    mockGetOrderDetail.mockResolvedValue({ data: null, error: null });
+    render(<TransactionDetailView transactionId="tx-1" shareUrl="https://example.com/tx/1" errorRedirectUrl="relative" />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Transaction not found')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText('Back'));
+    expect(mockNavigate).toHaveBeenCalledWith('/');
+  });
+
   it('should render transaction data', async () => {
     mockGetOrderDetail.mockResolvedValue({ data: baseTx, error: null });
     render(<TransactionDetailView transactionId="tx-1" shareUrl="https://example.com/tx/1" errorRedirectUrl="/" />);
@@ -181,6 +207,20 @@ describe('TransactionDetailView', () => {
     render(<TransactionDetailView transactionId="tx-1" shareUrl="https://example.com/tx/1" errorRedirectUrl="/" allowUpload onUpload={vi.fn()} />);
 
     expect(await screen.findByText('Upload Receipt')).toBeInTheDocument();
+  });
+
+  it('should show Max 10MB helper text next to upload button', async () => {
+    mockGetOrderDetail.mockResolvedValue({ data: baseTx, error: null });
+    render(<TransactionDetailView transactionId="tx-1" shareUrl="https://example.com/tx/1" errorRedirectUrl="/" allowUpload onUpload={vi.fn()} />);
+
+    expect(await screen.findByText('Max 10MB')).toBeInTheDocument();
+  });
+
+  it('should show Max 10MB helper text next to replace button', async () => {
+    mockGetOrderDetail.mockResolvedValue({ data: { ...baseTx, receiptUrl: 'https://example.com/rec.jpg' }, error: null });
+    render(<TransactionDetailView transactionId="tx-1" shareUrl="https://example.com/tx/1" errorRedirectUrl="/" allowUpload onUpload={vi.fn()} />);
+
+    expect(await screen.findByText('Max 10MB')).toBeInTheDocument();
   });
 
   it('should show replace button when receipt exists and allowUpload is true', async () => {

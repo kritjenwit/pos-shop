@@ -115,6 +115,31 @@ describe('AnalyticsPage', () => {
     expect(screen.getByText('Failed to load')).toBeInTheDocument();
   });
 
+  it('should use Rank instead of # for column header', async () => {
+    render(<AnalyticsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Coffee')).toBeInTheDocument();
+    });
+
+    expect(screen.getByText('Rank')).toBeInTheDocument();
+    expect(screen.queryByText('#')).not.toBeInTheDocument();
+  });
+
+  it('should have aria-labels on daily sales bars with revenue and date', async () => {
+    render(<AnalyticsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('06-01')).toBeInTheDocument();
+    });
+
+    const bars = document.querySelectorAll<HTMLElement>('[aria-label^="฿"]');
+    expect(bars.length).toBe(3);
+    expect(bars[0]).toHaveAttribute('aria-label', '฿3000.00 on 2026-06-01');
+    expect(bars[1]).toHaveAttribute('aria-label', '฿5000.00 on 2026-06-02');
+    expect(bars[2]).toHaveAttribute('aria-label', '฿2000.00 on 2026-06-03');
+  });
+
   it('switches between day ranges when buttons clicked', async () => {
     render(<AnalyticsPage />);
 

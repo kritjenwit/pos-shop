@@ -153,9 +153,19 @@ export default function TransactionDetailView({
 
   if (!transaction) {
     return (
-      <div className="flex flex-col items-center justify-center py-16">
-        <Receipt size={48} style={{ color: COLORS.textSecondary }} />
-        <p className="text-lg mt-4 font-medium" style={{ color: COLORS.text }}>Transaction not found</p>
+      <div className="max-w-md mx-auto space-y-4">
+        <button
+          onClick={() => navigate(errorRedirectUrl?.startsWith('/') ? errorRedirectUrl : '/')}
+          className="flex items-center gap-2 text-sm transition-colors duration-200 cursor-pointer hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-md px-2 py-1"
+          style={{ color: COLORS.textSecondary }}
+        >
+          <ArrowLeft size={16} />
+          Back
+        </button>
+        <div className="flex flex-col items-center justify-center py-16">
+          <Receipt size={48} style={{ color: COLORS.textSecondary }} />
+          <p className="text-lg mt-4 font-medium" style={{ color: COLORS.text }}>Transaction not found</p>
+        </div>
       </div>
     );
   }
@@ -239,6 +249,7 @@ export default function TransactionDetailView({
               >
                 {uploading ? 'Uploading...' : 'Replace Receipt'}
               </button>
+              <span className="text-xs ml-2" style={{ color: COLORS.textSecondary }}>Max 10MB</span>
             </div>
           )}
         </div>
@@ -261,6 +272,7 @@ export default function TransactionDetailView({
                 <Upload size={14} className="inline mr-1" />
                 {uploading ? 'Uploading...' : 'Upload Receipt'}
               </button>
+              <span className="text-xs ml-2" style={{ color: COLORS.textSecondary }}>Max 10MB</span>
             </div>
           )}
         </div>

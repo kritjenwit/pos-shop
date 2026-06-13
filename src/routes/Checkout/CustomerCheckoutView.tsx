@@ -68,6 +68,10 @@ function CustomerCheckoutView() {
       setError(`Additional detail must be ${VALIDATION.maxAdditionalDetailLength} characters or less`);
       return;
     }
+    if (customerPhone && !/^0[0-9]{9}$/.test(customerPhone)) {
+      setError('Invalid phone format. Use 0XXXXXXXXX');
+      return;
+    }
     setCompleting(true);
     setError('');
     try {
@@ -325,9 +329,16 @@ function CustomerCheckoutView() {
       )}
 
       <button
+        onClick={() => navigate('/menu')}
+        className="btn-secondary w-full py-3 font-heading"
+      >
+        Cancel
+      </button>
+
+      <button
         onClick={handleCompleteOrder}
         disabled={completing}
-        className="btn-primary w-full py-3 font-heading mt-4"
+        className="btn-primary w-full py-3 font-heading mt-2"
       >
         {completing ? (
           <span className="flex items-center justify-center gap-2">
