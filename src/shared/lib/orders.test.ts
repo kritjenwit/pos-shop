@@ -351,6 +351,40 @@ describe('orders', () => {
 
       expect(error).toBe('Update failed');
     });
+
+    it('should include additional detail when provided', async () => {
+      const mockEq = vi.fn().mockResolvedValue({ error: null });
+      const mockUpdate = vi.fn(() => ({ eq: mockEq }));
+      mockFrom.mockReturnValue({ update: mockUpdate });
+
+      const { error } = await confirmPayment('order-1', {
+        additionalDetail: 'Gift wrap please',
+      });
+
+      expect(error).toBeNull();
+      expect(mockUpdate).toHaveBeenCalledWith({ additional_detail: 'Gift wrap please' });
+      expect(mockUpdate).toHaveBeenCalledWith({ status: 'completed' });
+    });
+
+    it('should return error when customer info update fails', async () => {
+      const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Info update failed' } });
+      const mockUpdate = vi.fn(() => ({ eq: mockEq }));
+      mockFrom.mockReturnValue({ update: mockUpdate });
+
+      const { error } = await confirmPayment('order-1', {
+        customerName: 'John',
+      });
+
+      expect(error).toBe('Info update failed');
+    });
+
+    it('should handle thrown errors in catch block', async () => {
+      mockFrom.mockImplementation(() => { throw new Error('Network error'); });
+
+      const { error } = await confirmPayment('order-1');
+
+      expect(error).toBe('Network error');
+    });
   });
 
   describe('order lifecycle', () => {

@@ -1,18 +1,21 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import TransactionListPage from './TransactionList';
 
 const mockGetOrders = vi.hoisted(() => vi.fn());
+const mockGetCache = vi.hoisted(() => vi.fn(() => null));
+const mockSetCache = vi.hoisted(() => vi.fn());
+const mockInvalidateCache = vi.hoisted(() => vi.fn());
 
 vi.mock('../../shared/lib/orders', () => ({
   getOrders: mockGetOrders,
 }));
 
 vi.mock('../../shared/lib/cache', () => ({
-  getCache: vi.fn(() => null),
-  setCache: vi.fn(),
-  invalidateCache: vi.fn(),
+  getCache: mockGetCache,
+  setCache: mockSetCache,
+  invalidateCache: mockInvalidateCache,
 }));
 
 vi.mock('../../shared/lib/supabase', () => ({
@@ -109,6 +112,137 @@ describe('TransactionListPage', () => {
     expect(screen.getByText('approved')).toBeInTheDocument();
     expect(screen.getByText('pending')).toBeInTheDocument();
     expect(screen.getByText('cancelled')).toBeInTheDocument();
+  });
+
+  it('should use cached data when available without API call', async () => {
+    const cachedTransactions = [
+      {
+        id: 'tx-cached',
+        totalAmount: 999,
+        status: 'completed',
+        sellerId: 'u1',
+        createdAt: '2026-05-23T10:00:00Z',
+        itemsCount: 1,
+        orderId: null,
+        customerName: null,
+        customerPhone: null,
+        additionalDetail: null,
+        sellerName: null,
+        sellerEmail: null,
+        receiptUrl: null,
+      },
+    ];
+    mockGetCache.mockReturnValueOnce(cachedTransactions);
+
+    render(<MemoryRouter><TransactionListPage /></MemoryRouter>);
+
+    await waitFor(() => {
+      expect(screen.getByText(/999\.00/)).toBeInTheDocument();
+    });
+
+    expect(mockGetOrders).not.toHaveBeenCalled();
+  });
+
+  it('should refresh data when refresh button clicked', async () => {
+    render(<MemoryRouter><TransactionListPage /></MemoryRouter>);
+
+    await waitFor(() => {
+      expect(screen.getByText('No transactions found')).toBeInTheDocument();
+    });
+
+    mockGetOrders.mockResolvedValue({
+      data: [{
+        id: 'tx-refreshed',
+        totalAmount: 750,
+        status: 'completed',
+        sellerId: 'u1',
+        createdAt: '2026-05-23T10:00:00Z',
+        itemsCount: 1,
+        orderId: null,
+        customerName: null,
+        customerPhone: null,
+        additionalDetail: null,
+        sellerName: null,
+        sellerEmail: 'seller@shop.com',
+        receiptUrl: null,
+      }],
+      error: null,
+    });
+
+    fireEvent.click(screen.getByText('Refresh'));
+
+    await waitFor(() => {
+      expect(screen.getByText(/750\.00/)).toBeInTheDocument();
+    });
+
+    expect(mockInvalidateCache).toHaveBeenCalled();
+  });
+
+  it('should filter by start date', async () => {
+    const transactions = [
+      {
+        id: 'tx-old',
+        totalAmount: 100,
+        status: 'completed',
+        sellerId: 'u1',
+        createdAt: '2026-05-20T10:00:00Z',
+        itemsCount: 1,
+        orderId: null,
+        customerName: null,
+        customerPhone: null,
+        additionalDetail: null,
+        sellerName: null,
+        sellerEmail: null,
+        receiptUrl: null,
+      },
+      {
+        id: 'tx-new',
+        totalAmount: 200,
+        status: 'completed',
+        sellerId: 'u1',
+        createdAt: '2026-06-01T10:00:00Z',
+        itemsCount: 2,
+        orderId: null,
+        customerName: null,
+        customerPhone: null,
+        additionalDetail: null,
+        sellerName: null,
+        sellerEmail: null,
+        receiptUrl: null,
+      },
+    ];
+
+    mockGetOrders.mockResolvedValue({ data: transactions, error: null });
+
+    render(<MemoryRouter><TransactionListPage /></MemoryRouter>);
+
+    await waitFor(() => {
+      expect(screen.getByText(/100\.00/)).toBeInTheDocument();
+    });
+
+    const dateInputs = document.querySelectorAll('input[type="date"]');
+    fireEvent.change(dateInputs[0], { target: { value: '2026-05-25' } });
+
+    await waitFor(() => {
+      expect(screen.queryByText(/100\.00/)).not.toBeInTheDocument();
+    });
+
+    expect(screen.getByText(/200\.00/)).toBeInTheDocument();
+  });
+
+  it('should show clear filters button when filter is active', async () => {
+    mockGetOrders.mockResolvedValue({ data: [], error: null });
+
+    render(<MemoryRouter><TransactionListPage /></MemoryRouter>);
+
+    await waitFor(() => {
+      expect(screen.getByText('No transactions found')).toBeInTheDocument();
+    });
+
+    const dateInputs = document.querySelectorAll('input[type="date"]');
+    fireEvent.change(dateInputs[0], { target: { value: '2026-05-25' } });
+
+    expect(screen.getByText('Clear Filters')).toBeInTheDocument();
   });
 
   it('should render with additional_detail when present', async () => {

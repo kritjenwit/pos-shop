@@ -38,6 +38,38 @@ describe('generateThaiQRPayment', () => {
       const qr = generateThaiQRPayment('123456789012345678', 100);
       expect(qr).toBeTruthy();
     });
+
+    it('should generate QR for exactly 15-digit target starting with 1 as e-wallet', () => {
+      const qr = generateThaiQRPayment('123456789012345', 100);
+      expect(qr).toBeTruthy();
+      expect(qr).not.toContain('3015'); // Bill Payment template ID
+    });
+
+    it('should generate QR for exactly 15-digit target not starting with 1 as bill payment', () => {
+      const qr = generateThaiQRPayment('223456789012345', 100, 'REF001');
+      expect(qr).toBeTruthy();
+      expect(qr).toContain('A000000677010112'); // Bill Payment GUID
+      expect(qr).not.toContain('A000000677010111'); // Not PromptPay GUID
+    });
+  });
+
+  describe('Bill Payment targeting', () => {
+    it('should include reference when using bill payment', () => {
+      const qr = generateThaiQRPayment('223456789012345', 100, 'INV-001');
+      expect(qr).toContain('INV-001');
+    });
+
+    it('should include additional reference tag for bill payment', () => {
+      const qr = generateThaiQRPayment('223456789012345', 100, undefined, 'REF2');
+      expect(qr).toContain('REF2');
+    });
+  });
+
+  describe('Additional data with reference', () => {
+    it('should include additional data tag 62 when reference is provided for non-bill-payment', () => {
+      const qr = generateThaiQRPayment('0812345678', 100, 'CUST-REF');
+      expect(qr).toContain('CUST-REF');
+    });
   });
 
   describe('Amount handling', () => {

@@ -144,6 +144,68 @@ describe('ItemManagementPage', () => {
     expect(screen.queryByText(/Are you sure/)).not.toBeInTheDocument();
   });
 
+  it('should show validation error when name is empty', async () => {
+    render(<ItemManagementPage />);
+    fireEvent.click(screen.getByText('Add New'));
+
+    const priceInput = screen.getByLabelText('Price');
+    fireEvent.change(priceInput, { target: { value: '100' } });
+
+    const form = document.querySelector('form')!;
+    fireEvent.submit(form);
+
+    await waitFor(() => {
+      expect(screen.getByText('Invalid name or price')).toBeInTheDocument();
+    });
+  });
+
+  it('should show validation error when price is zero', async () => {
+    render(<ItemManagementPage />);
+    fireEvent.click(screen.getByText('Add New'));
+
+    const nameInput = screen.getByLabelText('Name');
+    fireEvent.change(nameInput, { target: { value: 'Test Item' } });
+
+    const form = document.querySelector('form')!;
+    fireEvent.submit(form);
+
+    await waitFor(() => {
+      expect(screen.getByText('Invalid name or price')).toBeInTheDocument();
+    });
+  });
+
+  it('should reset and close modal on backdrop click', () => {
+    render(<ItemManagementPage />);
+    fireEvent.click(screen.getByText('Add New'));
+    expect(screen.getByText('Add New Item')).toBeInTheDocument();
+
+    const backdrop = document.querySelector('.modal-backdrop');
+    if (backdrop) {
+      fireEvent.click(backdrop);
+    }
+    expect(screen.queryByText('Add New Item')).not.toBeInTheDocument();
+  });
+
+  it('should call updateItem when editing', async () => {
+    render(<ItemManagementPage />);
+
+    const editButton = screen.getByLabelText('Edit Pizza');
+    fireEvent.click(editButton);
+    expect(screen.getByText('Edit Item')).toBeInTheDocument();
+
+    const nameInput = screen.getByDisplayValue('Pizza');
+    fireEvent.change(nameInput, { target: { value: 'Pizza Updated' } });
+    fireEvent.click(screen.getByText('Update'));
+
+    await waitFor(() => {
+      expect(mockUpdateItem).toHaveBeenCalledWith('item-1', {
+        name: 'Pizza Updated',
+        price: 200,
+        image: '',
+      });
+    });
+  });
+
   it('should show empty state when no items', () => {
     mockUseAppState.mockReturnValue({
       items: [],
