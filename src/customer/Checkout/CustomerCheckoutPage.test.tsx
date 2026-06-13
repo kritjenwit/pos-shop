@@ -94,10 +94,10 @@ describe('CustomerCheckoutPage', () => {
     expect(screen.getByText('Your basket is empty')).toBeInTheDocument();
   });
 
-  it('should not submit without customer name', () => {
+  it('should show error when submitting without customer name', () => {
     renderPage();
-    const button = screen.getByText('Place Order');
-    expect(button.closest('button')).toBeDisabled();
+    fireEvent.click(screen.getByText('Place Order'));
+    expect(screen.getByText('Please enter your name')).toBeInTheDocument();
   });
 
   it('should create pending order on submit', async () => {

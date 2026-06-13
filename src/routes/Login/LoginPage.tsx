@@ -19,7 +19,12 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      if (isSignUp && APP.environment !== 'production') {
+      if (isSignUp) {
+        if (APP.environment === 'production') {
+          setError('Sign up is disabled in production');
+          setLoading(false);
+          return;
+        }
         const { error } = await signUp(email, password, fullName);
         if (error) throw error;
       } else {

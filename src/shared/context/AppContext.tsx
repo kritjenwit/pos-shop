@@ -22,6 +22,7 @@ interface AppContextType {
   approveOrder: (orderId: string) => Promise<void>;
   confirmPayment: (orderId: string) => Promise<void>;
   refreshItems: () => Promise<void>;
+  itemsError: string;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -32,6 +33,7 @@ export function AppProvider({ children, basketKey = 'pos-shop-basket' }: { child
   const { user } = useAuth();
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
+  const [itemsError, setItemsError] = useState('');
   const [basket, setBasket] = useState<Map<string, number>>(() => {
     const stored = localStorage.getItem(basketKey);
     if (stored) {
@@ -51,16 +53,18 @@ export function AppProvider({ children, basketKey = 'pos-shop-basket' }: { child
       if (cached) {
         setItems(cached);
         setLoading(false);
+        setItemsError('');
         return;
       }
     }
 
     const { data, error } = await itemsService.getItems();
     if (error) {
-      console.error('Error fetching items:', error);
+      setItemsError(error);
     } else {
       setItems(data || []);
       setCache(CACHE_KEY, data || []);
+      setItemsError('');
     }
     setLoading(false);
   };
@@ -220,6 +224,7 @@ export function AppProvider({ children, basketKey = 'pos-shop-basket' }: { child
         basket,
         total,
         loading,
+        itemsError,
         addItem,
         updateItem,
         deleteItem,

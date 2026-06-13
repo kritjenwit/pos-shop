@@ -43,24 +43,28 @@ describe('TransactionDetailPage', () => {
     expect(document.querySelector('.skeleton')).toBeInTheDocument();
   });
 
-  it('should navigate to transactions list when order not found', async () => {
+  it('should show error when order not found', async () => {
     mockGetOrderDetail.mockResolvedValue({ data: null, error: 'Order not found' });
 
     renderWithRouter();
 
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith('/transactions');
+      expect(screen.getByText('Order not found')).toBeInTheDocument();
     });
+
+    expect(mockNavigate).not.toHaveBeenCalled();
   });
 
-  it('should navigate back when fetch error occurs', async () => {
+  it('should show error on fetch error', async () => {
     mockGetOrderDetail.mockResolvedValue({ data: null, error: 'Not found' });
 
     renderWithRouter();
 
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith('/transactions');
+      expect(screen.getByText('Not found')).toBeInTheDocument();
     });
+
+    expect(mockNavigate).not.toHaveBeenCalled();
   });
 
   it('should render transaction details when data is loaded', async () => {

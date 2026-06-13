@@ -35,19 +35,18 @@ export default function TransactionDetailView({
   const [showQR, setShowQR] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
+  const [fetchError, setFetchError] = useState('');
 
   const fetchTransaction = async () => {
     if (!transactionId) return;
+    setFetchError('');
 
     const { data, error } = await getOrderDetail(transactionId);
 
     if (error || !data) {
       console.error('Error fetching transaction:', error);
-      if (errorRedirectUrl?.startsWith('/')) {
-        navigate(errorRedirectUrl);
-      } else {
-        navigate('/');
-      }
+      setFetchError(error || 'Transaction not found');
+      setLoading(false);
       return;
     }
 
@@ -121,6 +120,32 @@ export default function TransactionDetailView({
         <div className="rounded-lg shadow-card p-5" style={{ backgroundColor: COLORS.cardBackground }}>
           <div className="skeleton h-10 w-32 mx-auto mb-2"></div>
           <div className="skeleton h-4 w-48 mx-auto"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (fetchError) {
+    return (
+      <div className="max-w-md mx-auto space-y-4">
+        <button
+          onClick={() => navigate(errorRedirectUrl?.startsWith('/') ? errorRedirectUrl : '/')}
+          className="flex items-center gap-2 text-sm transition-colors duration-200 cursor-pointer hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-md px-2 py-1"
+          style={{ color: COLORS.textSecondary }}
+        >
+          <ArrowLeft size={16} />
+          Back
+        </button>
+        <div className="flex flex-col items-center justify-center py-16">
+          <Receipt size={48} style={{ color: COLORS.textSecondary }} />
+          <p className="text-lg mt-4 font-medium" style={{ color: COLORS.text }}>{fetchError}</p>
+          <button
+            onClick={fetchTransaction}
+            className="mt-4 px-4 py-2 rounded-lg font-medium transition-all duration-200 cursor-pointer"
+            style={{ backgroundColor: COLORS.primary, color: '#ffffff' }}
+          >
+            Retry
+          </button>
         </div>
       </div>
     );

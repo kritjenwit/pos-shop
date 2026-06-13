@@ -16,9 +16,20 @@ export default function CustomerCheckoutPage() {
   const [createdOrder, setCreatedOrder] = useState<{ id: string, order_id: string, total_amount: number } | null>(null);
 
   const handleCompleteOrder = async () => {
-    if (!customerName.trim()) return;
-    if (customerName.length > VALIDATION.maxCustomerNameLength || customerPhone.length > VALIDATION.maxPhoneLength || additionalDetail.length > VALIDATION.maxAdditionalDetailLength) {
-      setError('One or more fields exceed maximum length');
+    if (!customerName.trim()) {
+      setError('Please enter your name');
+      return;
+    }
+    if (customerName.length > VALIDATION.maxCustomerNameLength) {
+      setError(`Name must be ${VALIDATION.maxCustomerNameLength} characters or less`);
+      return;
+    }
+    if (customerPhone.length > VALIDATION.maxPhoneLength) {
+      setError(`Phone must be ${VALIDATION.maxPhoneLength} characters or less`);
+      return;
+    }
+    if (additionalDetail.length > VALIDATION.maxAdditionalDetailLength) {
+      setError(`Additional detail must be ${VALIDATION.maxAdditionalDetailLength} characters or less`);
       return;
     }
 
@@ -285,7 +296,7 @@ export default function CustomerCheckoutPage() {
 
             <button
               onClick={handleCompleteOrder}
-              disabled={completing || !customerName.trim()}
+              disabled={completing}
               className="w-full mt-8 btn-primary py-4 rounded-2xl text-lg shadow-xl shadow-primary/20 hover:-translate-y-1 transition-all active:translate-y-0 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed disabled:translate-y-0"
             >
               {completing ? (

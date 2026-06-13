@@ -20,6 +20,7 @@ const mockState = vi.hoisted(() => {
     basket: new Map<string, number>(),
     total: 0,
     loading: false,
+    itemsError: '',
   };
 });
 
@@ -29,6 +30,7 @@ vi.mock('../../shared/context/AppContext', () => ({
     basket: mockState.basket,
     total: mockState.total,
     loading: mockState.loading,
+    itemsError: mockState.itemsError,
     addToBasket: mockAddToBasket,
     removeFromBasket: mockRemoveFromBasket,
     getBasketQuantity: mockGetBasketQuantity,
@@ -68,6 +70,7 @@ describe('MenuPage', () => {
     mockState.basket = new Map();
     mockState.total = 0;
     mockState.loading = false;
+    mockState.itemsError = '';
     mockGetBasketQuantity.mockReturnValue(0);
   });
 
@@ -266,5 +269,16 @@ describe('MenuPage', () => {
     expect(screen.getAllByLabelText('Add to cart').length).toBe(2);
     expect(screen.getByLabelText('Remove one Pizza from basket')).toBeInTheDocument();
     expect(screen.getByLabelText('Add one Pizza to basket')).toBeInTheDocument();
+  });
+
+  it('should show error state when itemsError is set', () => {
+    mockState.items = [];
+    mockState.itemsError = 'Failed to fetch';
+    renderPage();
+    expect(screen.getByRole('alert')).toBeInTheDocument();
+    expect(screen.getByText(/Failed to load items/)).toBeInTheDocument();
+    expect(screen.getByText('Retry')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('Retry'));
+    expect(mockRefreshItems).toHaveBeenCalled();
   });
 });

@@ -1,6 +1,7 @@
 import { useState, useEffect, memo, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
-import { CheckCircle, ShoppingCart, Upload } from 'lucide-react';
+import { CheckCircle, ShoppingCart, Upload, ArrowLeft } from 'lucide-react';
 import { useApp } from '../../shared/context/AppContext';
 import { useAuth } from '../../shared/context/AuthContext';
 import { getSignedImageUrl } from '../../shared/lib/images';
@@ -9,6 +10,7 @@ import { COLORS, PAYMENT, VALIDATION } from '../../shared/constants';
 import { resetFormState } from '../../shared/lib/util';
 
 function CustomerCheckoutView() {
+  const navigate = useNavigate();
   const { basket, items, completeOrder, total } = useApp();
   const { user } = useAuth();
 
@@ -50,8 +52,20 @@ function CustomerCheckoutView() {
   };
 
   const handleCompleteOrder = async () => {
-    if (customerName.length > VALIDATION.maxCustomerNameLength || customerPhone.length > VALIDATION.maxPhoneLength || additionalDetail.length > VALIDATION.maxAdditionalDetailLength) {
-      setError('One or more fields exceed maximum length');
+    if (!customerName.trim()) {
+      setError('Please enter your name');
+      return;
+    }
+    if (customerName.length > VALIDATION.maxCustomerNameLength) {
+      setError(`Name must be ${VALIDATION.maxCustomerNameLength} characters or less`);
+      return;
+    }
+    if (customerPhone.length > VALIDATION.maxPhoneLength) {
+      setError(`Phone must be ${VALIDATION.maxPhoneLength} characters or less`);
+      return;
+    }
+    if (additionalDetail.length > VALIDATION.maxAdditionalDetailLength) {
+      setError(`Additional detail must be ${VALIDATION.maxAdditionalDetailLength} characters or less`);
       return;
     }
     setCompleting(true);
@@ -143,6 +157,14 @@ function CustomerCheckoutView() {
 
   return (
     <div className="max-w-md mx-auto">
+      <button
+        onClick={() => navigate('/menu')}
+        className="flex items-center gap-2 mb-4 text-sm font-medium hover:opacity-80 transition-colors"
+        style={{ color: COLORS.textSecondary }}
+      >
+        <ArrowLeft size={18} />
+        Back
+      </button>
       <h1 className="text-2xl font-bold mb-6 font-heading" style={{ color: COLORS.text }}>
         Checkout
       </h1>

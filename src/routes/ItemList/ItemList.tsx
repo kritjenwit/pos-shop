@@ -92,7 +92,7 @@ const ItemCard = memo(function ItemCard({ item }: ItemCardProps) {
 type Tab = 'items' | 'management' | 'checkout';
 
 export default function ItemListPage() {
-  const { items, total, basket, loading: itemsLoading, refreshItems } = useApp();
+  const { items, total, basket, loading: itemsLoading, refreshItems, itemsError } = useApp();
   const [activeTab, setActiveTab] = useState<Tab>('items');
   const [refreshing, setRefreshing] = useState(false);
   const totalItems = useMemo(() => Array.from(basket.values()).reduce((a, b) => a + b, 0), [basket]);
@@ -192,7 +192,15 @@ export default function ItemListPage() {
               <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />
             </button>
           </div>
-          {items.length === 0 ? (
+          {itemsError ? (
+            <div role="alert" className="bg-red-50 border border-red-200 rounded-lg p-8 text-center">
+              <p className="text-red-800 font-bold text-lg mb-2">Failed to load items</p>
+              <p className="text-red-600 text-sm mb-4">{itemsError}</p>
+              <button onClick={handleRefresh} disabled={refreshing} className="btn-secondary">
+                Retry
+              </button>
+            </div>
+          ) : items.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16">
               <ShoppingBag size={48} style={{ color: COLORS.textSecondary }} />
               <p className="text-lg mt-4 font-medium" style={{ color: COLORS.text }}>No items yet</p>

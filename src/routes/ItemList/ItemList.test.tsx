@@ -155,4 +155,16 @@ describe('ItemListPage', () => {
       expect(screen.getByText('Item Management')).toBeInTheDocument();
     });
   });
+
+  it('should show error state when items fetch fails', async () => {
+    mockSupabaseSelect.mockResolvedValueOnce({ data: null, error: { message: 'Failed to load' } });
+
+    renderPage();
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toBeInTheDocument();
+    });
+    expect(screen.getByText(/Failed to load items/)).toBeInTheDocument();
+    expect(screen.getByText('Retry')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('Retry'));
+  });
 });

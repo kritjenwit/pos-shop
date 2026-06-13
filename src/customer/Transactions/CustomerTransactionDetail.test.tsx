@@ -42,14 +42,16 @@ describe('CustomerTransactionDetailPage', () => {
     expect(document.querySelector('.skeleton')).toBeInTheDocument();
   });
 
-  it('should navigate to public transactions when order not found', async () => {
+  it('should show error when order not found', async () => {
     mockGetOrderDetail.mockResolvedValue({ data: null, error: 'Order not found' });
 
     renderWithRouter();
 
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith('/public/transactions');
+      expect(screen.getByText('Order not found')).toBeInTheDocument();
     });
+
+    expect(mockNavigate).not.toHaveBeenCalled();
   });
 
   it('should render transaction details when data is loaded', async () => {

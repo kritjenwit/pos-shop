@@ -48,17 +48,19 @@ describe('PendingOrderDetailPage', () => {
     expect(document.querySelector('.skeleton')).toBeInTheDocument();
   });
 
-  it('should navigate back when transaction fetch fails', async () => {
+  it('should show error when transaction fetch fails', async () => {
     mockGetOrderDetail.mockResolvedValue({ data: null, error: 'Not found' });
 
     renderWithRouter();
 
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith('/pending-orders');
+      expect(screen.getByText('Not found')).toBeInTheDocument();
     });
+
+    expect(mockNavigate).not.toHaveBeenCalled();
   });
 
-  it('should navigate back when order is not pending', async () => {
+  it('should show processed message when order is not pending', async () => {
     mockGetOrderDetail.mockResolvedValue({
       data: { id: 'order-1', status: 'completed', totalAmount: 100, items: [], createdAt: '2026-05-23T10:00:00Z', orderId: null, customerName: null, customerPhone: null, additionalDetail: null, receiptUrl: null, sellerName: null, sellerEmail: null, sellerPhone: null },
       error: null,
@@ -67,8 +69,10 @@ describe('PendingOrderDetailPage', () => {
     renderWithRouter();
 
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith('/pending-orders');
+      expect(screen.getByText('This order has already been processed')).toBeInTheDocument();
     });
+
+    expect(mockNavigate).not.toHaveBeenCalled();
   });
 
   it('should render order details for pending order', async () => {

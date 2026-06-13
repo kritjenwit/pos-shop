@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { COLORS } from '../../shared/constants';
-import { Receipt, Check, ArrowLeft, AlertTriangle } from 'lucide-react';
+import { Check, ArrowLeft, AlertTriangle } from 'lucide-react';
 import { getOrderDetail, approveOrder, cancelOrder } from '../../shared/lib/orders';
 import type { OrderDetail } from '../../shared/lib/orders';
 
@@ -13,22 +13,26 @@ export default function PendingOrderDetailPage() {
   const [approving, setApproving] = useState(false);
   const [error, setError] = useState('');
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [fetchError, setFetchError] = useState('');
 
   const fetchOrder = async () => {
     if (!id) return;
     setLoading(true);
+    setFetchError('');
 
     const { data, error } = await getOrderDetail(id);
 
     if (error || !data) {
       console.error('Error fetching order:', error);
-      navigate('/pending-orders');
+      setFetchError(error || 'Order not found');
+      setLoading(false);
       return;
     }
 
     // Only allow pending orders on this page
     if (data.status !== 'pending') {
-      navigate('/pending-orders');
+      setFetchError('This order has already been processed');
+      setLoading(false);
       return;
     }
 
@@ -114,13 +118,33 @@ export default function PendingOrderDetailPage() {
     );
   }
 
-  if (!order) {
+  if (fetchError) {
     return (
-      <div className="flex flex-col items-center justify-center py-16">
-        <Receipt size={48} style={{ color: COLORS.textSecondary }} />
-        <p className="text-lg mt-4 font-medium" style={{ color: COLORS.text }}>Order not found</p>
+      <div className="max-w-lg mx-auto">
+        <button
+          onClick={() => navigate('/pending-orders')}
+          className="flex items-center gap-2 text-sm mt-4 text-slate-500 hover:text-primary transition-colors"
+        >
+          <ArrowLeft size={16} />
+          Back to Pending Orders
+        </button>
+        <div className="flex flex-col items-center justify-center py-16">
+          <AlertTriangle size={48} style={{ color: COLORS.textSecondary }} />
+          <p className="text-lg mt-4 font-medium" style={{ color: COLORS.text }}>{fetchError}</p>
+          <button
+            onClick={fetchOrder}
+            className="mt-4 px-4 py-2 rounded-lg font-medium transition-all duration-200 cursor-pointer"
+            style={{ backgroundColor: COLORS.primary, color: '#ffffff' }}
+          >
+            Retry
+          </button>
+        </div>
       </div>
     );
+  }
+
+  if (!order) {
+    return null;
   }
 
   return (

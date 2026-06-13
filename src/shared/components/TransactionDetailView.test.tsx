@@ -47,20 +47,22 @@ describe('TransactionDetailView', () => {
     expect(document.querySelector('.skeleton')).toBeInTheDocument();
   });
 
-  it('should navigate to errorRedirectUrl on fetch error', async () => {
+  it('should show error state on fetch error', async () => {
     mockGetOrderDetail.mockResolvedValue({ data: null, error: 'Not found' });
     render(<TransactionDetailView transactionId="tx-1" shareUrl="https://example.com/tx/1" errorRedirectUrl="/error" />);
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith('/error');
+      expect(screen.getByText('Not found')).toBeInTheDocument();
     });
+    expect(mockNavigate).not.toHaveBeenCalled();
   });
 
-  it('should navigate to / when errorRedirectUrl is external', async () => {
-    mockGetOrderDetail.mockResolvedValue({ data: null, error: 'Not found' });
-    render(<TransactionDetailView transactionId="tx-1" shareUrl="https://example.com/tx/1" errorRedirectUrl="https://external.com/error" />);
+  it('should show error state when data is null', async () => {
+    mockGetOrderDetail.mockResolvedValue({ data: null, error: null });
+    render(<TransactionDetailView transactionId="tx-1" shareUrl="https://example.com/tx/1" errorRedirectUrl="/" />);
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith('/');
+      expect(screen.getByText('Transaction not found')).toBeInTheDocument();
     });
+    expect(mockNavigate).not.toHaveBeenCalled();
   });
 
   it('should render transaction data', async () => {

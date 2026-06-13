@@ -181,15 +181,17 @@ describe('CheckoutPage', () => {
 
     it('should complete order on submit', async () => {
       renderCheckout();
+      fireEvent.change(screen.getByLabelText('Customer Name'), { target: { value: 'John' } });
       fireEvent.click(screen.getByText('Complete Order'));
 
       await waitFor(() => {
-        expect(mockCompleteOrder).toHaveBeenCalledWith(null, 'completed', null, null, null);
+        expect(mockCompleteOrder).toHaveBeenCalledWith(null, 'completed', 'John', null, null);
       });
     });
 
     it('should show success screen after order completion', async () => {
       renderCheckout();
+      fireEvent.change(screen.getByLabelText('Customer Name'), { target: { value: 'John' } });
       fireEvent.click(screen.getByText('Complete Order'));
 
       await waitFor(() => {
@@ -214,6 +216,7 @@ describe('CheckoutPage', () => {
 
     it('should reset state after clicking New Order', async () => {
       renderCheckout();
+      fireEvent.change(screen.getByLabelText('Customer Name'), { target: { value: 'John' } });
       fireEvent.click(screen.getByText('Complete Order'));
 
       await waitFor(() => {
@@ -228,20 +231,22 @@ describe('CheckoutPage', () => {
       renderCheckout();
       fireEvent.change(screen.getByLabelText('Customer Name'), { target: { value: 'A'.repeat(201) } });
       fireEvent.click(screen.getByText('Complete Order'));
-      expect(screen.getByText('One or more fields exceed maximum length')).toBeInTheDocument();
+      expect(screen.getByText('Name must be 200 characters or less')).toBeInTheDocument();
     });
 
     it('should show validation error when phone exceeds max length', () => {
       renderCheckout();
+      fireEvent.change(screen.getByLabelText('Customer Name'), { target: { value: 'John' } });
       fireEvent.change(screen.getByLabelText('Phone Number'), { target: { value: '0'.repeat(31) } });
       fireEvent.click(screen.getByText('Complete Order'));
-      expect(screen.getByText('One or more fields exceed maximum length')).toBeInTheDocument();
+      expect(screen.getByText('Phone must be 30 characters or less')).toBeInTheDocument();
     });
 
     it('should show error when completeOrder throws', async () => {
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       mockCompleteOrder.mockRejectedValue(new Error('Network error'));
       renderCheckout();
+      fireEvent.change(screen.getByLabelText('Customer Name'), { target: { value: 'John' } });
       fireEvent.click(screen.getByText('Complete Order'));
 
       await waitFor(() => {
@@ -279,14 +284,18 @@ describe('CheckoutPage', () => {
       expect(document.querySelector('.skeleton')).toBeInTheDocument();
     });
 
-    it('should redirect when order not found', async () => {
+    it('should show error when order not found', async () => {
       mockOrdersGetOrderDetail.mockResolvedValue({ data: null, error: 'Not found' });
 
       renderCheckout(['/checkout/tx-1']);
 
       await waitFor(() => {
-        expect(mockNavigate).toHaveBeenCalledWith('/pending-orders');
+        expect(screen.getByText('Not found')).toBeInTheDocument();
       });
+
+      fireEvent.click(screen.getByText('Back to Pending Orders'));
+
+      expect(mockNavigate).toHaveBeenCalledWith('/pending-orders');
     });
 
     it('should render payment view for approved order', async () => {
@@ -377,12 +386,12 @@ describe('CheckoutPage', () => {
       expect(mockNavigate).toHaveBeenCalledWith('/pending-orders');
     });
 
-    it('should show order not found view when no data and no error', async () => {
+    it('should show error when no order data and no error message', async () => {
       mockOrdersGetOrderDetail.mockResolvedValue({ data: null, error: null });
       renderCheckout(['/checkout/tx-1']);
 
       await waitFor(() => {
-        expect(screen.getByText('Order not found')).toBeInTheDocument();
+        expect(screen.getByText('Order not found or not approved')).toBeInTheDocument();
       });
 
       fireEvent.click(screen.getByText('Back to Pending Orders'));
@@ -440,7 +449,7 @@ describe('CheckoutPage', () => {
       fireEvent.change(screen.getByLabelText('Customer Name'), { target: { value: 'A'.repeat(201) } });
       fireEvent.click(screen.getByText('Confirm Payment'));
 
-      expect(screen.getByText('One or more fields exceed maximum length')).toBeInTheDocument();
+      expect(screen.getByText('Name must be 200 characters or less')).toBeInTheDocument();
     });
 
     it('should show error when confirmPayment throws', async () => {

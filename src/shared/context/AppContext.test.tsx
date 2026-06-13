@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
+import { renderHook, act, waitFor } from '@testing-library/react';
 import { AppProvider, useApp } from './AppContext';
 
 const { mockFrom, mockSelect, mockUpdate, mockDelete, mockEq, mockSingle, mockOrder } = vi.hoisted(() => {
@@ -272,6 +272,28 @@ describe('AppContext', () => {
       await result.current.refreshItems();
     });
     expect(mockSelect).toHaveBeenCalled();
+  });
+
+  it('should set itemsError on fetch error', async () => {
+    mockSelect.mockResolvedValueOnce({ data: null, error: { message: 'DB error' } });
+    const { result } = renderAppHook();
+    await waitFor(() => {
+      expect(result.current.itemsError).toBe('DB error');
+    });
+    expect(result.current.items).toEqual([]);
+  });
+
+  it('should clear itemsError on successful fetch', async () => {
+    mockSelect.mockResolvedValueOnce({ data: null, error: { message: 'DB error' } });
+    const { result } = renderAppHook();
+    await waitFor(() => {
+      expect(result.current.itemsError).toBe('DB error');
+    });
+    expect(result.current.items).toEqual([]);
+    await act(async () => {
+      await result.current.refreshItems();
+    });
+    expect(result.current.itemsError).toBe('');
   });
 
   it('should throw error when useApp is used outside provider', () => {

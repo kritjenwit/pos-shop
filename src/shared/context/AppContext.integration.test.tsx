@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
+import { renderHook, act, waitFor } from '@testing-library/react';
 import { AppProvider, useApp } from './AppContext';
 
 const mockGetCache = vi.hoisted(() => vi.fn(() => null));
@@ -151,5 +151,25 @@ describe('AppContext integration', () => {
         await result.current.confirmPayment('bad-order');
       })
     ).rejects.toThrow('Payment failed');
+  });
+
+  it('should set itemsError when getItems fails', async () => {
+    mockItemsGetItems.mockResolvedValueOnce({ data: null, error: 'Network error' });
+    const { result } = renderAppHook();
+    await waitFor(() => {
+      expect(result.current.itemsError).toBe('Network error');
+    });
+  });
+
+  it('should clear itemsError after successful retry', async () => {
+    mockItemsGetItems.mockResolvedValueOnce({ data: null, error: 'First fail' });
+    const { result } = renderAppHook();
+    await waitFor(() => {
+      expect(result.current.itemsError).toBe('First fail');
+    });
+    await act(async () => {
+      await result.current.refreshItems();
+    });
+    expect(result.current.itemsError).toBe('');
   });
 });

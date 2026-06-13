@@ -125,7 +125,7 @@ function ItemCard({ item, index }: ItemCardProps) {
 }
 
 export default function MenuPage() {
-  const { items, total, basket, loading: itemsLoading, refreshItems } = useApp();
+  const { items, total, basket, loading: itemsLoading, refreshItems, itemsError } = useApp();
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -159,6 +159,20 @@ export default function MenuPage() {
               </div>
             </div>
           ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (!itemsLoading && itemsError) {
+    return (
+      <div className="max-w-6xl mx-auto px-4 py-8">
+        <div role="alert" className="bg-red-50 border border-red-200 rounded-2xl p-8 text-center">
+          <p className="text-red-800 font-bold text-lg mb-2">Failed to load items</p>
+          <p className="text-red-600 text-sm mb-4">{itemsError}</p>
+          <button onClick={handleRefresh} disabled={refreshing} className="btn-secondary">
+            Retry
+          </button>
         </div>
       </div>
     );

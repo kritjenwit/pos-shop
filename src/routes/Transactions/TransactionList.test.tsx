@@ -179,56 +179,28 @@ describe('TransactionListPage', () => {
     expect(mockInvalidateCache).toHaveBeenCalled();
   });
 
-  it('should filter by start date', async () => {
-    const transactions = [
-      {
-        id: 'tx-old',
-        totalAmount: 100,
-        status: 'completed',
-        sellerId: 'u1',
-        createdAt: '2026-05-20T10:00:00Z',
-        itemsCount: 1,
-        orderId: null,
-        customerName: null,
-        customerPhone: null,
-        additionalDetail: null,
-        sellerName: null,
-        sellerEmail: null,
-        receiptUrl: null,
-      },
-      {
-        id: 'tx-new',
-        totalAmount: 200,
-        status: 'completed',
-        sellerId: 'u1',
-        createdAt: '2026-06-01T10:00:00Z',
-        itemsCount: 2,
-        orderId: null,
-        customerName: null,
-        customerPhone: null,
-        additionalDetail: null,
-        sellerName: null,
-        sellerEmail: null,
-        receiptUrl: null,
-      },
-    ];
-
-    mockGetOrders.mockResolvedValue({ data: transactions, error: null });
+  it('should fetch with dateRange when start date is set', async () => {
+    mockGetOrders.mockResolvedValue({ data: [], error: null });
 
     render(<MemoryRouter><TransactionListPage /></MemoryRouter>);
 
     await waitFor(() => {
-      expect(screen.getByText(/100\.00/)).toBeInTheDocument();
+      expect(screen.getByText('No transactions found')).toBeInTheDocument();
     });
+
+    mockGetOrders.mockClear();
+    mockGetOrders.mockResolvedValue({ data: [], error: null });
 
     const dateInputs = document.querySelectorAll('input[type="date"]');
     fireEvent.change(dateInputs[0], { target: { value: '2026-05-25' } });
 
     await waitFor(() => {
-      expect(screen.queryByText(/100\.00/)).not.toBeInTheDocument();
+      expect(mockGetOrders).toHaveBeenCalledWith(
+        expect.objectContaining({
+          dateRange: expect.objectContaining({ start: '2026-05-25T00:00:00' }),
+        }),
+      );
     });
-
-    expect(screen.getByText(/200\.00/)).toBeInTheDocument();
   });
 
   it('should show clear filters button when filter is active', async () => {
@@ -246,55 +218,28 @@ describe('TransactionListPage', () => {
     expect(screen.getByText('Clear Filters')).toBeInTheDocument();
   });
 
-  it('should filter by end date', async () => {
-    const transactions = [
-      {
-        id: 'tx-early',
-        totalAmount: 100,
-        status: 'completed',
-        sellerId: 'u1',
-        createdAt: '2026-05-20T10:00:00Z',
-        itemsCount: 1,
-        orderId: null,
-        customerName: null,
-        customerPhone: null,
-        additionalDetail: null,
-        sellerName: null,
-        sellerEmail: null,
-        receiptUrl: null,
-      },
-      {
-        id: 'tx-late',
-        totalAmount: 200,
-        status: 'completed',
-        sellerId: 'u1',
-        createdAt: '2026-06-01T10:00:00Z',
-        itemsCount: 2,
-        orderId: null,
-        customerName: null,
-        customerPhone: null,
-        additionalDetail: null,
-        sellerName: null,
-        sellerEmail: null,
-        receiptUrl: null,
-      },
-    ];
-
-    mockGetOrders.mockResolvedValue({ data: transactions, error: null });
+  it('should fetch with dateRange when end date is set', async () => {
+    mockGetOrders.mockResolvedValue({ data: [], error: null });
 
     render(<MemoryRouter><TransactionListPage /></MemoryRouter>);
 
     await waitFor(() => {
-      expect(screen.getByText(/100\.00/)).toBeInTheDocument();
+      expect(screen.getByText('No transactions found')).toBeInTheDocument();
     });
+
+    mockGetOrders.mockClear();
+    mockGetOrders.mockResolvedValue({ data: [], error: null });
 
     const dateInputs = document.querySelectorAll('input[type="date"]');
     fireEvent.change(dateInputs[1], { target: { value: '2026-05-25' } });
 
     await waitFor(() => {
-      expect(screen.getByText(/100\.00/)).toBeInTheDocument();
+      expect(mockGetOrders).toHaveBeenCalledWith(
+        expect.objectContaining({
+          dateRange: expect.objectContaining({ end: '2026-05-25T23:59:59' }),
+        }),
+      );
     });
-    expect(screen.queryByText(/200\.00/)).not.toBeInTheDocument();
   });
 
   it('should handle seller display name fallback', async () => {

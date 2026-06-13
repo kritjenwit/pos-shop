@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Calendar, ChevronRight, X, Search, Receipt, RefreshCw } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { COLORS } from '../../shared/constants';
@@ -24,27 +24,14 @@ export default function TransactionListPage() {
   const pageSize = 20;
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
-  const CACHE_KEY = 'transactions';
-
-  const filteredTransactions = useMemo(() => {
-    let filtered = transactions;
-
-    if (startDate) {
-      filtered = filtered.filter(t => t.createdAt >= `${startDate}T00:00:00`);
-    }
-    if (endDate) {
-      filtered = filtered.filter(t => t.createdAt <= `${endDate}T23:59:59`);
-    }
-    if (selectedSeller) {
-      filtered = filtered.filter(t => t.sellerId === selectedSeller.id);
-    }
-
-    return filtered;
-  }, [transactions, startDate, endDate, selectedSeller]);
+  const getCacheKey = () => {
+    return `transactions-${currentPage}-${startDate || ''}-${endDate || ''}-${selectedSeller?.id || ''}`;
+  };
 
   const fetchTransactions = async (useCache = true) => {
+    const cacheKey = getCacheKey();
     if (useCache) {
-      const cached = getCache<OrderSummary[]>(CACHE_KEY);
+      const cached = getCache<OrderSummary[]>(cacheKey);
       if (cached) {
         setTransactions(cached);
         setLoading(false);
@@ -54,7 +41,12 @@ export default function TransactionListPage() {
 
     setLoading(true);
     setError('');
-    const { data, total, error: fetchErr } = await getOrders({ page: currentPage, pageSize });
+    const { data, total, error: fetchErr } = await getOrders({
+      page: currentPage,
+      pageSize,
+      dateRange: startDate || endDate ? { start: startDate ? `${startDate}T00:00:00` : undefined, end: endDate ? `${endDate}T23:59:59` : undefined } : undefined,
+      sellerId: selectedSeller?.id || undefined,
+    });
 
     if (fetchErr) {
       setError(typeof fetchErr === 'string' ? fetchErr : 'Failed to load transactions');
@@ -64,7 +56,7 @@ export default function TransactionListPage() {
     }
 
     if (data) {
-      setCache(CACHE_KEY, data);
+      setCache(cacheKey, data);
       setTransactions(data);
       setTotalCount(total || 0);
     }
@@ -73,7 +65,7 @@ export default function TransactionListPage() {
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    invalidateCache(CACHE_KEY);
+    invalidateCache(getCacheKey());
     setCurrentPage(1);
     await fetchTransactions(false);
     setRefreshing(false);
@@ -92,8 +84,12 @@ export default function TransactionListPage() {
   };
 
   useEffect(() => {
+    setCurrentPage(1);
+  }, [startDate, endDate, selectedSeller]);
+
+  useEffect(() => {
     fetchTransactions(true);
-  }, [currentPage]);
+  }, [currentPage, startDate, endDate, selectedSeller]);
 
   useEffect(() => {
     if (sellerQuery.length >= 1) {
@@ -284,7 +280,7 @@ export default function TransactionListPage() {
             </div>
           ))}
         </div>
-      ) : filteredTransactions.length === 0 ? (
+      ) : transactions.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 rounded-lg shadow-sm" style={{ backgroundColor: COLORS.cardBackground }}>
           <Receipt size={48} style={{ color: COLORS.textSecondary }} />
           <p className="text-lg mt-4 font-medium" style={{ color: COLORS.text }}>No transactions found</p>
@@ -294,7 +290,7 @@ export default function TransactionListPage() {
         </div>
       ) : (
         <div className="space-y-2">
-          {filteredTransactions.map((t) => (
+          {transactions.map((t) => (
             <Link
               key={t.id}
               to={`/transactions/${t.id}`}

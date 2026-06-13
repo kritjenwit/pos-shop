@@ -41,6 +41,7 @@ const AdminCheckoutView = /*#__PURE__*/memo(function AdminCheckoutView({ orderId
     additional_detail?: string | null;
   } | null>(null);
   const [adminLoading, setAdminLoading] = useState(false);
+  const [loadError, setLoadError] = useState('');
 
   useEffect(() => {
     if (user?.phone) {
@@ -49,13 +50,16 @@ const AdminCheckoutView = /*#__PURE__*/memo(function AdminCheckoutView({ orderId
   }, [user]);
 
   const loadAdminOrder = async () => {
+    setLoadError('');
     setAdminLoading(true);
     try {
       const { data: tx, error } = await orders.getOrderDetail(orderId);
 
       if (error || !tx || tx.status !== 'approved') {
         console.error('Error fetching admin order:', error);
-        navigate('/pending-orders');
+        setLoadError(error ? String(error) : 'Order not found or not approved');
+        setAdminOrder(null);
+        setAdminLoading(false);
         return;
       }
 
@@ -96,8 +100,20 @@ const AdminCheckoutView = /*#__PURE__*/memo(function AdminCheckoutView({ orderId
   }, [orderId]);
 
   const handleCompleteOrder = async () => {
-    if (customerName.length > VALIDATION.maxCustomerNameLength || customerPhone.length > VALIDATION.maxPhoneLength || additionalDetail.length > VALIDATION.maxAdditionalDetailLength) {
-      setError('One or more fields exceed maximum length');
+    if (!customerName.trim()) {
+      setError('Please enter your name');
+      return;
+    }
+    if (customerName.length > VALIDATION.maxCustomerNameLength) {
+      setError(`Name must be ${VALIDATION.maxCustomerNameLength} characters or less`);
+      return;
+    }
+    if (customerPhone.length > VALIDATION.maxPhoneLength) {
+      setError(`Phone must be ${VALIDATION.maxPhoneLength} characters or less`);
+      return;
+    }
+    if (additionalDetail.length > VALIDATION.maxAdditionalDetailLength) {
+      setError(`Additional detail must be ${VALIDATION.maxAdditionalDetailLength} characters or less`);
       return;
     }
     setCompleting(true);
@@ -164,6 +180,23 @@ const AdminCheckoutView = /*#__PURE__*/memo(function AdminCheckoutView({ orderId
       <div className="flex flex-col items-center justify-center min-h-[50vh] py-16" role="status" aria-label="Loading">
         <div className="skeleton h-8 w-32 mb-4"></div>
         <div className="skeleton h-4 w-64 mb-2"></div>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh] py-16">
+        <div className="p-4 rounded-lg text-sm bg-red-50 text-red-600 border border-red-200 mb-4" role="alert">
+          {loadError}
+        </div>
+        <button
+          onClick={() => navigate('/pending-orders')}
+          className="btn-primary flex items-center gap-2"
+        >
+          <ArrowLeft size={16} />
+          Back to Pending Orders
+        </button>
       </div>
     );
   }
