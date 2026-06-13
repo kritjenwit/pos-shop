@@ -1,8 +1,9 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import { supabase, type Item, deleteImage } from '../lib/supabase';
+import type { Item } from '../lib/supabase';
 import { useAuth } from './AuthContext';
 import { getCache, setCache, invalidateCache } from '../lib/cache';
 import * as orders from '../lib/orders';
+import * as itemsService from '../lib/items';
 
 interface AppContextType {
   items: Item[];
@@ -54,7 +55,7 @@ export function AppProvider({ children, basketKey = 'pos-shop-basket' }: { child
       }
     }
 
-    const { data, error } = await supabase.from('items').select('*');
+    const { data, error } = await itemsService.getItems();
     if (error) {
       console.error('Error fetching items:', error);
     } else {
@@ -79,21 +80,21 @@ export function AppProvider({ children, basketKey = 'pos-shop-basket' }: { child
   }, 0);
 
   const addItem = async (item: Omit<Item, 'id'>) => {
-    const { data, error } = await supabase.from('items').insert(item).select();
+    const { data, error } = await itemsService.addItem(item);
     if (error) {
       console.error('Error adding item:', error);
-      throw error;
+      throw new Error(error);
     }
-    if (data && data.length > 0) {
-      setItems((prev) => [...prev, data[0]]);
+    if (data) {
+      setItems((prev) => [...prev, data]);
     }
   };
 
   const updateItem = async (id: string, updates: Partial<Item>) => {
-    const { error } = await supabase.from('items').update(updates).eq('id', id);
+    const { error } = await itemsService.updateItem(id, updates);
     if (error) {
       console.error('Error updating item:', error);
-      throw error;
+      throw new Error(error);
     }
     setItems((prev) =>
       prev.map((item) => (item.id === id ? { ...item, ...updates } : item))
@@ -101,19 +102,12 @@ export function AppProvider({ children, basketKey = 'pos-shop-basket' }: { child
   };
 
   const deleteItem = async (id: string) => {
-    // Get the item to delete to get its image URL
     const itemToDelete = items.find(item => item.id === id);
 
-    // Delete item from database
-    const { error } = await supabase.from('items').delete().eq('id', id);
+    const { error } = await itemsService.deleteItem(id, itemToDelete?.image);
     if (error) {
       console.error('Error deleting item:', error);
-      throw error;
-    }
-
-    // Delete associated image from storage if it exists
-    if (itemToDelete?.image) {
-      await deleteImage(itemToDelete.image);
+      throw new Error(error);
     }
 
     setItems((prev) => prev.filter((item) => item.id !== id));

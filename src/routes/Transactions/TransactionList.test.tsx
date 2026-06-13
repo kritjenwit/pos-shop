@@ -4,7 +4,7 @@ import { MemoryRouter } from 'react-router-dom';
 import TransactionListPage from './TransactionList';
 
 const mockGetOrders = vi.hoisted(() => vi.fn());
-const mockGetCache = vi.hoisted(() => vi.fn(() => null));
+const mockGetCache = vi.hoisted(() => vi.fn<(key: string) => unknown>(() => null));
 const mockSetCache = vi.hoisted(() => vi.fn());
 const mockInvalidateCache = vi.hoisted(() => vi.fn());
 
