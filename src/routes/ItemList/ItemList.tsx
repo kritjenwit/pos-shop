@@ -1,11 +1,19 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { Minus, Plus, ShoppingBag, Package, CreditCard, ShoppingCart, RefreshCw } from 'lucide-react';
 import { useApp } from '../../shared/context/AppContext';
 import type { Item } from '../../shared/lib/supabase';
 import { getSignedImageUrl } from '../../shared/lib/supabase';
-import ItemManagementPage from '../ItemManagement/ItemManagement';
-import CheckoutPage from '../Checkout/Checkout';
 import { COLORS, UI } from '../../shared/constants';
+
+const ItemManagementPage = lazy(() => import('../ItemManagement/ItemManagement'));
+const CheckoutPage = lazy(() => import('../Checkout/Checkout'));
+
+const tabSuspense = (
+  <div className="p-4">
+    <div className="skeleton h-8 w-48 mb-4"></div>
+    <div className="skeleton h-64 w-full"></div>
+  </div>
+);
 
 interface ItemCardProps {
   item: Item;
@@ -201,8 +209,16 @@ export default function ItemListPage() {
         </>
       )}
 
-      {activeTab === 'management' && <ItemManagementPage />}
-      {activeTab === 'checkout' && <CheckoutPage />}
+      {activeTab === 'management' && (
+        <Suspense fallback={tabSuspense}>
+          <ItemManagementPage />
+        </Suspense>
+      )}
+      {activeTab === 'checkout' && (
+        <Suspense fallback={tabSuspense}>
+          <CheckoutPage />
+        </Suspense>
+      )}
     </div>
   );
 }

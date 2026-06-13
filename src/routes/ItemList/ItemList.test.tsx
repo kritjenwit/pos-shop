@@ -5,6 +5,14 @@ import ItemListPage from './ItemList';
 import { AppProvider } from '../../shared/context/AppContext';
 import { AuthProvider } from '../../shared/context/AuthContext';
 
+vi.mock('../ItemManagement/ItemManagement', () => ({
+  default: () => <div>Item Management</div>,
+}));
+
+vi.mock('../Checkout/Checkout', () => ({
+  default: () => <div>Checkout</div>,
+}));
+
 const mockGetSignedImageUrl = vi.hoisted(() => vi.fn(() => Promise.resolve(null)));
 
 vi.mock('../../shared/lib/supabase', () => ({
