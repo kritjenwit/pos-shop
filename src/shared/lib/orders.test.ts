@@ -219,10 +219,6 @@ describe('orders', () => {
 
   describe('createOrder', () => {
     const basket = new Map([['item-1', 2], ['item-2', 1]]);
-    const items = [
-      { id: 'item-1', name: 'Pizza', price: 200, image: '', quantity: 10 },
-      { id: 'item-2', name: 'Cola', price: 50, image: '', quantity: 20 },
-    ];
 
     function makeInsertMock(dataResult: Record<string, unknown>) {
       const mockSingle = vi.fn().mockResolvedValue({ data: dataResult, error: null });
@@ -253,7 +249,7 @@ describe('orders', () => {
       const { mockInsert } = makeInsertMock({ id: 'tx-new', order_id: 'ORD-001', total_amount: 450 });
       mockFrom.mockImplementation(makeItemsInsertMock(mockInsert));
 
-      const { data, error } = await createOrder(basket, items, 'user-1');
+      const { data, error } = await createOrder(basket, 'user-1');
 
       expect(error).toBeNull();
       expect(data).not.toBeNull();
@@ -266,14 +262,14 @@ describe('orders', () => {
       mockFrom.mockImplementation(makeItemsInsertMock(mockInsert));
 
       const receiptFile = new File([''], 'receipt.jpg', { type: 'image/jpeg' });
-      const { error } = await createOrder(basket, items, 'user-1', { receiptFile });
+      const { error } = await createOrder(basket, 'user-1', { receiptFile });
 
       expect(mockUploadImage).toHaveBeenCalledWith(receiptFile);
       expect(error).toBeNull();
     });
 
     it('should return error with empty basket', async () => {
-      const { data, error } = await createOrder(new Map(), items, 'user-1');
+      const { data, error } = await createOrder(new Map(), 'user-1');
 
       expect(data).toBeNull();
       expect(error).toBe('Basket is empty');
@@ -286,7 +282,7 @@ describe('orders', () => {
         return { insert: vi.fn() };
       });
 
-      const { data, error } = await createOrder(basket, items, 'user-1');
+      const { data, error } = await createOrder(basket, 'user-1');
       expect(data).toBeNull();
       expect(error).toBe('Price fetch failed');
     });
@@ -307,7 +303,7 @@ describe('orders', () => {
         return { insert: vi.fn() };
       });
 
-      const { data, error } = await createOrder(new Map([['item-1', 1]]), items, 'user-1');
+      const { data, error } = await createOrder(new Map([['item-1', 1]]), 'user-1');
       expect(error).toBeNull();
       expect(mockInsert).toHaveBeenCalledWith(expect.objectContaining({ total_amount: 999 }));
       expect(data!.totalAmount).toBe(999);
@@ -326,7 +322,7 @@ describe('orders', () => {
         return { insert: mockInsert };
       });
 
-      const { data, error } = await createOrder(basket, items, 'user-1');
+      const { data, error } = await createOrder(basket, 'user-1');
 
       expect(data).toBeNull();
       expect(error).toBe('Insert failed');
@@ -342,7 +338,7 @@ describe('orders', () => {
         return { insert: vi.fn() };
       });
 
-      const { data, error } = await createOrder(basket, items, 'user-1');
+      const { data, error } = await createOrder(basket, 'user-1');
 
       expect(data).toBeNull();
       expect(error).toBe('Items insert failed');
@@ -351,7 +347,7 @@ describe('orders', () => {
     it('should handle thrown error in createOrder', async () => {
       mockFrom.mockImplementation(() => { throw new Error('Network error'); });
 
-      const { data, error } = await createOrder(basket, items, 'user-1');
+      const { data, error } = await createOrder(basket, 'user-1');
 
       expect(data).toBeNull();
       expect(error).toBe('Network error');
@@ -360,7 +356,6 @@ describe('orders', () => {
 
   describe('createPendingOrder', () => {
     const basket = new Map([['item-1', 2]]);
-    const items = [{ id: 'item-1', name: 'Pizza', price: 200, image: '', quantity: 10 }];
 
     function makeInsertMock(dataResult: Record<string, unknown>) {
       const mockSingle = vi.fn().mockResolvedValue({ data: dataResult, error: null });
@@ -389,7 +384,7 @@ describe('orders', () => {
         return { insert: vi.fn() };
       });
 
-      const { data, error } = await createPendingOrder(basket, items, {
+      const { data, error } = await createPendingOrder(basket, {
         name: 'John',
         phone: '0811111111',
         detail: 'Extra cheese',
@@ -401,7 +396,7 @@ describe('orders', () => {
     });
 
     it('should return error with empty basket', async () => {
-      const { data, error } = await createPendingOrder(new Map(), items);
+      const { data, error } = await createPendingOrder(new Map());
 
       expect(data).toBeNull();
       expect(error).toBe('Basket is empty');
@@ -422,7 +417,6 @@ describe('orders', () => {
 
       const { data, error } = await createPendingOrder(
         new Map([['item-1', 2]]),
-        [{ id: 'item-1', name: 'Pizza', price: 200, image: '', quantity: 10 }],
       );
 
       expect(data).toBeNull();
@@ -441,7 +435,6 @@ describe('orders', () => {
 
       const { data, error } = await createPendingOrder(
         new Map([['item-1', 2]]),
-        [{ id: 'item-1', name: 'Pizza', price: 200, image: '', quantity: 10 }],
       );
 
       expect(data).toBeNull();
@@ -453,7 +446,6 @@ describe('orders', () => {
 
       const { data, error } = await createPendingOrder(
         new Map([['item-1', 2]]),
-        [{ id: 'item-1', name: 'Pizza', price: 200, image: '', quantity: 10 }],
       );
 
       expect(data).toBeNull();
@@ -637,10 +629,6 @@ describe('orders', () => {
 
   describe('order lifecycle', () => {
     const basket = new Map([['item-1', 2], ['item-2', 1]]);
-    const items = [
-      { id: 'item-1', name: 'Pizza', price: 200, image: '', quantity: 10 },
-      { id: 'item-2', name: 'Cola', price: 50, image: '', quantity: 20 },
-    ];
     const txId = 'tx-flow-1';
     const txData = { id: txId, total_amount: 450, status: 'pending', created_at: '2026-05-23T10:00:00Z', order_id: 'ORD-FLOW', customer_name: 'John', customer_phone: '0811111111', additional_detail: null, receipt_url: null, created_by: 'user-1', users: { email: 'staff@shop.com', full_name: 'Staff', phone: '0812345678' } };
 
@@ -664,7 +652,7 @@ describe('orders', () => {
         return { insert: tiInsert };
       });
 
-      const { data: order, error: createErr } = await createPendingOrder(basket, items, {
+      const { data: order, error: createErr } = await createPendingOrder(basket, {
         name: 'John', phone: '0811111111', detail: 'No ice',
       });
       expect(createErr).toBeNull();

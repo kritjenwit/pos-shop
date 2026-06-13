@@ -350,7 +350,7 @@ describe('AppContext', () => {
     });
 
     expect(mockOrdersCreateOrder).toHaveBeenCalled();
-    expect(mockOrdersCreateOrder.mock.calls[0][3].receiptFile).toBe(receiptFile);
+    expect(mockOrdersCreateOrder.mock.calls[0][2].receiptFile).toBe(receiptFile);
   });
 
   it('should create pending order via orders module', async () => {
