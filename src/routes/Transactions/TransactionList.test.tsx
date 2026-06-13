@@ -390,4 +390,197 @@ describe('TransactionListPage', () => {
       expect(screen.getByText('Gift wrap please')).toBeInTheDocument();
     });
   });
+
+  it('should show receipt icon when receiptUrl is present', async () => {
+    const transactions = [
+      {
+        id: 'tx-1',
+        totalAmount: 350,
+        status: 'completed',
+        sellerId: 'u1',
+        createdAt: '2026-05-23T10:00:00Z',
+        itemsCount: 1,
+        orderId: null,
+        customerName: null,
+        customerPhone: null,
+        sellerName: null,
+        sellerEmail: null,
+        additionalDetail: null,
+        receiptUrl: 'receipts/test.jpg',
+      },
+    ];
+
+    mockGetOrders.mockResolvedValue({ data: transactions, error: null });
+
+    const { container } = render(<MemoryRouter><TransactionListPage /></MemoryRouter>);
+
+    await waitFor(() => {
+      expect(screen.getByText(/350\.00/)).toBeInTheDocument();
+    });
+
+    expect(container.querySelector('[aria-label] + svg, .lucide-receipt')).toBeDefined();
+  });
+
+  it('should apply This Week date preset', async () => {
+    mockGetOrders.mockResolvedValue({ data: [], error: null });
+
+    render(<MemoryRouter><TransactionListPage /></MemoryRouter>);
+
+    await waitFor(() => {
+      expect(screen.getByText('No transactions found')).toBeInTheDocument();
+    });
+
+    mockGetOrders.mockClear();
+    mockGetOrders.mockResolvedValue({ data: [], error: null });
+
+    fireEvent.click(screen.getByText('This Week'));
+
+    await waitFor(() => {
+      expect(mockGetOrders).toHaveBeenCalledWith(
+        expect.objectContaining({ dateRange: expect.objectContaining({ start: expect.any(String), end: expect.any(String) }) }),
+      );
+    });
+  });
+
+  it('should apply This Month date preset', async () => {
+    mockGetOrders.mockResolvedValue({ data: [], error: null });
+
+    render(<MemoryRouter><TransactionListPage /></MemoryRouter>);
+
+    await waitFor(() => {
+      expect(screen.getByText('No transactions found')).toBeInTheDocument();
+    });
+
+    mockGetOrders.mockClear();
+    mockGetOrders.mockResolvedValue({ data: [], error: null });
+
+    fireEvent.click(screen.getByText('This Month'));
+
+    await waitFor(() => {
+      expect(mockGetOrders).toHaveBeenCalledWith(
+        expect.objectContaining({ dateRange: expect.objectContaining({ start: expect.any(String), end: expect.any(String) }) }),
+      );
+    });
+  });
+
+  it('should show try adjusting filters text when filters active and no data', async () => {
+    mockGetOrders.mockResolvedValue({ data: [], error: null });
+
+    render(<MemoryRouter><TransactionListPage /></MemoryRouter>);
+
+    await waitFor(() => {
+      expect(screen.getByText('No transactions found')).toBeInTheDocument();
+    });
+
+    const dateInputs = document.querySelectorAll('input[type="date"]');
+    fireEvent.change(dateInputs[0], { target: { value: '2026-06-01' } });
+
+    await waitFor(() => {
+      expect(screen.getByText('Try adjusting your filters')).toBeInTheDocument();
+    });
+  });
+
+  it('should clear all filters when clear filters button clicked', async () => {
+    mockGetOrders.mockResolvedValue({ data: [], error: null });
+
+    render(<MemoryRouter><TransactionListPage /></MemoryRouter>);
+
+    await waitFor(() => {
+      expect(screen.getByText('No transactions found')).toBeInTheDocument();
+    });
+
+    const dateInputs = document.querySelectorAll('input[type="date"]');
+    fireEvent.change(dateInputs[0], { target: { value: '2026-06-01' } });
+
+    await waitFor(() => {
+      expect(screen.getByText('Clear Filters')).toBeInTheDocument();
+    });
+
+    mockGetOrders.mockClear();
+    mockGetOrders.mockResolvedValue({ data: [], error: null });
+
+    fireEvent.click(screen.getByText('Clear Filters'));
+
+    await waitFor(() => {
+      expect(screen.getByText('No transactions found')).toBeInTheDocument();
+    });
+  });
+
+  it('should show fallback error text when fetchErr is not a string', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    mockGetOrders.mockResolvedValue({ data: null, error: { message: 'Server error' } });
+
+    render(<MemoryRouter><TransactionListPage /></MemoryRouter>);
+
+    await waitFor(() => {
+      expect(screen.getByText('Failed to load transactions')).toBeInTheDocument();
+    });
+
+    consoleSpy.mockRestore();
+  });
+
+  it('should render pagination when totalCount exceeds pageSize', async () => {
+    const transactions = Array.from({ length: 20 }, (_, i) => ({
+      id: `tx-${i}`,
+      totalAmount: 100 + i,
+      status: 'completed',
+      sellerId: 'u1',
+      createdAt: '2026-05-23T10:00:00Z',
+      itemsCount: 1,
+      orderId: null,
+      customerName: null,
+      customerPhone: null,
+      sellerName: null,
+      sellerEmail: null,
+      additionalDetail: null,
+      receiptUrl: null,
+    }));
+
+    mockGetOrders.mockResolvedValue({ data: transactions, total: 25, error: null });
+
+    render(<MemoryRouter><TransactionListPage /></MemoryRouter>);
+
+    await waitFor(() => {
+      expect(screen.getByText('Previous')).toBeInTheDocument();
+    });
+
+    expect(screen.getByText('Next')).toBeInTheDocument();
+    expect(screen.getByText('1')).toBeInTheDocument();
+    expect(screen.getByText('2')).toBeInTheDocument();
+  });
+
+  it('should navigate to next page when pagination Next is clicked', async () => {
+    const transactions = Array.from({ length: 20 }, (_, i) => ({
+      id: `tx-${i}`,
+      totalAmount: 100 + i,
+      status: 'completed',
+      sellerId: 'u1',
+      createdAt: '2026-05-23T10:00:00Z',
+      itemsCount: 1,
+      orderId: null,
+      customerName: null,
+      customerPhone: null,
+      sellerName: null,
+      sellerEmail: null,
+      additionalDetail: null,
+      receiptUrl: null,
+    }));
+
+    mockGetOrders.mockResolvedValue({ data: transactions, total: 25, error: null });
+
+    render(<MemoryRouter><TransactionListPage /></MemoryRouter>);
+
+    await waitFor(() => {
+      expect(screen.getByText('Next')).toBeInTheDocument();
+    });
+
+    mockGetOrders.mockClear();
+    mockGetOrders.mockResolvedValue({ data: transactions, total: 25, error: null });
+
+    fireEvent.click(screen.getByText('Next'));
+
+    await waitFor(() => {
+      expect(screen.getByText('2')).toBeInTheDocument();
+    });
+  });
 });

@@ -1,10 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { act } from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import LoginPage from './LoginPage';
 import { AuthProvider } from '../../shared/context/AuthContext';
 
 const mockSignIn = vi.hoisted(() => vi.fn());
 const mockSignUp = vi.hoisted(() => vi.fn());
+const mockAppConstants = vi.hoisted(() => ({ name: 'POS Shop', environment: 'development' }));
 
 vi.mock('../../shared/lib/auth', () => ({
   signIn: mockSignIn,
@@ -12,7 +14,7 @@ vi.mock('../../shared/lib/auth', () => ({
 }));
 
 vi.mock('../../shared/constants', () => ({
-  APP: { name: 'POS Shop', environment: 'development' },
+  APP: mockAppConstants,
   COLORS: {
     primary: '#111111',
     background: '#F5F5F5',
@@ -26,6 +28,7 @@ vi.mock('../../shared/constants', () => ({
 describe('LoginPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockAppConstants.environment = 'development';
     mockSignIn.mockResolvedValue({ user: null, error: null });
     mockSignUp.mockResolvedValue({ user: null, error: null });
   });
@@ -178,5 +181,68 @@ describe('LoginPage', () => {
     await waitFor(() => {
       expect(screen.getByText('Account created! Please sign in.')).toBeInTheDocument();
     });
+  });
+
+  it('should show production sign-up guard', async () => {
+    renderLoginPage();
+
+    fireEvent.click(screen.getByText('Sign Up'));
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Create Account' })).toBeInTheDocument();
+    });
+
+    mockAppConstants.environment = 'production';
+
+    fireEvent.change(screen.getByLabelText('Full Name'), { target: { value: 'New User' } });
+    fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'new@test.com' } });
+    fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'password123' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Sign Up' }));
+
+    await waitFor(() => {
+      expect(screen.getByText('Sign up is disabled in production')).toBeInTheDocument();
+    });
+
+    expect(mockSignUp).not.toHaveBeenCalled();
+  });
+
+  it('should show generic error for non-Error thrown values', async () => {
+    mockSignIn.mockResolvedValue({ user: null, error: 'string error' });
+
+    renderLoginPage();
+
+    fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'test@test.com' } });
+    fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'password123' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Sign In' }));
+
+    await waitFor(() => {
+      expect(screen.getByText('An error occurred')).toBeInTheDocument();
+    });
+  });
+
+  it('should auto-clear sign-up success message after timeout', async () => {
+    vi.useFakeTimers();
+    mockSignUp.mockResolvedValue({ user: { id: '2', email: 'new@test.com' }, error: null });
+
+    renderLoginPage();
+    fireEvent.click(screen.getByText('Sign Up'));
+
+    fireEvent.change(screen.getByLabelText('Full Name'), { target: { value: 'New User' } });
+    fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'new@test.com' } });
+    fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'Password1!' } });
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Sign Up' }));
+    });
+
+    expect(screen.getByText('Account created! Please sign in.')).toBeInTheDocument();
+
+    await act(async () => {
+      vi.advanceTimersByTime(2500);
+    });
+
+    expect(screen.queryByText('Account created! Please sign in.')).not.toBeInTheDocument();
+
+    vi.useRealTimers();
   });
 });

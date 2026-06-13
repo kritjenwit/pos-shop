@@ -208,4 +208,68 @@ describe('CustomerCheckoutPage', () => {
       expect(screen.getByText('Invalid phone format. Use 0XXXXXXXXX')).toBeInTheDocument();
     });
   });
+
+  it('should show validation error when name exceeds max length', () => {
+    renderPage();
+
+    fireEvent.change(screen.getByLabelText(/Full Name/), {
+      target: { value: 'A'.repeat(201) },
+    });
+
+    fireEvent.click(screen.getByText('Place Order'));
+
+    expect(screen.getByText('Name must be 200 characters or less')).toBeInTheDocument();
+  });
+
+  it('should show validation error when phone exceeds max length', () => {
+    renderPage();
+
+    fireEvent.change(screen.getByLabelText(/Full Name/), {
+      target: { value: 'John' },
+    });
+
+    fireEvent.change(screen.getByLabelText(/Phone Number/), {
+      target: { value: '0'.repeat(31) },
+    });
+
+    fireEvent.click(screen.getByText('Place Order'));
+
+    expect(screen.getByText('Phone must be 30 characters or less')).toBeInTheDocument();
+  });
+
+  it('should show validation error when additional detail exceeds max length', () => {
+    renderPage();
+
+    fireEvent.change(screen.getByLabelText(/Full Name/), {
+      target: { value: 'John' },
+    });
+
+    fireEvent.change(screen.getByLabelText(/Additional Detail/), {
+      target: { value: 'A'.repeat(1001) },
+    });
+
+    fireEvent.click(screen.getByText('Place Order'));
+
+    expect(screen.getByText('Additional detail must be 1000 characters or less')).toBeInTheDocument();
+  });
+
+  it('should reset to checkout form when Start New Order is clicked', async () => {
+    renderPage();
+
+    fireEvent.change(screen.getByLabelText(/Full Name/), {
+      target: { value: 'John Doe' },
+    });
+
+    fireEvent.click(screen.getByText('Place Order'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Order Received!')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText('Start New Order'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Checkout')).toBeInTheDocument();
+    });
+  });
 });
