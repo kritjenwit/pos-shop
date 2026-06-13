@@ -6,6 +6,8 @@ export interface OrderQuery {
   status?: string;
   sellerId?: string;
   dateRange?: { start?: string; end?: string };
+  page?: number;
+  pageSize?: number;
 }
 
 export interface CustomerInfo {
@@ -135,11 +137,11 @@ async function buildTransactionItemsFromDb(
   return { data: { items, total }, error: null };
 }
 
-export async function getOrders(query?: OrderQuery) {
+export async function getOrders(query?: OrderQuery): Promise<{ data: OrderSummary[] | null; total: number; error: string | null }> {
   try {
     let dbQuery = supabase
       .from('transactions')
-      .select('*, users(email, full_name)');
+      .select('*, users(email, full_name)', { count: 'exact' });
 
     if (query?.status) {
       dbQuery = dbQuery.eq('status', query.status);
@@ -155,11 +157,16 @@ export async function getOrders(query?: OrderQuery) {
     }
 
     dbQuery = dbQuery.order('created_at', { ascending: false });
+    if (query?.page && query?.pageSize) {
+      const start = (query.page - 1) * query.pageSize;
+      const end = start + query.pageSize - 1;
+      dbQuery = dbQuery.range(start, end);
+    }
 
-    const { data, error } = await dbQuery;
+    const { data, count, error } = await dbQuery;
 
     if (error) {
-      return { data: null, error: error.message };
+      return { data: null, total: 0, error: error.message };
     }
 
     const txList = (data || []) as Record<string, unknown>[];
@@ -184,9 +191,9 @@ export async function getOrders(query?: OrderQuery) {
       mapTransaction(t, batchCounts.get(t.id as string) || 0),
     );
 
-    return { data: summaries, error: null };
+    return { data: summaries, total: count || 0, error: null };
   } catch (err) {
-    return { data: null, error: err instanceof Error ? err.message : 'Failed to fetch orders' };
+    return { data: null, total: 0, error: err instanceof Error ? err.message : 'Failed to fetch orders' };
   }
 }
 

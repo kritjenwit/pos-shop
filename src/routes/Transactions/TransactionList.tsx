@@ -19,6 +19,10 @@ export default function TransactionListPage() {
   const [selectedSeller, setSelectedSeller] = useState<SellerOption | null>(null);
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const pageSize = 20;
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
   const CACHE_KEY = 'transactions';
 
@@ -50,7 +54,7 @@ export default function TransactionListPage() {
 
     setLoading(true);
     setError('');
-    const { data, error: fetchErr } = await getOrders();
+    const { data, total, error: fetchErr } = await getOrders({ page: currentPage, pageSize });
 
     if (fetchErr) {
       setError(typeof fetchErr === 'string' ? fetchErr : 'Failed to load transactions');
@@ -62,6 +66,7 @@ export default function TransactionListPage() {
     if (data) {
       setCache(CACHE_KEY, data);
       setTransactions(data);
+      setTotalCount(total || 0);
     }
     setLoading(false);
   };
@@ -69,6 +74,7 @@ export default function TransactionListPage() {
   const handleRefresh = async () => {
     setRefreshing(true);
     invalidateCache(CACHE_KEY);
+    setCurrentPage(1);
     await fetchTransactions(false);
     setRefreshing(false);
   };
@@ -87,7 +93,7 @@ export default function TransactionListPage() {
 
   useEffect(() => {
     fetchTransactions(true);
-  }, []);
+  }, [currentPage]);
 
   useEffect(() => {
     if (sellerQuery.length >= 1) {
@@ -338,6 +344,40 @@ export default function TransactionListPage() {
                      </div>
             </Link>
           ))}
+        </div>
+      )}
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2 pt-4">
+          <button
+            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            disabled={currentPage <= 1}
+            className="px-3 py-1.5 rounded text-sm font-medium transition-all duration-200 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            style={{ backgroundColor: COLORS['primary-10'], color: COLORS.primary }}
+          >
+            Previous
+          </button>
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+            <button
+              key={page}
+              onClick={() => setCurrentPage(page)}
+              className="w-8 h-8 rounded text-sm font-medium transition-all duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              style={{
+                backgroundColor: page === currentPage ? COLORS.primary : COLORS['primary-10'],
+                color: page === currentPage ? '#ffffff' : COLORS.primary,
+              }}
+            >
+              {page}
+            </button>
+          ))}
+          <button
+            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+            disabled={currentPage >= totalPages}
+            className="px-3 py-1.5 rounded text-sm font-medium transition-all duration-200 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            style={{ backgroundColor: COLORS['primary-10'], color: COLORS.primary }}
+          >
+            Next
+          </button>
         </div>
       )}
     </div>

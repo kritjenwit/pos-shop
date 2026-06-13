@@ -1,5 +1,6 @@
 import { supabase, type User } from './supabase';
 import bcrypt from 'bcryptjs';
+import { logEvent } from './audit';
 
 const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
 
@@ -46,6 +47,7 @@ export async function signIn(email: string, password: string): Promise<{ user: U
   }
 
   rateLimitStore.delete(email);
+  logEvent('sign_in', data.id).catch(() => {});
   return { user: data as User, error: null };
 }
 
@@ -79,6 +81,7 @@ export async function signUp(email: string, password: string, fullName?: string)
     return { user: null, error: new Error(error.message) };
   }
 
+  logEvent('sign_up', data.id, { email }).catch(() => {});
   return { user: data as User, error: null };
 }
 

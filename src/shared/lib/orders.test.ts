@@ -4,6 +4,18 @@ const mockFrom = vi.hoisted(() => vi.fn());
 const mockUploadImage = vi.hoisted(() => vi.fn());
 const mockGetSignedImageUrl = vi.hoisted(() => vi.fn());
 
+function makeGetOrdersBuilder(resolvedValue: { data: Record<string, unknown>[] | null; error: unknown }) {
+  const builder: Record<string, unknown> = {};
+  const rangeResolved = { ...resolvedValue, count: Array.isArray(resolvedValue.data) ? resolvedValue.data.length : 0 };
+  builder.range = vi.fn(() => Promise.resolve(rangeResolved));
+  builder.order = vi.fn(() => builder);
+  builder.eq = vi.fn(() => builder);
+  builder.gte = vi.fn(() => builder);
+  builder.lte = vi.fn(() => builder);
+  builder.then = (onfulfilled: (v: typeof rangeResolved) => unknown) => Promise.resolve(rangeResolved).then(onfulfilled);
+  return builder;
+}
+
 vi.mock('./supabase', () => ({
   supabase: { from: mockFrom },
 }));
@@ -37,25 +49,18 @@ describe('orders', () => {
 
   describe('getOrders', () => {
     it('should return order summaries', async () => {
-      const mockOrderFn = vi.fn().mockResolvedValue({
-        data: [
-          { id: 'tx-1', total_amount: 500, status: 'completed', created_at: '2026-05-23T10:00:00Z', order_id: 'ORD-001', customer_name: null, customer_phone: null, additional_detail: null, receipt_url: null, created_by: 'user-1', users: { email: 'staff@shop.com', full_name: 'Staff' } },
-        ],
-        error: null,
-      });
-      const mockGte = vi.fn();
-      const mockLte = vi.fn();
-      const mockEq = vi.fn();
-      const mockSelect = vi.fn(() => ({ eq: mockEq, order: mockOrderFn, gte: mockGte, lte: mockLte }));
+      const txData = [
+        { id: 'tx-1', total_amount: 500, status: 'completed', created_at: '2026-05-23T10:00:00Z', order_id: 'ORD-001', customer_name: null, customer_phone: null, additional_detail: null, receipt_url: null, created_by: 'user-1', users: { email: 'staff@shop.com', full_name: 'Staff' } },
+      ];
+      const builder = makeGetOrdersBuilder({ data: txData, error: null });
+      const mockSelect = vi.fn(() => builder);
       mockFrom.mockReturnValue({ select: mockSelect });
 
       const mockCountIn = vi.fn().mockResolvedValue({ data: [{ transaction_id: 'tx-1' }, { transaction_id: 'tx-1' }, { transaction_id: 'tx-1' }], error: null });
       const mockCountSelect = vi.fn(() => ({ in: mockCountIn }));
 
       mockFrom.mockImplementation((table: string) => {
-        if (table === 'transaction_items') {
-          return { select: mockCountSelect };
-        }
+        if (table === 'transaction_items') return { select: mockCountSelect };
         return { select: mockSelect };
       });
 
@@ -69,20 +74,19 @@ describe('orders', () => {
     });
 
     it('should apply status filter', async () => {
-      const mockEq = vi.fn();
-      const mockOrderFn = vi.fn().mockResolvedValue({ data: [], error: null });
-      const mockSelect = vi.fn(() => ({ eq: mockEq, order: mockOrderFn }));
+      const builder = makeGetOrdersBuilder({ data: [], error: null });
+      const mockSelect = vi.fn(() => builder);
       mockFrom.mockReturnValue({ select: mockSelect });
 
       await getOrders({ status: 'pending' });
 
-      expect(mockSelect).toHaveBeenCalledWith('*, users(email, full_name)');
-      expect(mockEq).toHaveBeenCalledWith('status', 'pending');
+      expect(mockSelect).toHaveBeenCalledWith('*, users(email, full_name)', { count: 'exact' });
+      expect(builder.eq).toHaveBeenCalledWith('status', 'pending');
     });
 
     it('should return null with error on failure', async () => {
-      const mockOrderFn = vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } });
-      const mockSelect = vi.fn(() => ({ eq: vi.fn(), order: mockOrderFn }));
+      const builder = makeGetOrdersBuilder({ data: null, error: { message: 'DB error' } });
+      const mockSelect = vi.fn(() => builder);
       mockFrom.mockReturnValue({ select: mockSelect });
 
       const { data, error } = await getOrders();
@@ -92,36 +96,33 @@ describe('orders', () => {
     });
 
     it('should apply sellerId filter', async () => {
-      const mockOrderFn = vi.fn().mockResolvedValue({ data: [], error: null });
-      const mockEq = vi.fn(() => ({ order: mockOrderFn }));
-      const mockSelect = vi.fn(() => ({ eq: mockEq, order: mockOrderFn }));
+      const builder = makeGetOrdersBuilder({ data: [], error: null });
+      const mockSelect = vi.fn(() => builder);
       mockFrom.mockReturnValue({ select: mockSelect });
 
       await getOrders({ sellerId: 'user-1' });
 
-      expect(mockEq).toHaveBeenCalledWith('created_by', 'user-1');
+      expect(builder.eq).toHaveBeenCalledWith('created_by', 'user-1');
     });
 
     it('should apply start date filter', async () => {
-      const mockOrderFn = vi.fn().mockResolvedValue({ data: [], error: null });
-      const mockGte = vi.fn(() => ({ order: mockOrderFn }));
-      const mockSelect = vi.fn(() => ({ eq: vi.fn(), gte: mockGte, order: mockOrderFn }));
+      const builder = makeGetOrdersBuilder({ data: [], error: null });
+      const mockSelect = vi.fn(() => builder);
       mockFrom.mockReturnValue({ select: mockSelect });
 
       await getOrders({ dateRange: { start: '2026-01-01' } });
 
-      expect(mockGte).toHaveBeenCalledWith('created_at', '2026-01-01');
+      expect(builder.gte).toHaveBeenCalledWith('created_at', '2026-01-01');
     });
 
     it('should apply end date filter', async () => {
-      const mockOrderFn = vi.fn().mockResolvedValue({ data: [], error: null });
-      const mockLte = vi.fn(() => ({ order: mockOrderFn }));
-      const mockSelect = vi.fn(() => ({ eq: vi.fn(), lte: mockLte, order: mockOrderFn }));
+      const builder = makeGetOrdersBuilder({ data: [], error: null });
+      const mockSelect = vi.fn(() => builder);
       mockFrom.mockReturnValue({ select: mockSelect });
 
       await getOrders({ dateRange: { end: '2026-12-31' } });
 
-      expect(mockLte).toHaveBeenCalledWith('created_at', '2026-12-31');
+      expect(builder.lte).toHaveBeenCalledWith('created_at', '2026-12-31');
     });
 
     it('should handle thrown error in getOrders', async () => {
@@ -131,6 +132,25 @@ describe('orders', () => {
 
       expect(data).toBeNull();
       expect(error).toBe('Network error');
+    });
+
+    it('should apply pagination when page and pageSize are provided', async () => {
+      const txData = [
+        { id: 'tx-1', total_amount: 100, status: 'completed', created_at: '2026-06-01T00:00:00Z', order_id: null, customer_name: null, customer_phone: null, additional_detail: null, receipt_url: null, created_by: 'user-1', users: { email: 'a@b.com', full_name: 'A' } },
+      ];
+      const builder = makeGetOrdersBuilder({ data: txData, error: null });
+      mockFrom.mockReturnValue({ select: vi.fn(() => builder) });
+
+      mockFrom.mockImplementation((table: string) => {
+        if (table === 'transaction_items') return { select: vi.fn(() => ({ in: vi.fn().mockResolvedValue({ data: [], error: null }) })) };
+        return { select: vi.fn(() => builder) };
+      });
+
+      const { data, total } = await getOrders({ page: 1, pageSize: 10 });
+
+      expect(data).toHaveLength(1);
+      expect(total).toBe(1);
+      expect(builder.range).toHaveBeenCalledWith(0, 9);
     });
   });
 
