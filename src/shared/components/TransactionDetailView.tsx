@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
-import { ArrowLeft, Share2, Copy, Check, Receipt, ImageOff } from 'lucide-react';
+import { ArrowLeft, Share2, Copy, Check, Receipt, ImageOff, Upload } from 'lucide-react';
 import { COLORS, PAYMENT } from '../constants';
 import { getOrderDetail } from '../lib/orders';
 import type { OrderDetail } from '../lib/orders';
@@ -13,6 +13,8 @@ interface TransactionDetailViewProps {
   backUrl?: string;
   backLabel?: string;
   showStatusColors?: boolean;
+  allowUpload?: boolean;
+  onUpload?: (id: string, file: File) => Promise<{ data: { receiptUrl: string } | null; error: string | null }>;
 }
 
 export default function TransactionDetailView({
@@ -22,12 +24,17 @@ export default function TransactionDetailView({
   backUrl,
   backLabel = 'Back',
   showStatusColors = false,
+  allowUpload = false,
+  onUpload,
 }: TransactionDetailViewProps) {
   const navigate = useNavigate();
+  const fileRef = useRef<HTMLInputElement>(null);
   const [transaction, setTransaction] = useState<OrderDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [showQR, setShowQR] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
 
   const fetchTransaction = async () => {
     if (!transactionId) return;
@@ -61,6 +68,27 @@ export default function TransactionDetailView({
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       console.error('Failed to copy:', err);
+    }
+  };
+
+  const handleUploadReceipt = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !onUpload) return;
+
+    setUploading(true);
+    setUploadError('');
+
+    try {
+      const { error } = await onUpload(transactionId, file);
+      if (error) {
+        setUploadError(error);
+      } else {
+        await fetchTransaction();
+      }
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : 'Failed to upload receipt');
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -177,6 +205,17 @@ export default function TransactionDetailView({
             Receipt
           </h3>
           <img src={transaction.receiptUrl} alt="Receipt" className="w-full rounded-lg" style={{ maxHeight: '400px', objectFit: 'contain' }} />
+          {allowUpload && onUpload && (
+            <div className="mt-3">
+              <button
+                onClick={() => fileRef.current?.click()}
+                disabled={uploading}
+                className="btn-secondary text-sm py-1.5 px-3"
+              >
+                {uploading ? 'Uploading...' : 'Replace Receipt'}
+              </button>
+            </div>
+          )}
         </div>
       ) : (
         <div className="rounded-lg shadow-card p-5" style={{ backgroundColor: COLORS.cardBackground }}>
@@ -187,8 +226,34 @@ export default function TransactionDetailView({
             </h3>
           </div>
           <p className="text-sm" style={{ color: COLORS.textSecondary }}>Receipt not found</p>
+          {allowUpload && onUpload && (
+            <div className="mt-3">
+              <button
+                onClick={() => fileRef.current?.click()}
+                disabled={uploading}
+                className="btn-secondary text-sm py-1.5 px-3"
+              >
+                <Upload size={14} className="inline mr-1" />
+                {uploading ? 'Uploading...' : 'Upload Receipt'}
+              </button>
+            </div>
+          )}
         </div>
       )}
+
+      {uploadError && (
+        <div className="p-3 rounded-lg text-sm bg-red-50 text-red-600 border border-red-200" role="alert">
+          {uploadError}
+        </div>
+      )}
+
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*"
+        onChange={handleUploadReceipt}
+        className="hidden"
+      />
 
       <div className="rounded-lg shadow-card p-5" style={{ backgroundColor: COLORS.cardBackground }}>
         <div className="flex justify-between items-center mb-4">

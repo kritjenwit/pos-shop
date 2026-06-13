@@ -136,4 +136,58 @@ describe('TransactionDetailView', () => {
     expect(await screen.findByText('Additional Detail')).toBeInTheDocument();
     expect(screen.getByText('Extra spicy please')).toBeInTheDocument();
   });
+
+  it('should show upload button when allowUpload is true', async () => {
+    mockGetOrderDetail.mockResolvedValue({ data: baseTx, error: null });
+    render(<TransactionDetailView transactionId="tx-1" shareUrl="https://example.com/tx/1" errorRedirectUrl="/" allowUpload onUpload={vi.fn()} />);
+
+    expect(await screen.findByText('Upload Receipt')).toBeInTheDocument();
+  });
+
+  it('should show replace button when receipt exists and allowUpload is true', async () => {
+    mockGetOrderDetail.mockResolvedValue({ data: { ...baseTx, receiptUrl: 'https://example.com/rec.jpg' }, error: null });
+    render(<TransactionDetailView transactionId="tx-1" shareUrl="https://example.com/tx/1" errorRedirectUrl="/" allowUpload onUpload={vi.fn()} />);
+
+    expect(await screen.findByText('Replace Receipt')).toBeInTheDocument();
+  });
+
+  it('should not show upload button when allowUpload is false', async () => {
+    mockGetOrderDetail.mockResolvedValue({ data: baseTx, error: null });
+    render(<TransactionDetailView transactionId="tx-1" shareUrl="https://example.com/tx/1" errorRedirectUrl="/" />);
+
+    expect(await screen.findByText('Receipt not found')).toBeInTheDocument();
+    expect(screen.queryByText('Upload Receipt')).not.toBeInTheDocument();
+  });
+
+  it('should call onUpload when file is selected', async () => {
+    const mockUpload = vi.fn().mockResolvedValue({ data: { receiptUrl: 'https://example.com/new-rec.jpg' }, error: null });
+    mockGetOrderDetail.mockResolvedValue({ data: baseTx, error: null });
+    render(<TransactionDetailView transactionId="tx-1" shareUrl="https://example.com/tx/1" errorRedirectUrl="/" allowUpload onUpload={mockUpload} />);
+
+    await screen.findByText('Upload Receipt');
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    expect(fileInput).toBeInTheDocument();
+
+    const file = new File(['test'], 'rec.jpg', { type: 'image/jpeg' });
+    fireEvent.change(fileInput, { target: { files: [file] } });
+
+    await waitFor(() => {
+      expect(mockUpload).toHaveBeenCalledWith('tx-1', file);
+    });
+  });
+
+  it('should show upload error when onUpload fails', async () => {
+    const mockUpload = vi.fn().mockResolvedValue({ data: null, error: 'Upload failed' });
+    mockGetOrderDetail.mockResolvedValue({ data: baseTx, error: null });
+    render(<TransactionDetailView transactionId="tx-1" shareUrl="https://example.com/tx/1" errorRedirectUrl="/" allowUpload onUpload={mockUpload} />);
+
+    await screen.findByText('Upload Receipt');
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    const file = new File(['test'], 'rec.jpg', { type: 'image/jpeg' });
+    fireEvent.change(fileInput, { target: { files: [file] } });
+
+    expect(await screen.findByText('Upload failed')).toBeInTheDocument();
+  });
 });

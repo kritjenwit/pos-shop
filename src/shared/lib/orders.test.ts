@@ -25,6 +25,7 @@ const {
   approveOrder,
   cancelOrder,
   confirmPayment,
+  uploadReceipt,
 } = await import('./orders');
 
 describe('orders', () => {
@@ -575,6 +576,40 @@ describe('orders', () => {
       mockFrom.mockImplementation(() => { throw new Error('Network error'); });
 
       const { error } = await confirmPayment('order-1');
+
+      expect(error).toBe('Network error');
+    });
+  });
+
+  describe('uploadReceipt', () => {
+    it('should upload file and update receipt_url', async () => {
+      const mockEq = vi.fn().mockResolvedValue({ error: null });
+      const mockUpdate = vi.fn(() => ({ eq: mockEq }));
+      mockFrom.mockReturnValue({ update: mockUpdate });
+      mockUploadImage.mockResolvedValue('receipts/new-rec.jpg');
+
+      const { data, error } = await uploadReceipt('order-1', new File([''], 'rec.jpg'));
+
+      expect(error).toBeNull();
+      expect(data?.receiptUrl).toBe('receipts/new-rec.jpg');
+      expect(mockUploadImage).toHaveBeenCalled();
+      expect(mockUpdate).toHaveBeenCalledWith({ receipt_url: 'receipts/new-rec.jpg' });
+    });
+
+    it('should return error when update fails', async () => {
+      const mockEq = vi.fn().mockResolvedValue({ error: { message: 'Update failed' } });
+      mockFrom.mockReturnValue({ update: vi.fn(() => ({ eq: mockEq })) });
+      mockUploadImage.mockResolvedValue('receipts/rec.jpg');
+
+      const { error } = await uploadReceipt('order-1', new File([''], 'rec.jpg'));
+
+      expect(error).toBe('Update failed');
+    });
+
+    it('should handle thrown errors in catch block', async () => {
+      mockFrom.mockImplementation(() => { throw new Error('Network error'); });
+
+      const { error } = await uploadReceipt('order-1', new File([''], 'rec.jpg'));
 
       expect(error).toBe('Network error');
     });

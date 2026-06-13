@@ -17,6 +17,7 @@ const mockGetOrderDetail = vi.hoisted(() => vi.fn());
 
 vi.mock('../../shared/lib/orders', () => ({
   getOrderDetail: mockGetOrderDetail,
+  uploadReceipt: vi.fn(),
 }));
 
 describe('TransactionDetailPage', () => {

@@ -455,3 +455,22 @@ export async function confirmPayment(
     return { data: null, error: err instanceof Error ? err.message : 'Failed to confirm payment' };
   }
 }
+
+export async function uploadReceipt(id: string, file: File) {
+  try {
+    const receiptUrl = await uploadImage(file);
+
+    const { error } = await supabase
+      .from('transactions')
+      .update({ receipt_url: receiptUrl })
+      .eq('id', id);
+
+    if (error) {
+      return { data: null, error: error.message };
+    }
+
+    return { data: { receiptUrl }, error: null };
+  } catch (err) {
+    return { data: null, error: err instanceof Error ? err.message : 'Failed to upload receipt' };
+  }
+}
