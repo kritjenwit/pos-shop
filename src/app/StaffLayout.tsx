@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect } from 'react';
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
-import { LogOut, User, ShoppingCart, Moon, Sun } from 'lucide-react';
+import { LogOut, User, ShoppingCart, Moon, Sun, BarChart3 } from 'lucide-react';
 import { useAuth } from '../shared/context/AuthContext';
 import { useTheme } from '../shared/context/ThemeContext';
 import { AppProvider } from '../shared/context/AppContext';
@@ -15,6 +15,7 @@ const CustomerTransactionDetailPage = lazy(() => import('../customer/Transaction
 const ProfilePage = lazy(() => import('../routes/Profile/ProfilePage'));
 const PendingOrdersPage = lazy(() => import('../routes/PendingOrders/PendingOrdersPage'));
 const PendingOrderDetailPage = lazy(() => import('../routes/PendingOrders/PendingOrderDetail'));
+const AnalyticsPage = lazy(() => import('../routes/Analytics/AnalyticsPage'));
 
 function LoadingFallback() {
   return (
@@ -61,6 +62,17 @@ function Navigation() {
         }}
       >
         Pending Orders
+      </Link>
+      <Link
+        to="/analytics"
+        className="px-4 py-3 text-sm font-medium border-b-2 transition-all duration-200 cursor-pointer font-heading"
+        style={{
+          color: isActive('/analytics') ? COLORS.primary : COLORS.textSecondary,
+          borderColor: isActive('/analytics') ? COLORS.primary : 'transparent',
+        }}
+      >
+        <BarChart3 size={16} className="inline mr-2" />
+        Analytics
       </Link>
     </div>
   );
@@ -138,6 +150,7 @@ export default function StaffLayout() {
     <Route path="/profile" element={<ProfilePage />} />
     <Route path="/pending-orders" element={<PendingOrdersPage />} />
     <Route path="/pending-orders/:id" element={<PendingOrderDetailPage />} />
+    <Route path="/analytics" element={<AnalyticsPage />} />
   </Routes>
 </Suspense>
             </div>
