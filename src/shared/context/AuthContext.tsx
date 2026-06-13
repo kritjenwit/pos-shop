@@ -30,14 +30,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(false);
   }, []);
 
+  const stripPassword = (u: User): Omit<User, 'password'> => {
+    const safe = { ...u };
+    delete (safe as Record<string, unknown>).password;
+    return safe;
+  };
+
   const signIn = async (email: string, password: string) => {
     const { user, error } = await authSignIn(email, password);
     if (error) {
       return { error };
     }
     if (user) {
+      const safeUser = stripPassword(user);
       setUser(user);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(safeUser));
     }
     return { error: null };
   };
@@ -48,8 +55,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error };
     }
     if (user) {
+      const safeUser = stripPassword(user);
       setUser(user);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(safeUser));
     }
     return { error: null };
   };

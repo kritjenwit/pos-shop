@@ -4,7 +4,7 @@ import bcrypt from 'bcryptjs';
 export async function signIn(email: string, password: string): Promise<{ user: User | null; error: Error | null }> {
   const { data, error } = await supabase
     .from('users')
-    .select('*')
+    .select('id, email, password, full_name, phone, created_at')
     .eq('email', email)
     .single();
 

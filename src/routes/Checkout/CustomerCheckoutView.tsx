@@ -5,7 +5,7 @@ import { useApp } from '../../shared/context/AppContext';
 import { useAuth } from '../../shared/context/AuthContext';
 import { getSignedImageUrl } from '../../shared/lib/images';
 import { generateThaiQRPayment } from '../../shared/lib/thaiQR';
-import { COLORS, PAYMENT } from '../../shared/constants';
+import { COLORS, PAYMENT, VALIDATION } from '../../shared/constants';
 import { resetFormState } from '../../shared/lib/util';
 
 export default function CustomerCheckoutView() {
@@ -50,6 +50,10 @@ export default function CustomerCheckoutView() {
   };
 
   const handleCompleteOrder = async () => {
+    if (customerName.length > VALIDATION.maxCustomerNameLength || customerPhone.length > VALIDATION.maxPhoneLength || additionalDetail.length > VALIDATION.maxAdditionalDetailLength) {
+      setError('One or more fields exceed maximum length');
+      return;
+    }
     setCompleting(true);
     setError('');
     try {

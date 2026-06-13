@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { CheckCircle, ShoppingCart, ArrowLeft, User, Phone, CreditCard, ShoppingBag, Loader2, MessageSquare } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../../shared/context/AppContext';
+import { VALIDATION } from '../../shared/constants';
 import { resetFormState } from '../../shared/lib/util';
 
 export default function CustomerCheckoutPage() {
@@ -16,6 +17,10 @@ export default function CustomerCheckoutPage() {
 
   const handleCompleteOrder = async () => {
     if (!customerName.trim()) return;
+    if (customerName.length > VALIDATION.maxCustomerNameLength || customerPhone.length > VALIDATION.maxPhoneLength || additionalDetail.length > VALIDATION.maxAdditionalDetailLength) {
+      setError('One or more fields exceed maximum length');
+      return;
+    }
 
     setCompleting(true);
     setError('');

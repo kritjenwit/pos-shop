@@ -36,7 +36,11 @@ export default function TransactionDetailView({
 
     if (error || !data) {
       console.error('Error fetching transaction:', error);
-      navigate(errorRedirectUrl);
+      if (errorRedirectUrl?.startsWith('/')) {
+        navigate(errorRedirectUrl);
+      } else {
+        navigate('/');
+      }
       return;
     }
 

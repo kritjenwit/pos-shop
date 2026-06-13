@@ -57,3 +57,10 @@ export const PAYMENT = {
   qrSize: 200,
   qrLevel: 'H' as const,
 } as const;
+
+export const VALIDATION = {
+  maxItemNameLength: 200,
+  maxCustomerNameLength: 200,
+  maxPhoneLength: 30,
+  maxAdditionalDetailLength: 1000,
+} as const;

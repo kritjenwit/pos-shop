@@ -52,6 +52,7 @@ vi.mock('../../shared/constants', () => ({
     accent: '#333333',
   },
   PAYMENT: { qrSize: 200, qrLevel: 'H' },
+  VALIDATION: { maxItemNameLength: 200, maxCustomerNameLength: 200, maxPhoneLength: 30, maxAdditionalDetailLength: 1000 },
 }));
 
 const mockItems = [

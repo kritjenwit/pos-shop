@@ -9,7 +9,7 @@ export interface SellerOption {
 export async function getProfile(userId: string): Promise<{ data: User | null; error: string | null }> {
   const { data, error } = await supabase
     .from('users')
-    .select('*')
+    .select('id, email, password, full_name, phone, created_at')
     .eq('id', userId)
     .single();
 
@@ -21,10 +21,11 @@ export async function getProfile(userId: string): Promise<{ data: User | null; e
 }
 
 export async function searchSellers(query: string): Promise<{ data: SellerOption[] | null; error: string | null }> {
+  const escaped = query.replace(/[%_]/g, '\\$&');
   const { data, error } = await supabase
     .from('users')
     .select('id, email, full_name')
-    .or(`email.ilike.%${query}%,full_name.ilike.%${query}%`)
+    .or(`email.ilike.%${escaped}%,full_name.ilike.%${escaped}%`)
     .limit(10);
 
   if (error) {

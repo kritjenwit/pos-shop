@@ -44,6 +44,7 @@ vi.mock('../../shared/constants', () => ({
   },
   UI: { stickyTop: '100px', borderRadius: '8px' },
   PAYMENT: { qrSize: 200, qrLevel: 'H' },
+  VALIDATION: { maxItemNameLength: 200, maxCustomerNameLength: 200, maxPhoneLength: 30, maxAdditionalDetailLength: 1000 },
 }));
 
 vi.mock('../../shared/components/MenuQRCode', () => ({

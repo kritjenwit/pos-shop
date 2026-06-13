@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Plus, Pencil, Trash2, Upload, X } from 'lucide-react';
 import { useApp } from '../../shared/context/AppContext';
 import type { Item } from '../../shared/lib/supabase';
-import { COLORS } from '../../shared/constants';
+import { COLORS, VALIDATION } from '../../shared/constants';
 import { uploadImage, deleteImage, getSignedImageUrl } from '../../shared/lib/images';
 import MenuQRCode from '../../shared/components/MenuQRCode';
 
@@ -70,10 +70,10 @@ function ItemForm({
     
     try {
       const priceNum = parseFloat(price);
-      if (!name || !price || priceNum <= 0) {
-        setError('Invalid name or price');
-        return;
-      }
+    if (!name || name.length > VALIDATION.maxItemNameLength || !price || priceNum <= 0) {
+      setError('Invalid name or price');
+      return;
+    }
 
       let imageUrl = imagePath || item?.image || '';
       const file = fileRef.current?.files?.[0];
