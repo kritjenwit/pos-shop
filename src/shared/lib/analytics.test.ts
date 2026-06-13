@@ -95,6 +95,15 @@ describe('getDailySales', () => {
     expect(error).toBeNull();
     expect(data).toEqual([]);
   });
+
+  it('catches thrown errors', async () => {
+    mockGte.mockRejectedValue(new Error('Network error'));
+
+    const { data, error } = await getDailySales(30);
+
+    expect(data).toBeNull();
+    expect(error).toBe('Network error');
+  });
 });
 
 describe('getTopItems', () => {
@@ -158,5 +167,56 @@ describe('getTopItems', () => {
 
     expect(data).toBeNull();
     expect(error).toBe('Network error');
+  });
+
+  it('returns empty array when no completed transactions', async () => {
+    mockFrom.mockReturnValueOnce({ select: mockTxSelect });
+
+    mockGte.mockResolvedValue({ data: [], error: null });
+
+    const { data, error } = await getTopItems(30, 10);
+
+    expect(error).toBeNull();
+    expect(data).toEqual([]);
+  });
+
+  it('returns error when transaction_items query fails', async () => {
+    mockFrom.mockReturnValueOnce({ select: mockTxSelect });
+    mockFrom.mockReturnValueOnce({ select: mockItemSelect });
+
+    mockGte.mockResolvedValue({
+      data: [{ id: 'tx-1' }],
+      error: null,
+    });
+
+    mockIn.mockResolvedValue({ data: null, error: { message: 'Items fetch failed' } });
+
+    const { data, error } = await getTopItems(30, 10);
+
+    expect(data).toBeNull();
+    expect(error).toBe('Items fetch failed');
+  });
+
+  it('returns all items when limit not specified', async () => {
+    mockFrom.mockReturnValueOnce({ select: mockTxSelect });
+    mockFrom.mockReturnValueOnce({ select: mockItemSelect });
+
+    mockGte.mockResolvedValue({
+      data: [{ id: 'tx-1' }, { id: 'tx-2' }],
+      error: null,
+    });
+
+    mockIn.mockResolvedValue({
+      data: [
+        { item_name: 'Coffee', quantity: 1, subtotal: 50 },
+        { item_name: 'Tea', quantity: 1, subtotal: 30 },
+      ],
+      error: null,
+    });
+
+    const { data, error } = await getTopItems(30);
+
+    expect(error).toBeNull();
+    expect(data).toHaveLength(2);
   });
 });

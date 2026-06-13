@@ -42,7 +42,9 @@ Thumbs.db
 .opencode/
 .process/
 
-# Test coverage
+# Test artifacts
 coverage/
+playwright-report/
+test-results/
 
 supabase/.temp
