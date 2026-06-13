@@ -14,14 +14,12 @@ vi.mock('../Checkout/Checkout', () => ({
 }));
 
 const mockGetSignedImageUrl = vi.hoisted(() => vi.fn(() => Promise.resolve(null)));
+const mockSupabaseSelect = vi.hoisted(() => vi.fn<(...args: never[]) => unknown>(() => Promise.resolve({ data: [], error: null })));
 
 vi.mock('../../shared/lib/supabase', () => ({
   supabase: {
     from: vi.fn(() => ({
-      select: vi.fn(() => Promise.resolve({ data: [
-        { id: '1', name: 'Pizza', price: 200, image: '', quantity: 10 },
-        { id: '2', name: 'Cola', price: 50, image: '', quantity: 20 },
-      ], error: null })),
+      select: mockSupabaseSelect,
     })),
   },
   getSignedImageUrl: mockGetSignedImageUrl,
@@ -53,6 +51,10 @@ describe('ItemListPage', () => {
     localStorage.clear();
     vi.clearAllMocks();
     mockGetSignedImageUrl.mockResolvedValue(null);
+    mockSupabaseSelect.mockResolvedValue({ data: [
+      { id: '1', name: 'Pizza', price: 200, image: '', quantity: 10 },
+      { id: '2', name: 'Cola', price: 50, image: '', quantity: 20 },
+    ], error: null });
   });
 
   it('should render Items tab', async () => {
@@ -123,6 +125,31 @@ describe('ItemListPage', () => {
     renderPage();
     await waitFor(() => {
       expect(screen.getByLabelText(/Add one Pizza to basket/)).toBeInTheDocument();
+    });
+  });
+
+  it('should refresh items on refresh button click', async () => {
+    renderPage();
+    await waitFor(() => {
+      expect(screen.getByLabelText('Refresh items')).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByLabelText('Refresh items'));
+  });
+
+  it('should show Go to Management button when items are empty', async () => {
+    mockSupabaseSelect.mockResolvedValue({ data: [], error: null });
+
+    renderPage();
+    await waitFor(() => {
+      expect(screen.getByText('No items yet')).toBeInTheDocument();
+    });
+
+    const goButton = screen.getByText('Go to Management');
+    expect(goButton).toBeInTheDocument();
+    fireEvent.click(goButton);
+
+    await waitFor(() => {
+      expect(screen.getByText('Item Management')).toBeInTheDocument();
     });
   });
 });

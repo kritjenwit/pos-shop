@@ -165,6 +165,36 @@ describe('MenuPage', () => {
     expect(mockAddToBasket).toHaveBeenCalledWith('item-1');
   });
 
+  it('should show clear search button when typing', () => {
+    renderPage();
+    const searchInput = screen.getByPlaceholderText('Search items...');
+    fireEvent.change(searchInput, { target: { value: 'Pizza' } });
+
+    const clearButton = document.querySelector('button.absolute.right-3');
+    expect(clearButton).toBeInTheDocument();
+    fireEvent.click(clearButton!);
+    expect(searchInput).toHaveValue('');
+  });
+
+  it('should show no items message when items array is empty', () => {
+    mockState.items = [];
+    mockState.loading = false;
+    renderPage();
+    expect(screen.getByText(/no items available/)).toBeInTheDocument();
+  });
+
+  it('should update basket display when basketQty > 0', () => {
+    mockState.basket = new Map([['item-2', 2]]);
+    mockState.total = 100;
+    mockGetBasketQuantity.mockImplementation((id: string) => id === 'item-2' ? 2 : 0);
+
+    renderPage();
+
+    expect(screen.getByText('Your Basket')).toBeInTheDocument();
+    expect(screen.getByText('2 Items')).toBeInTheDocument();
+    expect(screen.getByText(/Review Order/)).toBeInTheDocument();
+  });
+
   it('should show badge count when item in basket', () => {
     mockState.basket = new Map([['item-1', 3]]);
     mockGetBasketQuantity.mockImplementation((id: string) => id === 'item-1' ? 3 : 0);

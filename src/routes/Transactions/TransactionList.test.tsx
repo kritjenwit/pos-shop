@@ -7,6 +7,7 @@ const mockGetOrders = vi.hoisted(() => vi.fn());
 const mockGetCache = vi.hoisted(() => vi.fn<(key: string) => unknown>(() => null));
 const mockSetCache = vi.hoisted(() => vi.fn());
 const mockInvalidateCache = vi.hoisted(() => vi.fn());
+const mockSupabaseFrom = vi.hoisted(() => vi.fn());
 
 vi.mock('../../shared/lib/orders', () => ({
   getOrders: mockGetOrders,
@@ -19,7 +20,7 @@ vi.mock('../../shared/lib/cache', () => ({
 }));
 
 vi.mock('../../shared/lib/supabase', () => ({
-  supabase: { from: vi.fn() },
+  supabase: { from: mockSupabaseFrom },
 }));
 
 describe('TransactionListPage', () => {
@@ -243,6 +244,114 @@ describe('TransactionListPage', () => {
     fireEvent.change(dateInputs[0], { target: { value: '2026-05-25' } });
 
     expect(screen.getByText('Clear Filters')).toBeInTheDocument();
+  });
+
+  it('should filter by end date', async () => {
+    const transactions = [
+      {
+        id: 'tx-early',
+        totalAmount: 100,
+        status: 'completed',
+        sellerId: 'u1',
+        createdAt: '2026-05-20T10:00:00Z',
+        itemsCount: 1,
+        orderId: null,
+        customerName: null,
+        customerPhone: null,
+        additionalDetail: null,
+        sellerName: null,
+        sellerEmail: null,
+        receiptUrl: null,
+      },
+      {
+        id: 'tx-late',
+        totalAmount: 200,
+        status: 'completed',
+        sellerId: 'u1',
+        createdAt: '2026-06-01T10:00:00Z',
+        itemsCount: 2,
+        orderId: null,
+        customerName: null,
+        customerPhone: null,
+        additionalDetail: null,
+        sellerName: null,
+        sellerEmail: null,
+        receiptUrl: null,
+      },
+    ];
+
+    mockGetOrders.mockResolvedValue({ data: transactions, error: null });
+
+    render(<MemoryRouter><TransactionListPage /></MemoryRouter>);
+
+    await waitFor(() => {
+      expect(screen.getByText(/100\.00/)).toBeInTheDocument();
+    });
+
+    const dateInputs = document.querySelectorAll('input[type="date"]');
+    fireEvent.change(dateInputs[1], { target: { value: '2026-05-25' } });
+
+    await waitFor(() => {
+      expect(screen.getByText(/100\.00/)).toBeInTheDocument();
+    });
+    expect(screen.queryByText(/200\.00/)).not.toBeInTheDocument();
+  });
+
+  it('should handle seller display name fallback', async () => {
+    const transactions = [
+      {
+        id: 'tx-seller',
+        totalAmount: 300,
+        status: 'completed',
+        sellerId: 'user-seller',
+        createdAt: '2026-05-23T10:00:00Z',
+        itemsCount: 1,
+        orderId: null,
+        customerName: null,
+        customerPhone: null,
+        additionalDetail: null,
+        sellerName: null,
+        sellerEmail: 'seller@shop.com',
+        receiptUrl: null,
+      },
+    ];
+
+    mockGetOrders.mockResolvedValue({ data: transactions, error: null });
+
+    render(<MemoryRouter><TransactionListPage /></MemoryRouter>);
+
+    await waitFor(() => {
+      expect(screen.getByText(/seller@shop.com/)).toBeInTheDocument();
+    });
+  });
+
+  it('should search sellers when typing in seller filter', async () => {
+    mockGetOrders.mockResolvedValue({ data: [], error: null });
+
+    const mockOr = vi.fn();
+    const mockLimit = vi.fn();
+    const mockSelect = vi.fn(() => ({ or: mockOr }));
+    mockOr.mockReturnValue({ limit: mockLimit });
+    mockLimit.mockResolvedValue({ data: [{ id: 'u1', email: 'seller@shop.com', full_name: 'Shop Seller' }], error: null });
+    mockSupabaseFrom.mockReturnValue({ select: mockSelect });
+
+    render(<MemoryRouter><TransactionListPage /></MemoryRouter>);
+
+    await waitFor(() => {
+      expect(screen.getByText('No transactions found')).toBeInTheDocument();
+    });
+
+    const searchInput = screen.getByPlaceholderText('Search seller...');
+    fireEvent.focus(searchInput);
+    fireEvent.change(searchInput, { target: { value: 'Shop' } });
+
+    await waitFor(() => {
+      expect(screen.getByText('Shop Seller')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText('Shop Seller'));
+
+    expect(screen.getByText('Shop Seller')).toBeInTheDocument();
   });
 
   it('should render with additional_detail when present', async () => {
