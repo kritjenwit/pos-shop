@@ -1,10 +1,11 @@
-name: CI
+name: CI / Deploy
 
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
   build-and-test:
@@ -23,6 +24,11 @@ jobs:
       - run: npm run lint
 
       - run: npm run build
+        env:
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL || 'http://localhost:54321' }}
+          VITE_SUPABASE_KEY: ${{ vars.VITE_SUPABASE_KEY || 'dummy-key' }}
+          VITE_ENVIRONMENT: ${{ vars.VITE_ENVIRONMENT || 'development' }}
+          VITE_CACHE_DURATION_HOURS: ${{ vars.VITE_CACHE_DURATION_HOURS || '1' }}
 
       - run: npm run test:coverage
         env:
@@ -30,3 +36,29 @@ jobs:
           VITE_SUPABASE_KEY: ${{ vars.VITE_SUPABASE_KEY || 'dummy-key' }}
           VITE_ENVIRONMENT: ${{ vars.VITE_ENVIRONMENT || 'development' }}
           VITE_CACHE_DURATION_HOURS: ${{ vars.VITE_CACHE_DURATION_HOURS || '1' }}
+
+  deploy:
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: build-and-test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - run: npm ci
+
+      - run: npm run build
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_KEY: ${{ secrets.VITE_SUPABASE_KEY }}
+          VITE_ENVIRONMENT: production
+          VITE_CACHE_DURATION_HOURS: ${{ secrets.VITE_CACHE_DURATION_HOURS || '1' }}
+
+      - run: npm run deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
