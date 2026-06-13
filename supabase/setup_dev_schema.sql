@@ -102,23 +102,36 @@ ALTER TABLE dev.transactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE dev.transaction_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE dev.audit_log ENABLE ROW LEVEL SECURITY;
 
+-- Drop old policies (created by previous versions scoped only to authenticated) and recreate
+DROP POLICY IF EXISTS "dev_items_all" ON dev.items;
+DROP POLICY IF EXISTS "dev_items_select" ON dev.items;
+DROP POLICY IF EXISTS "dev_users_all" ON dev.users;
+DROP POLICY IF EXISTS "dev_users_select" ON dev.users;
+DROP POLICY IF EXISTS "dev_transactions_all" ON dev.transactions;
+DROP POLICY IF EXISTS "dev_transaction_items_all" ON dev.transaction_items;
+DROP POLICY IF EXISTS "dev_audit_log_all" ON dev.audit_log;
+
 DO $$
 BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'dev' AND tablename = 'items') THEN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'dev' AND tablename = 'items' AND policyname = 'dev_items_all') THEN
         CREATE POLICY "dev_items_all" ON dev.items FOR ALL TO anon, authenticated USING (true) WITH CHECK (true);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'dev' AND tablename = 'items' AND policyname = 'dev_items_select') THEN
         CREATE POLICY "dev_items_select" ON dev.items FOR SELECT TO anon USING (true);
     END IF;
-    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'dev' AND tablename = 'users') THEN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'dev' AND tablename = 'users' AND policyname = 'dev_users_all') THEN
         CREATE POLICY "dev_users_all" ON dev.users FOR ALL TO anon, authenticated USING (true) WITH CHECK (true);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'dev' AND tablename = 'users' AND policyname = 'dev_users_select') THEN
         CREATE POLICY "dev_users_select" ON dev.users FOR SELECT TO anon USING (true);
     END IF;
-    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'dev' AND tablename = 'transactions') THEN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'dev' AND tablename = 'transactions' AND policyname = 'dev_transactions_all') THEN
         CREATE POLICY "dev_transactions_all" ON dev.transactions FOR ALL TO anon, authenticated USING (true) WITH CHECK (true);
     END IF;
-    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'dev' AND tablename = 'transaction_items') THEN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'dev' AND tablename = 'transaction_items' AND policyname = 'dev_transaction_items_all') THEN
         CREATE POLICY "dev_transaction_items_all" ON dev.transaction_items FOR ALL TO anon, authenticated USING (true) WITH CHECK (true);
     END IF;
-    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'dev' AND tablename = 'audit_log') THEN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'dev' AND tablename = 'audit_log' AND policyname = 'dev_audit_log_all') THEN
         CREATE POLICY "dev_audit_log_all" ON dev.audit_log FOR ALL TO anon, authenticated USING (true) WITH CHECK (true);
     END IF;
 END $$;
