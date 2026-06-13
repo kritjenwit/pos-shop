@@ -25,8 +25,6 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-const BASKET_KEY = 'pos-shop-basket';
-
 const CACHE_KEY = 'items';
 
 const fetchItems = async (setItems: React.Dispatch<React.SetStateAction<Item[]>>, setLoading: React.Dispatch<React.SetStateAction<boolean>>, useCache = true) => {
@@ -49,12 +47,12 @@ const fetchItems = async (setItems: React.Dispatch<React.SetStateAction<Item[]>>
   setLoading(false);
 };
 
-export function AppProvider({ children }: { children: ReactNode }) {
+export function AppProvider({ children, basketKey = 'pos-shop-basket' }: { children: ReactNode; basketKey?: string }) {
   const { user } = useAuth();
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
   const [basket, setBasket] = useState<Map<string, number>>(() => {
-    const stored = localStorage.getItem(BASKET_KEY);
+    const stored = localStorage.getItem(basketKey);
     if (stored) {
       try {
         const parsed = JSON.parse(stored);
@@ -72,7 +70,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const basketObj = Object.fromEntries(basket);
-    localStorage.setItem(BASKET_KEY, JSON.stringify(basketObj));
+    localStorage.setItem(basketKey, JSON.stringify(basketObj));
   }, [basket]);
 
   const total = Array.from(basket.entries()).reduce((sum, [id, qty]) => {
@@ -152,7 +150,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const clearBasket = () => {
     setBasket(new Map());
-    localStorage.removeItem(BASKET_KEY);
+    localStorage.removeItem(basketKey);
   };
 
   const completeOrder = async (receiptFile?: File | null, status: string = 'completed', customerName?: string | null, customerPhone?: string | null, additionalDetail?: string | null) => {

@@ -83,7 +83,7 @@ function AppContent() {
   // Public access routes: allow public viewing without authentication
   if (!user && (location.pathname === '/menu' || location.pathname === '/checkout' || location.pathname.startsWith('/public/') || location.pathname.startsWith('/checkout/'))) {
     return (
-      <AppProvider>
+      <AppProvider basketKey="pos-shop-customer-basket">
         <Suspense fallback={<LoadingFallback />}>
           <Routes>
             <Route path="/menu" element={<MenuPage />} />
@@ -104,7 +104,7 @@ function AppContent() {
   }
 
   return (
-    <AppProvider>
+    <AppProvider basketKey="pos-shop-staff-basket">
       <div className="min-h-screen flex flex-col" style={{ backgroundColor: COLORS.background }}>
         <header
           className="px-4 sm:px-6 py-4 sticky top-0 z-50 shadow-sm"
