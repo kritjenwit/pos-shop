@@ -1,4 +1,4 @@
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_KEY;
@@ -7,7 +7,8 @@ if (!supabaseUrl || !supabaseKey) {
   throw new Error('Missing Supabase environment variables');
 }
 
-export const supabase: SupabaseClient = createClient(supabaseUrl, supabaseKey);
+const schema = import.meta.env.VITE_ENVIRONMENT === 'production' ? ('public' as const) : ('dev' as const);
+export const supabase = createClient(supabaseUrl, supabaseKey, { db: { schema } });
 
 export interface Item {
   id: string;
