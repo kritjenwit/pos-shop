@@ -91,9 +91,9 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="input-base pr-10"
-                  placeholder="At least 6 characters"
+                  placeholder="At least 8 characters, 1 uppercase, 1 number, 1 special"
                   required
-                  minLength={6}
+                  minLength={8}
                 />
                 <button
                   type="button"

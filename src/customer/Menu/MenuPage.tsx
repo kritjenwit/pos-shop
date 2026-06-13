@@ -13,7 +13,7 @@ interface ItemCardProps {
 function ItemCard({ item, index }: ItemCardProps) {
   const { addToBasket, removeFromBasket, getBasketQuantity } = useApp();
   const basketQty = getBasketQuantity(item.id);
-  const [imageSrc, setImageSrc] = useState<string>('');
+  const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [imageLoaded, setImageLoaded] = useState(false);
 
   const defaultImage = `https://placehold.co/150x150/f1f5f9/64748b?text=${encodeURIComponent(item.name.charAt(0))}`;
@@ -44,7 +44,7 @@ function ItemCard({ item, index }: ItemCardProps) {
           </div>
         )}
         <img
-          src={imageSrc}
+          src={imageSrc ?? undefined}
           alt={item.name}
           className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
           onLoad={() => setImageLoaded(true)}

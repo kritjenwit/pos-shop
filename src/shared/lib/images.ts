@@ -2,7 +2,17 @@ import { supabase } from './supabase';
 
 const STORAGE_BUCKET = 'pos-shop';
 
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
+
 export const uploadImage = async (file: File): Promise<string> => {
+  if (!ALLOWED_TYPES.includes(file.type)) {
+    throw new Error('Invalid file type. Only JPEG, PNG, and WebP are allowed.');
+  }
+  if (file.size > MAX_FILE_SIZE) {
+    throw new Error('File too large. Maximum size is 10MB.');
+  }
+
   const fileExt = file.name.split('.').pop();
   const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
   const filePath = `${fileName}`;

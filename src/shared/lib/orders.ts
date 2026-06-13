@@ -86,33 +86,53 @@ function mapTransactionDetail(
   };
 }
 
-function buildTransactionItems(
-  basket: Map<string, number>,
-  allItems: Item[],
-): {
-  items: Array<{
-    item_id: string;
-    item_name: string;
-    quantity: number;
-    unit_price: number;
-    subtotal: number;
-  }>;
+interface TransactionItemInput {
+  item_id: string;
+  item_name: string;
+  quantity: number;
+  unit_price: number;
+  subtotal: number;
+}
+
+interface BasketPriceResult {
+  items: TransactionItemInput[];
   total: number;
-} {
+}
+
+async function buildTransactionItemsFromDb(
+  basket: Map<string, number>,
+): Promise<{ data: BasketPriceResult | null; error: string | null }> {
+  const itemIds = Array.from(basket.keys());
+  if (itemIds.length === 0) {
+    return { data: null, error: 'Basket is empty' };
+  }
+
+  const { data: freshItems, error } = await supabase
+    .from('items')
+    .select('id, name, price')
+    .in('id', itemIds);
+
+  if (error) {
+    return { data: null, error: error.message };
+  }
+
+  const priceMap = new Map((freshItems || []).map((i: Record<string, unknown>) => [i.id, { name: i.name as string, price: i.price as number }]));
   let total = 0;
   const items = Array.from(basket.entries()).map(([id, qty]) => {
-    const item = allItems.find((i) => i.id === id);
-    const subtotal = (item?.price || 0) * qty;
+    const item = priceMap.get(id);
+    const unitPrice = item?.price || 0;
+    const subtotal = unitPrice * qty;
     total += subtotal;
     return {
       item_id: id,
       item_name: item?.name || '',
       quantity: qty,
-      unit_price: item?.price || 0,
+      unit_price: unitPrice,
       subtotal,
     };
   });
-  return { items, total };
+
+  return { data: { items, total }, error: null };
 }
 
 export async function getOrders(query?: OrderQuery) {
@@ -213,7 +233,7 @@ export async function getOrderDetail(id: string) {
 
 export async function createOrder(
   basket: Map<string, number>,
-  allItems: Item[],
+  _allItems: Item[],
   userId: string,
   options?: {
     customerName?: string | null;
@@ -233,7 +253,11 @@ export async function createOrder(
       receiptUrl = await uploadImage(options.receiptFile);
     }
 
-    const { items: transactionItems, total } = buildTransactionItems(basket, allItems);
+    const { data: priceResult, error: priceError } = await buildTransactionItemsFromDb(basket);
+    if (priceError || !priceResult) {
+      return { data: null, error: priceError || 'Failed to validate prices' };
+    }
+    const { items: transactionItems, total } = priceResult;
 
     const { data, error } = await supabase
       .from('transactions')
@@ -284,7 +308,7 @@ export async function createOrder(
 
 export async function createPendingOrder(
   basket: Map<string, number>,
-  allItems: Item[],
+  _allItems: Item[],
   customerInfo?: CustomerInfo,
 ) {
   if (basket.size === 0) {
@@ -292,7 +316,11 @@ export async function createPendingOrder(
   }
 
   try {
-    const { items: transactionItems, total } = buildTransactionItems(basket, allItems);
+    const { data: priceResult, error: priceError } = await buildTransactionItemsFromDb(basket);
+    if (priceError || !priceResult) {
+      return { data: null, error: priceError || 'Failed to validate prices' };
+    }
+    const { items: transactionItems, total } = priceResult;
 
     const { data, error } = await supabase
       .from('transactions')

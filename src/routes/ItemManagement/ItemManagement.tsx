@@ -7,7 +7,7 @@ import { uploadImage, deleteImage, getSignedImageUrl } from '../../shared/lib/im
 import MenuQRCode from '../../shared/components/MenuQRCode';
 
 function SignedImage({ filePath, alt, className }: { filePath: string | null; alt: string; className?: string }) {
-  const [src, setSrc] = useState<string>('');
+  const [src, setSrc] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -36,7 +36,7 @@ function ItemForm({
   const [name, setName] = useState(item?.name || '');
   const [price, setPrice] = useState(item?.price?.toString() || '');
   const [imagePath, setImagePath] = useState(item?.image || '');
-  const [imagePreview, setImagePreview] = useState<string>('');
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);

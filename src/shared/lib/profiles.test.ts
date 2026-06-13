@@ -35,7 +35,7 @@ describe('getProfile', () => {
     expect(error).toBeNull();
     expect(data).toEqual(userData);
     expect(mockFrom).toHaveBeenCalledWith('users');
-    expect(mockSelect).toHaveBeenCalledWith('id, email, password, full_name, phone, created_at');
+    expect(mockSelect).toHaveBeenCalledWith('id, email, full_name, phone, created_at');
     expect(mockEq).toHaveBeenCalledWith('id', 'user-1');
   });
 

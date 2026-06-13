@@ -69,6 +69,7 @@ describe('auth', () => {
 
       expect(user).toBeNull();
       expect(error).toBeInstanceOf(Error);
+      expect(error?.message).toBe('Invalid email or password');
     });
 
     it('should return error when password is invalid', async () => {
@@ -85,12 +86,55 @@ describe('auth', () => {
 
       expect(user).toBeNull();
       expect(error).toBeInstanceOf(Error);
+      expect(error?.message).toBe('Invalid email or password');
+    });
+
+    it('should rate limit after 5 failed attempts', async () => {
+      vi.useFakeTimers();
+      mockBuilder.single.mockResolvedValue({ data: null, error: { message: 'Not found' } });
+
+      for (let i = 0; i < 5; i++) {
+        await signIn('ratelimit@test.com', 'wrong');
+        vi.advanceTimersByTime(1000);
+      }
+
+      const { error } = await signIn('ratelimit@test.com', 'wrong');
+      expect(error?.message).toContain('Too many attempts');
+      vi.useRealTimers();
+    });
+
+    it('should reset rate limit after the window expires', async () => {
+      vi.useFakeTimers();
+      mockBuilder.single.mockResolvedValue({ data: null, error: { message: 'Not found' } });
+
+      for (let i = 0; i < 5; i++) {
+        await signIn('reset@test.com', 'wrong');
+        vi.advanceTimersByTime(1000);
+      }
+
+      const { error } = await signIn('reset@test.com', 'wrong');
+      expect(error?.message).toContain('Too many attempts');
+
+      vi.advanceTimersByTime(120000);
+
+      const mockUser = {
+        id: 'user-1',
+        email: 'reset@test.com',
+        password: await bcrypt.hash('correct', 10),
+        full_name: 'Test',
+      };
+      mockBuilder.single.mockResolvedValue({ data: mockUser, error: null });
+
+      const result = await signIn('reset@test.com', 'correct');
+      expect(result.error).toBeNull();
+      expect(result.user).toBeDefined();
+      vi.useRealTimers();
     });
   });
 
   describe('signUp', () => {
     it('should create user with hashed password', async () => {
-      const hashedPassword = await bcrypt.hash('password123', 10);
+      const hashedPassword = await bcrypt.hash('Password123!', 10);
       const mockUser = {
         id: 'user-1',
         email: 'new@example.com',
@@ -100,7 +144,7 @@ describe('auth', () => {
 
       mockBuilder.single.mockResolvedValue({ data: mockUser, error: null });
 
-      const { user, error } = await signUp('new@example.com', 'password123', 'New User');
+      const { user, error } = await signUp('new@example.com', 'Password123!', 'New User');
 
       expect(user).toBeDefined();
       expect(user?.email).toBe('new@example.com');
@@ -113,12 +157,26 @@ describe('auth', () => {
       );
     });
 
+    it('should reject passwords that do not meet requirements', async () => {
+      const { error: shortErr } = await signUp('test@test.com', 'Ab1!');
+      expect(shortErr?.message).toBe('Password must be at least 8 characters');
+
+      const { error: noUpperErr } = await signUp('test@test.com', 'password1!');
+      expect(noUpperErr?.message).toBe('Password must contain at least one uppercase letter');
+
+      const { error: noNumErr } = await signUp('test@test.com', 'Password!');
+      expect(noNumErr?.message).toBe('Password must contain at least one number');
+
+      const { error: noSpecialErr } = await signUp('test@test.com', 'Password1');
+      expect(noSpecialErr?.message).toBe('Password must contain at least one special character');
+    });
+
     it('should return error when signup fails', async () => {
       const insertReturn = createMockBuilder();
       insertReturn.single.mockResolvedValue({ data: null, error: { message: 'Email exists' } });
       mockBuilder.insert.mockReturnValueOnce(insertReturn);
 
-      const { user, error } = await signUp('existing@example.com', 'password123');
+      const { user, error } = await signUp('existing@example.com', 'Password123!');
 
       expect(user).toBeNull();
       expect(error).toBeInstanceOf(Error);

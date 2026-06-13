@@ -214,19 +214,23 @@ describe('orders', () => {
       return { mockInsert, mockSingle, mockSelect };
     }
 
+    function makePricesMock() {
+      const mockIn = vi.fn().mockResolvedValue({ data: [{ id: 'item-1', name: 'Pizza', price: 200 }, { id: 'item-2', name: 'Cola', price: 50 }], error: null });
+      return { select: vi.fn(() => ({ in: mockIn })) };
+    }
+
+    function makeItemsInsertMock(mockInsert: ReturnType<typeof makeInsertMock>['mockInsert']) {
+      return (table: string) => {
+        if (table === 'items') return makePricesMock();
+        if (table === 'transactions') return { insert: mockInsert };
+        if (table === 'transaction_items') return { insert: vi.fn().mockResolvedValue({ error: null }) };
+        return { insert: vi.fn() };
+      };
+    }
+
     it('should create a completed order and clear basket', async () => {
       const { mockInsert } = makeInsertMock({ id: 'tx-new', order_id: 'ORD-001', total_amount: 450 });
-      const itemInsertMock = vi.fn().mockResolvedValue({ error: null });
-
-      mockFrom.mockImplementation((table: string) => {
-        if (table === 'transactions') {
-          return { insert: mockInsert };
-        }
-        if (table === 'transaction_items') {
-          return { insert: itemInsertMock };
-        }
-        return { insert: vi.fn() };
-      });
+      mockFrom.mockImplementation(makeItemsInsertMock(mockInsert));
 
       const { data, error } = await createOrder(basket, items, 'user-1');
 
@@ -238,7 +242,7 @@ describe('orders', () => {
 
     it('should upload receipt when provided', async () => {
       const { mockInsert } = makeInsertMock({ id: 'tx-new', order_id: 'ORD-001', total_amount: 450 });
-      mockFrom.mockReturnValue({ insert: mockInsert });
+      mockFrom.mockImplementation(makeItemsInsertMock(mockInsert));
 
       const receiptFile = new File([''], 'receipt.jpg', { type: 'image/jpeg' });
       const { error } = await createOrder(basket, items, 'user-1', { receiptFile });
@@ -254,6 +258,40 @@ describe('orders', () => {
       expect(error).toBe('Basket is empty');
     });
 
+    it('should return error when items price fetch fails', async () => {
+      const itemsMock = vi.fn().mockResolvedValue({ data: null, error: { message: 'Price fetch failed' } });
+      mockFrom.mockImplementation((table: string) => {
+        if (table === 'items') return { select: vi.fn(() => ({ in: itemsMock })) };
+        return { insert: vi.fn() };
+      });
+
+      const { data, error } = await createOrder(basket, items, 'user-1');
+      expect(data).toBeNull();
+      expect(error).toBe('Price fetch failed');
+    });
+
+    it('should use DB prices not client prices', async () => {
+      const mockSingle = vi.fn().mockResolvedValue({ data: { id: 'tx-new', order_id: 'ORD-001', total_amount: 999 }, error: null });
+      const mockSelect = vi.fn(() => {
+        const p = Promise.resolve({ data: [{ id: 'tx-new', order_id: 'ORD-001', total_amount: 999 }], error: null });
+        (p as unknown as { single: typeof mockSingle }).single = mockSingle;
+        return p;
+      });
+      const mockInsert = vi.fn(() => ({ select: mockSelect }));
+      const mockIn = vi.fn().mockResolvedValue({ data: [{ id: 'item-1', name: 'Pizza', price: 999 }], error: null });
+      mockFrom.mockImplementation((table: string) => {
+        if (table === 'items') return { select: vi.fn(() => ({ in: mockIn })) };
+        if (table === 'transactions') return { insert: mockInsert };
+        if (table === 'transaction_items') return { insert: vi.fn().mockResolvedValue({ error: null }) };
+        return { insert: vi.fn() };
+      });
+
+      const { data, error } = await createOrder(new Map([['item-1', 1]]), items, 'user-1');
+      expect(error).toBeNull();
+      expect(mockInsert).toHaveBeenCalledWith(expect.objectContaining({ total_amount: 999 }));
+      expect(data!.totalAmount).toBe(999);
+    });
+
     it('should return error on insert failure', async () => {
       const mockSingle = vi.fn().mockResolvedValue({ data: null, error: { message: 'Insert failed' } });
       const mockSelect = vi.fn(() => {
@@ -262,7 +300,10 @@ describe('orders', () => {
         return p;
       });
       const mockInsert = vi.fn(() => ({ select: mockSelect }));
-      mockFrom.mockReturnValue({ insert: mockInsert });
+      mockFrom.mockImplementation((table: string) => {
+        if (table === 'items') return makePricesMock();
+        return { insert: mockInsert };
+      });
 
       const { data, error } = await createOrder(basket, items, 'user-1');
 
@@ -274,6 +315,7 @@ describe('orders', () => {
       const { mockInsert } = makeInsertMock({ id: 'tx-new', order_id: 'ORD-001', total_amount: 450 });
       const itemInsertMock = vi.fn().mockResolvedValue({ error: { message: 'Items insert failed' } });
       mockFrom.mockImplementation((table: string) => {
+        if (table === 'items') return makePricesMock();
         if (table === 'transactions') return { insert: mockInsert };
         if (table === 'transaction_items') return { insert: itemInsertMock };
         return { insert: vi.fn() };
@@ -310,17 +352,19 @@ describe('orders', () => {
       return { mockInsert, mockSingle, mockSelect };
     }
 
+    function makePricesMock() {
+      const mockIn = vi.fn().mockResolvedValue({ data: [{ id: 'item-1', name: 'Pizza', price: 200 }], error: null });
+      return { select: vi.fn(() => ({ in: mockIn })) };
+    }
+
     it('should create pending order with customer info', async () => {
       const { mockInsert } = makeInsertMock({ id: 'tx-pending', order_id: 'ORD-PND', total_amount: 400 });
       const itemInsertMock = vi.fn().mockResolvedValue({ error: null });
 
       mockFrom.mockImplementation((table: string) => {
-        if (table === 'transactions') {
-          return { insert: mockInsert };
-        }
-        if (table === 'transaction_items') {
-          return { insert: itemInsertMock };
-        }
+        if (table === 'items') return makePricesMock();
+        if (table === 'transactions') return { insert: mockInsert };
+        if (table === 'transaction_items') return { insert: itemInsertMock };
         return { insert: vi.fn() };
       });
 
@@ -350,7 +394,10 @@ describe('orders', () => {
         return p;
       });
       const mockInsert = vi.fn(() => ({ select: mockSelect }));
-      mockFrom.mockReturnValue({ insert: mockInsert });
+      mockFrom.mockImplementation((table: string) => {
+        if (table === 'items') return makePricesMock();
+        return { insert: mockInsert };
+      });
 
       const { data, error } = await createPendingOrder(
         new Map([['item-1', 2]]),
@@ -365,6 +412,7 @@ describe('orders', () => {
       const { mockInsert } = makeInsertMock({ id: 'tx-pending', order_id: 'ORD-PND', total_amount: 400 });
       const itemInsertMock = vi.fn().mockResolvedValue({ error: { message: 'Items insert failed' } });
       mockFrom.mockImplementation((table: string) => {
+        if (table === 'items') return makePricesMock();
         if (table === 'transactions') return { insert: mockInsert };
         if (table === 'transaction_items') return { insert: itemInsertMock };
         return { insert: vi.fn() };
@@ -554,7 +602,9 @@ describe('orders', () => {
     it('should create pending order then list, approve, confirm, and view detail', async () => {
       const txInsert = makeInsertMock();
       const tiInsert = vi.fn().mockResolvedValue({ error: null });
+      const priceIn = vi.fn().mockResolvedValue({ data: [{ id: 'item-1', name: 'Pizza', price: 200 }, { id: 'item-2', name: 'Cola', price: 50 }], error: null });
       mockFrom.mockImplementation((table: string) => {
+        if (table === 'items') return { select: vi.fn(() => ({ in: priceIn })) };
         if (table === 'transactions') return { insert: txInsert };
         return { insert: tiInsert };
       });

@@ -9,7 +9,7 @@ export interface SellerOption {
 export async function getProfile(userId: string): Promise<{ data: User | null; error: string | null }> {
   const { data, error } = await supabase
     .from('users')
-    .select('id, email, password, full_name, phone, created_at')
+    .select('id, email, full_name, phone, created_at')
     .eq('id', userId)
     .single();
 
