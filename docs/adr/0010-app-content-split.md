@@ -1,0 +1,3 @@
+# ADR-0010: AppContent Routing Split
+
+Extracted the three branches of `AppContent` into separate components: `PublicRoutes` (guest + public path → customer `AppProvider` + customer routes), `StaffLayout` (authenticated user → nav header + lazy-loaded staff routes), and `LoadingScreen` (auth loading state). Previously `AppContent` was an 80+ line function with branching `if/else` for three user states (loading, guest, authenticated) plus inline route definitions. The extracted components live in `src/shared/components/` alongside the `ErrorBoundary` that wraps `AppContent`. No behavioral changes — only structural clarity. `StaffLayout` handles its own null user guard for TypeScript strict compliance.

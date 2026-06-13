@@ -1,0 +1,3 @@
+# ADR-0011: Service Module for Item CRUD
+
+Extracted item database operations from `AppContext` into `src/shared/lib/items.ts` with four functions (`getItems`, `addItem`, `updateItem`, `deleteItem`) returning `{ data, error }`. This follows the same pattern established by `orders.ts` (ADR-0001), `profiles.ts` (ADR-0003), and `images.ts` (ADR-0004): isolate all Supabase query chains and storage calls into a dedicated module so pages and contexts delegate to it instead of building inline queries. `AppContext` now imports `itemsService` and delegates item CRUD to the module. Only `type Item` remains imported from `supabase.ts` in AppContext. Test files change from mocking complex `.from().select().eq().single()` chains to a single `vi.mock('../lib/items')`.

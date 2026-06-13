@@ -1,0 +1,3 @@
+# ADR-0008: Transaction Detail Merge
+
+Merged `TransactionDetail.tsx` (staff) and `CustomerTransactionDetail.tsx` (public) into a single shared `TransactionDetailView` component in `src/shared/components/`. The two original files were ~90% identical (232 and 205 lines respectively), differing only in back-navigation URL, share URL path, and error redirect. The shared component accepts props (`backUrl`, `backLabel`, `shareUrl`, `errorRedirectUrl`, `showStatusColors`) to cover both use cases. Each page file became a 14-line thin wrapper that bridges route parameters to props. Eliminated the maintenance burden of keeping two near-identical copies in sync.

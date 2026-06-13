@@ -1,0 +1,3 @@
+# ADR-0007: Checkout Monolith Split
+
+Split the 519-line `Checkout.tsx` dual-mode component into three files: `Checkout.tsx` (15-line thin wrapper using `useParams` to delegate), `AdminCheckoutView.tsx` (admin payment confirmation for approved orders), and `CustomerCheckoutView.tsx` (customer basket-to-checkout flow). The original file handled both customer checkout (no `:orderId` param) and admin payment confirmation (`:orderId` param) via scattered `isAdminMode` booleans throughout a single 221-line `renderCheckoutView` function. Each extracted component owns its state, loading, and error handling independently. No behavioral changes — only structural decomposition.
