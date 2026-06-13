@@ -16,13 +16,16 @@ vi.mock('../Checkout/Checkout', () => ({
 const mockGetSignedImageUrl = vi.hoisted(() => vi.fn(() => Promise.resolve(null)));
 const mockSupabaseSelect = vi.hoisted(() => vi.fn<(...args: never[]) => unknown>(() => Promise.resolve({ data: [], error: null })));
 
+vi.mock('../../shared/lib/images', () => ({
+  getSignedImageUrl: mockGetSignedImageUrl,
+}));
+
 vi.mock('../../shared/lib/supabase', () => ({
   supabase: {
     from: vi.fn(() => ({
       select: mockSupabaseSelect,
     })),
   },
-  getSignedImageUrl: mockGetSignedImageUrl,
 }));
 
 vi.mock('../../shared/context/AuthContext', async () => {

@@ -3,7 +3,7 @@ import { Plus, Pencil, Trash2, Upload, X } from 'lucide-react';
 import { useApp } from '../../shared/context/AppContext';
 import type { Item } from '../../shared/lib/supabase';
 import { COLORS } from '../../shared/constants';
-import { uploadImage, deleteImage, getSignedImageUrl } from '../../shared/lib/supabase';
+import { uploadImage, deleteImage, getSignedImageUrl } from '../../shared/lib/images';
 import MenuQRCode from '../../shared/components/MenuQRCode';
 
 function SignedImage({ filePath, alt, className }: { filePath: string | null; alt: string; className?: string }) {

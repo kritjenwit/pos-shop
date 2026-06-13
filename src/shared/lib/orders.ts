@@ -1,4 +1,5 @@
-import { supabase, type Item, type TransactionItem, getSignedImageUrl, uploadImage } from './supabase';
+import { supabase, type Item, type TransactionItem } from './supabase';
+import { getSignedImageUrl, uploadImage } from './images';
 import { generateOrderId } from './util';
 
 export interface OrderQuery {

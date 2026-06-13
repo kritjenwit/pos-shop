@@ -1,4 +1,5 @@
-import { supabase, type Item, deleteImage } from './supabase';
+import { supabase, type Item } from './supabase';
+import { deleteImage } from './images';
 
 export async function getItems(): Promise<{ data: Item[] | null; error: string | null }> {
   const { data, error } = await supabase.from('items').select('*');

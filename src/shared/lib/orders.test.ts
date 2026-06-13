@@ -6,6 +6,9 @@ const mockGetSignedImageUrl = vi.hoisted(() => vi.fn());
 
 vi.mock('./supabase', () => ({
   supabase: { from: mockFrom },
+}));
+
+vi.mock('./images', () => ({
   uploadImage: mockUploadImage,
   getSignedImageUrl: mockGetSignedImageUrl,
 }));

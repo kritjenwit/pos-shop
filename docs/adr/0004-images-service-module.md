@@ -1,0 +1,3 @@
+# ADR-0004: Images Service Module
+
+Extracted `uploadImage`, `deleteImage`, and `getSignedImageUrl` from `src/shared/lib/supabase.ts` into a standalone `src/shared/lib/images.ts`. After earlier extractions (orders, items, profiles), the only direct `supabase` imports remaining in pages were storage functions. The `supabase.ts` module is now reduced to just the client instance and type definitions — only consumed by the service layer (`auth.ts`, `orders.ts`, `items.ts`, `profiles.ts`, `images.ts`). No page ever imports `supabase` directly. This is the last service-layer extraction and completes the decoupling of pages from the Supabase query builder API, making storage provider swaps possible without changing page code.

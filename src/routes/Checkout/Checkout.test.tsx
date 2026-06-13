@@ -22,10 +22,13 @@ vi.mock('react-router-dom', async () => {
 
 vi.mock('../../shared/context/AppContext', () => ({ useApp: mockUseAppState }));
 vi.mock('../../shared/context/AuthContext', () => ({ useAuth: mockUseAuthState }));
-vi.mock('../../shared/lib/supabase', () => ({
-  supabase: { from: vi.fn() },
+vi.mock('../../shared/lib/images', () => ({
   uploadImage: mockUploadImage,
   getSignedImageUrl: mockGetSignedImageUrl,
+}));
+
+vi.mock('../../shared/lib/supabase', () => ({
+  supabase: { from: vi.fn() },
 }));
 vi.mock('../../shared/lib/thaiQR', () => ({
   generateThaiQRPayment: mockGenerateThaiQRPayment,

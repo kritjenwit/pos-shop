@@ -3,7 +3,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { CheckCircle, ShoppingCart, Upload } from 'lucide-react';
 import { useApp } from '../../shared/context/AppContext';
 import { useAuth } from '../../shared/context/AuthContext';
-import { getSignedImageUrl } from '../../shared/lib/supabase';
+import { getSignedImageUrl } from '../../shared/lib/images';
 import { generateThaiQRPayment } from '../../shared/lib/thaiQR';
 import { COLORS, PAYMENT } from '../../shared/constants';
 

@@ -12,6 +12,9 @@ vi.mock('./supabase', () => ({
   supabase: {
     from: mockFrom,
   },
+}));
+
+vi.mock('./images', () => ({
   deleteImage: vi.fn(),
 }));
 

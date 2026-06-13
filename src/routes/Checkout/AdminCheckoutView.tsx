@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import { CheckCircle, ArrowLeft, Receipt } from 'lucide-react';
 import { useAuth } from '../../shared/context/AuthContext';
-import { getSignedImageUrl } from '../../shared/lib/supabase';
+import { getSignedImageUrl } from '../../shared/lib/images';
 import { generateThaiQRPayment } from '../../shared/lib/thaiQR';
 import { COLORS, PAYMENT } from '../../shared/constants';
 import * as orders from '../../shared/lib/orders';

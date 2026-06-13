@@ -2,7 +2,7 @@ import { useState, useEffect, lazy, Suspense } from 'react';
 import { Minus, Plus, ShoppingBag, Package, CreditCard, ShoppingCart, RefreshCw } from 'lucide-react';
 import { useApp } from '../../shared/context/AppContext';
 import type { Item } from '../../shared/lib/supabase';
-import { getSignedImageUrl } from '../../shared/lib/supabase';
+import { getSignedImageUrl } from '../../shared/lib/images';
 import { COLORS, UI } from '../../shared/constants';
 
 const ItemManagementPage = lazy(() => import('../ItemManagement/ItemManagement'));

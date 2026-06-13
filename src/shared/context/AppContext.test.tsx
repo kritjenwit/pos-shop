@@ -51,7 +51,9 @@ vi.mock('../lib/supabase', () => ({
   supabase: {
     from: mockFrom,
   },
-  uploadImage: vi.fn(() => Promise.resolve('receipt-url')),
+}));
+
+vi.mock('../lib/images', () => ({
   deleteImage: vi.fn(() => Promise.resolve()),
 }));
 

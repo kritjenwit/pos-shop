@@ -20,11 +20,14 @@ vi.mock('../../shared/context/AppContext', () => ({
   useApp: mockUseAppState,
 }));
 
-vi.mock('../../shared/lib/supabase', () => ({
-  supabase: {},
+vi.mock('../../shared/lib/images', () => ({
   uploadImage: mockUploadImage,
   deleteImage: mockDeleteImage,
   getSignedImageUrl: mockGetSignedImageUrl,
+}));
+
+vi.mock('../../shared/lib/supabase', () => ({
+  supabase: {},
 }));
 
 vi.mock('../../shared/constants', () => ({

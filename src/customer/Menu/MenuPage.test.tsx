@@ -39,8 +39,11 @@ vi.mock('../../shared/context/AppContext', () => ({
   AppProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
 
-vi.mock('../../shared/lib/supabase', () => ({
+vi.mock('../../shared/lib/images', () => ({
   getSignedImageUrl: vi.fn(() => Promise.resolve('https://placehold.co/150x150')),
+}));
+
+vi.mock('../../shared/lib/supabase', () => ({
   supabase: {},
 }));
 

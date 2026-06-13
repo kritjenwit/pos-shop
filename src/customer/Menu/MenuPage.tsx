@@ -3,7 +3,7 @@ import { Minus, Plus, ShoppingBag, ShoppingCart, RefreshCw, Search, X } from 'lu
 import { useApp } from '../../shared/context/AppContext';
 import { Link } from 'react-router-dom';
 import type { Item } from '../../shared/lib/supabase';
-import { getSignedImageUrl } from '../../shared/lib/supabase';
+import { getSignedImageUrl } from '../../shared/lib/images';
 
 interface ItemCardProps {
   item: Item;
