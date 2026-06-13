@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { COLORS } from '../../shared/constants';
-import { Receipt, Check, ArrowLeft } from 'lucide-react';
+import { Receipt, Check, ArrowLeft, AlertTriangle } from 'lucide-react';
 import { getOrderDetail, approveOrder, cancelOrder } from '../../shared/lib/orders';
 import type { OrderDetail } from '../../shared/lib/orders';
 
@@ -12,6 +12,7 @@ export default function PendingOrderDetailPage() {
   const [loading, setLoading] = useState(true);
   const [approving, setApproving] = useState(false);
   const [error, setError] = useState('');
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
   const fetchOrder = async () => {
     if (!id) return;
@@ -63,8 +64,13 @@ export default function PendingOrderDetailPage() {
     }
   };
 
-  const handleCancel = async () => {
+  const handleCancel = () => {
+    setShowCancelConfirm(true);
+  };
+
+  const handleConfirmCancel = async () => {
     if (!order) return;
+    setShowCancelConfirm(false);
     setError('');
     const { error: cancelErr } = await cancelOrder(order.id);
     if (cancelErr) {
@@ -232,6 +238,48 @@ export default function PendingOrderDetailPage() {
           )}
         </button>
       </div>
+
+      {showCancelConfirm && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fade-in"
+          onClick={() => setShowCancelConfirm(false)}
+          onKeyDown={(e) => e.key === 'Escape' && setShowCancelConfirm(false)}
+        >
+          <div
+            className="bg-white rounded-lg shadow-modal w-full max-w-sm mx-4 p-6 animate-scale-in text-center"
+            onClick={(e) => e.stopPropagation()}
+            role="alertdialog"
+            aria-labelledby="cancel-title"
+            aria-describedby="cancel-desc"
+          >
+            <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: COLORS['danger-15'] }}>
+              <AlertTriangle size={28} style={{ color: COLORS.danger }} />
+            </div>
+            <h3 id="cancel-title" className="text-lg font-bold font-heading mb-2" style={{ color: COLORS.text }}>
+              Cancel Order
+            </h3>
+            <p id="cancel-desc" className="text-sm mb-6" style={{ color: COLORS.textSecondary }}>
+              Are you sure you want to cancel this order? This action cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowCancelConfirm(false)}
+                className="flex-1 py-2.5 rounded-lg font-medium transition-all duration-200 cursor-pointer"
+                style={{ backgroundColor: COLORS['primary-10'], color: COLORS.text }}
+              >
+                Go Back
+              </button>
+              <button
+                onClick={handleConfirmCancel}
+                className="flex-1 py-2.5 rounded-lg font-medium transition-all duration-200 cursor-pointer text-white"
+                style={{ backgroundColor: COLORS.danger }}
+              >
+                Yes, Cancel Order
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

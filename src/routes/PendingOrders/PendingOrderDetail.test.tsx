@@ -176,6 +176,12 @@ describe('PendingOrderDetailPage', () => {
     fireEvent.click(screen.getByText('Cancel'));
 
     await waitFor(() => {
+      expect(screen.getByText('Yes, Cancel Order')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText('Yes, Cancel Order'));
+
+    await waitFor(() => {
       expect(screen.getByText('Cancel error')).toBeInTheDocument();
     });
 
@@ -211,6 +217,75 @@ describe('PendingOrderDetailPage', () => {
     expect(screen.queryByText(/ORD-/)).not.toBeInTheDocument();
   });
 
+  it('should show confirmation dialog when cancel is clicked', async () => {
+    const order = {
+      id: 'order-1',
+      totalAmount: 500,
+      status: 'pending',
+      createdAt: '2026-05-23T10:00:00Z',
+      orderId: null,
+      customerName: null,
+      customerPhone: null,
+      additionalDetail: null,
+      receiptUrl: null,
+      items: [],
+      sellerName: null,
+      sellerEmail: null,
+      sellerPhone: null,
+    };
+
+    mockGetOrderDetail.mockResolvedValue({ data: order, error: null });
+
+    renderWithRouter('order-1');
+    await waitFor(() => {
+      expect(screen.getByText('Order Details')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText('Cancel'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Cancel Order')).toBeInTheDocument();
+    });
+
+    expect(screen.getByText('Yes, Cancel Order')).toBeInTheDocument();
+    expect(screen.getByText('Go Back')).toBeInTheDocument();
+  });
+
+  it('should dismiss cancel confirmation when Go Back is clicked', async () => {
+    const order = {
+      id: 'order-1',
+      totalAmount: 500,
+      status: 'pending',
+      createdAt: '2026-05-23T10:00:00Z',
+      orderId: null,
+      customerName: null,
+      customerPhone: null,
+      additionalDetail: null,
+      receiptUrl: null,
+      items: [],
+      sellerName: null,
+      sellerEmail: null,
+      sellerPhone: null,
+    };
+
+    mockGetOrderDetail.mockResolvedValue({ data: order, error: null });
+
+    renderWithRouter('order-1');
+    await waitFor(() => {
+      expect(screen.getByText('Order Details')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText('Cancel'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Cancel Order')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText('Go Back'));
+
+    expect(screen.queryByText('Cancel Order')).not.toBeInTheDocument();
+  });
+
   it('should navigate back when cancel succeeds', async () => {
     const order = {
       id: 'order-1',
@@ -237,6 +312,12 @@ describe('PendingOrderDetailPage', () => {
     });
 
     fireEvent.click(screen.getByText('Cancel'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Yes, Cancel Order')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText('Yes, Cancel Order'));
 
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith('/pending-orders');
