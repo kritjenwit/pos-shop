@@ -31,9 +31,11 @@ function AppContent() {
 
   if (!user) {
     return (
-      <Suspense fallback={<LoadingScreen />}>
-        <LoginPage />
-      </Suspense>
+      <main tabIndex={-1}>
+        <Suspense fallback={<LoadingScreen />}>
+          <LoginPage />
+        </Suspense>
+      </main>
     );
   }
 

@@ -363,7 +363,7 @@ export default function TransactionListPage() {
                              {t.status}
                            </span>
                            {t.orderId && (
-                             <span className="text-[10px] font-mono font-bold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">
+                             <span className="text-[10px] font-mono font-bold text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
                                {t.orderId}
                              </span>
                            )}
@@ -397,7 +397,7 @@ export default function TransactionListPage() {
           <button
             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
             disabled={currentPage <= 1}
-            className="px-3 py-1.5 rounded text-sm font-medium transition-all duration-200 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            className="px-3 py-1.5 rounded text-sm font-medium transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             style={{ backgroundColor: COLORS['primary-10'], color: COLORS.primary }}
           >
             Previous
@@ -418,7 +418,7 @@ export default function TransactionListPage() {
           <button
             onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
             disabled={currentPage >= totalPages}
-            className="px-3 py-1.5 rounded text-sm font-medium transition-all duration-200 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            className="px-3 py-1.5 rounded text-sm font-medium transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             style={{ backgroundColor: COLORS['primary-10'], color: COLORS.primary }}
           >
             Next

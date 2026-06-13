@@ -170,7 +170,7 @@ export default function MenuPage() {
       <div className="max-w-6xl mx-auto px-4 py-8">
         <div role="alert" className="bg-red-50 border border-red-200 rounded-2xl p-8 text-center">
           <p className="text-red-800 font-bold text-lg mb-2">Failed to load items</p>
-          <p className="text-red-600 text-sm mb-4">{itemsError}</p>
+          <p className="text-red-700 text-sm mb-4">{itemsError}</p>
           <button onClick={handleRefresh} disabled={refreshing} className="btn-secondary">
             Retry
           </button>
@@ -183,17 +183,17 @@ export default function MenuPage() {
     <div className="max-w-6xl mx-auto px-4 py-6 md:py-10 animate-fade-in">
       <header className="mb-8 md:mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div className="space-y-1">
-          <h1 className="text-3xl md:text-4xl font-black font-heading tracking-tight text-gray-900">
+          <h1 className="text-3xl md:text-4xl font-black font-heading tracking-tight text-gray-900 dark:text-gray-100">
             Our Menu
           </h1>
-          <p className="text-gray-500 font-medium">
+          <p className="text-gray-600 dark:text-gray-300 font-medium">
             Explore our curated selection of quality items
           </p>
         </div>
 
         <div className="flex items-center gap-3 w-full md:w-auto">
           <div className="relative flex-grow md:w-64 group">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors" size={18} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary transition-colors" size={18} />
             <input
               type="text"
               placeholder="Search items..."
@@ -204,7 +204,7 @@ export default function MenuPage() {
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-600"
                 aria-label="Clear search"
               >
                 <X size={16} />
@@ -236,12 +236,12 @@ export default function MenuPage() {
             <ShoppingCart size={20} />
           </div>
           <div>
-            <div className="text-xs font-bold text-gray-400 uppercase tracking-wider">Your Basket</div>
+            <div className="text-xs font-bold text-gray-500 uppercase tracking-wider">Your Basket</div>
             <div className="font-black text-gray-900">{totalItems} {totalItems === 1 ? 'Item' : 'Items'}</div>
           </div>
 
           <div className="ml-auto text-right mr-4">
-            <div className="text-xs font-bold text-gray-400 uppercase tracking-wider">Total</div>
+            <div className="text-xs font-bold text-gray-500 uppercase tracking-wider">Total</div>
             <div className="text-xl font-black text-primary font-heading">฿{total.toLocaleString()}</div>
           </div>
         </Link>
@@ -253,7 +253,7 @@ export default function MenuPage() {
             <ShoppingBag size={40} className="text-gray-300" />
           </div>
           <h3 className="text-xl font-bold text-gray-900">No items found</h3>
-          <p className="text-gray-500 mt-2 max-w-xs text-center">
+          <p className="text-gray-600 mt-2 max-w-xs text-center">
             {searchQuery
               ? `We couldn't find anything matching "${searchQuery}"`
               : "There are no items available in the menu right now."}

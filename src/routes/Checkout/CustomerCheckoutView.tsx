@@ -149,7 +149,7 @@ function CustomerCheckoutView() {
             Payment has been processed successfully
           </p>
           {createdOrder.order_id && (
-            <p className="text-sm font-mono text-gray-400 mb-6">{createdOrder.order_id}</p>
+            <p className="text-sm font-mono text-gray-500 mb-6">{createdOrder.order_id}</p>
           )}
           <button className="btn-primary w-full font-heading" onClick={handleReset}>
             New Order

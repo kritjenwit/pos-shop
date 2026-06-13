@@ -236,7 +236,7 @@ const AdminCheckoutView = /*#__PURE__*/memo(function AdminCheckoutView({ orderId
             Payment has been confirmed successfully
           </p>
           {createdOrder.order_id && (
-            <p className="text-sm font-mono text-gray-400 mb-6">{createdOrder.order_id}</p>
+            <p className="text-sm font-mono text-gray-500 mb-6">{createdOrder.order_id}</p>
           )}
           <button className="btn-primary w-full font-heading" onClick={handleReset}>
             Back to Pending Orders
@@ -346,7 +346,7 @@ const AdminCheckoutView = /*#__PURE__*/memo(function AdminCheckoutView({ orderId
           <div className="grid grid-cols-2 gap-2 text-sm">
             {adminOrder.order_id && (
               <div>
-                <span className="text-gray-400">Order ID</span>
+                <span className="text-gray-500">Order ID</span>
                 <div className="font-mono font-semibold text-sm flex items-center gap-1">
                   {adminOrder.order_id}
                   <button
@@ -367,7 +367,7 @@ const AdminCheckoutView = /*#__PURE__*/memo(function AdminCheckoutView({ orderId
             )}
             {adminOrder.user_full_name && (
               <div>
-                <span className="text-gray-400">Staff</span>
+                <span className="text-gray-500">Staff</span>
                 <div>{adminOrder.user_full_name}</div>
               </div>
             )}

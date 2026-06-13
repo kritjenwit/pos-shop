@@ -140,7 +140,7 @@ export default function PendingOrdersPage() {
                   {order.status}
                 </span>
                 {order.orderId && (
-                  <span className="text-[10px] font-mono font-bold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">
+                  <span className="text-[10px] font-mono font-bold text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
                     {order.orderId}
                   </span>
                 )}

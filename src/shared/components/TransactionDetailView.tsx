@@ -202,7 +202,7 @@ export default function TransactionDetailView({
             {formatDate(transaction.createdAt)}
           </div>
           {transaction.orderId && (
-            <div className="text-xs font-mono font-bold mt-2 text-gray-400">
+            <div className="text-xs font-mono font-bold mt-2 text-gray-500">
               {transaction.orderId}
             </div>
           )}

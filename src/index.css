@@ -102,9 +102,9 @@
 
   .input-base {
     @apply w-full px-3 py-2 border rounded text-sm transition-all duration-200;
-    @apply border-slate-300 bg-white;
+    @apply border-gray-500 bg-white text-gray-900;
     @apply focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary;
-    @apply placeholder:text-slate-400;
+    @apply placeholder:text-slate-500;
   }
 
   .label-base {

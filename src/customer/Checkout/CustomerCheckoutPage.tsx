@@ -73,8 +73,8 @@ export default function CustomerCheckoutPage() {
         <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-6">
           <ShoppingBag size={40} className="text-gray-300" />
         </div>
-        <h2 className="text-2xl font-black text-gray-900 font-heading">Your basket is empty</h2>
-        <p className="text-gray-500 mt-2 max-w-xs text-center">
+        <h2 className="text-2xl font-black text-gray-900 dark:text-gray-100 font-heading">Your basket is empty</h2>
+        <p className="text-gray-600 dark:text-gray-300 mt-2 max-w-xs text-center">
           Looks like you haven't added anything to your basket yet.
         </p>
         <Link 
@@ -110,13 +110,13 @@ export default function CustomerCheckoutPage() {
           <div className="p-8 text-center">
             <div className="mb-8 flex flex-col items-center gap-4">
               <div className="w-full">
-                <div className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-1">Order ID</div>
+                <div className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-1">Order ID</div>
                 <div className="text-xl font-black text-gray-900 font-mono bg-gray-50 py-2 px-4 rounded-xl border border-gray-100">
                   {createdOrder?.order_id || 'Generating...'}
                 </div>
               </div>
               <div className="w-full">
-                <div className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-1">Total Amount</div>
+                <div className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-1">Total Amount</div>
                 <div className="text-4xl font-black text-primary font-heading">฿{(createdOrder?.total_amount || 0).toLocaleString()}</div>
               </div>
             </div>
@@ -150,7 +150,7 @@ export default function CustomerCheckoutPage() {
         </Link>
         <div>
           <h1 className="text-3xl font-black font-heading tracking-tight text-gray-900">Checkout</h1>
-          <p className="text-gray-500 font-medium">Complete your order details</p>
+          <p className="text-gray-600 font-medium">Complete your order details</p>
         </div>
       </div>
 
@@ -167,7 +167,7 @@ export default function CustomerCheckoutPage() {
 
             <div className="space-y-5">
               <div>
-                <label htmlFor="customerName" className="block text-xs font-black text-gray-400 uppercase tracking-wider mb-2 ml-1">
+                <label htmlFor="customerName" className="block text-xs font-black text-gray-500 uppercase tracking-wider mb-2 ml-1">
                   Full Name <span className="text-danger">*</span>
                 </label>
                 <div className="relative group">
@@ -183,11 +183,11 @@ export default function CustomerCheckoutPage() {
               </div>
 
               <div>
-                <label htmlFor="customerPhone" className="block text-xs font-black text-gray-400 uppercase tracking-wider mb-2 ml-1">
+                <label htmlFor="customerPhone" className="block text-xs font-black text-gray-500 uppercase tracking-wider mb-2 ml-1">
                   Phone Number
                 </label>
                 <div className="relative group">
-                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors" size={18} />
+                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary transition-colors" size={18} />
                   <input
                     id="customerPhone"
                     type="tel"
@@ -199,18 +199,18 @@ export default function CustomerCheckoutPage() {
                 </div>
                 <div className="flex justify-between items-center mt-1">
                   {phoneError && (
-                    <span className="text-xs text-red-500" role="alert">{phoneError}</span>
+                    <span className="text-xs text-red-600" role="alert">{phoneError}</span>
                   )}
-                  <span className="text-xs text-gray-400 ml-auto">{customerPhone.length}/{VALIDATION.maxPhoneLength}</span>
+                  <span className="text-xs text-gray-500 ml-auto">{customerPhone.length}/{VALIDATION.maxPhoneLength}</span>
                 </div>
               </div>
 
               <div>
-                <label htmlFor="additionalDetail" className="block text-xs font-black text-gray-400 uppercase tracking-wider mb-2 ml-1">
+                <label htmlFor="additionalDetail" className="block text-xs font-black text-gray-500 uppercase tracking-wider mb-2 ml-1">
                   Additional Detail
                 </label>
                 <div className="relative group">
-                  <MessageSquare className="absolute left-4 top-4 text-gray-400 group-focus-within:text-primary transition-colors" size={18} />
+                  <MessageSquare className="absolute left-4 top-4 text-gray-500 group-focus-within:text-primary transition-colors" size={18} />
                   <textarea
                     id="additionalDetail"
                     value={additionalDetail}
@@ -221,12 +221,12 @@ export default function CustomerCheckoutPage() {
                   />
                 </div>
                 <div className="flex justify-end mt-1">
-                  <span className="text-xs text-gray-400">{additionalDetail.length}/{VALIDATION.maxAdditionalDetailLength}</span>
+                  <span className="text-xs text-gray-500">{additionalDetail.length}/{VALIDATION.maxAdditionalDetailLength}</span>
                 </div>
               </div>
             </div>
 
-            <p className="mt-6 text-xs text-gray-400 italic">
+            <p className="mt-6 text-xs text-gray-500 italic">
               * Full Name is required to identify your order.
             </p>
           </div>
@@ -264,7 +264,7 @@ export default function CustomerCheckoutPage() {
                 <div key={idx} className="flex justify-between items-start gap-4 animate-fade-in" style={{ animationDelay: `${idx * 50}ms` }}>
                   <div className="flex-grow">
                     <div className="text-sm font-bold text-gray-900">{item.name}</div>
-                    <div className="text-xs text-gray-400">Qty: {item.qty}</div>
+                    <div className="text-xs text-gray-500">Qty: {item.qty}</div>
                   </div>
                   <div className="text-sm font-black text-gray-900 whitespace-nowrap">
                     ฿{(item.price * item.qty).toLocaleString()}
@@ -276,7 +276,7 @@ export default function CustomerCheckoutPage() {
             {additionalDetail && (
               <div className="border-t border-dashed border-gray-200 pt-6 space-y-3">
                 <div>
-                  <div className="text-xs font-black text-gray-400 uppercase tracking-wider mb-2">Additional Detail</div>
+                  <div className="text-xs font-black text-gray-500 uppercase tracking-wider mb-2">Additional Detail</div>
                   <p className="text-sm text-gray-700">{additionalDetail}</p>
                 </div>
               </div>
@@ -284,7 +284,7 @@ export default function CustomerCheckoutPage() {
 
             <div className="border-t border-dashed border-gray-200 pt-6 space-y-3">
               <div className="flex justify-between items-center">
-                <div className="text-gray-400 font-bold text-xs uppercase tracking-wider">Subtotal</div>
+                <div className="text-gray-500 font-bold text-xs uppercase tracking-wider">Subtotal</div>
                 <div className="text-sm font-bold text-gray-900">฿{total.toLocaleString()}</div>
               </div>
               <div className="flex justify-between items-center text-xl">
@@ -312,7 +312,7 @@ export default function CustomerCheckoutPage() {
               ) : 'Place Order'}
             </button>
             
-            <p className="mt-4 text-[10px] text-center text-gray-400 uppercase tracking-widest font-black">
+            <p className="mt-4 text-[10px] text-center text-gray-500 uppercase tracking-widest font-black">
               SECURE CHECKOUT
             </p>
           </div>

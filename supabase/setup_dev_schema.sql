@@ -15,7 +15,12 @@ CREATE SCHEMA IF NOT EXISTS dev;
 -- 2. Enable pgcrypto for gen_random_uuid()
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
--- 3. Create tables in dev schema (identical to public)
+-- 3. Grant usage so the anon Supabase role can access dev schema
+GRANT USAGE ON SCHEMA dev TO anon, authenticated;
+ALTER DEFAULT PRIVILEGES IN SCHEMA dev GRANT ALL ON TABLES TO anon, authenticated;
+ALTER DEFAULT PRIVILEGES IN SCHEMA dev GRANT ALL ON SEQUENCES TO anon, authenticated;
+
+-- 4. Create tables in dev schema (identical to public)
 
 -- dev.items
 CREATE TABLE IF NOT EXISTS dev.items (
@@ -71,7 +76,7 @@ CREATE TABLE IF NOT EXISTS dev.audit_log (
     created_at TIMESTAMPTZ DEFAULT now()
 );
 
--- 4. Indexes on dev schema
+-- 5. Indexes on dev schema
 
 CREATE INDEX IF NOT EXISTS idx_dev_audit_log_user_id ON dev.audit_log(user_id);
 CREATE INDEX IF NOT EXISTS idx_dev_audit_log_event ON dev.audit_log(event);
@@ -81,11 +86,16 @@ CREATE INDEX IF NOT EXISTS idx_dev_transactions_created_by ON dev.transactions(c
 CREATE INDEX IF NOT EXISTS idx_dev_transactions_status ON dev.transactions(status);
 CREATE INDEX IF NOT EXISTS idx_dev_transaction_items_transaction ON dev.transaction_items(transaction_id);
 
--- 5. RLS — enabled for consistency with Supabase best practices
---    The app uses custom bcrypt auth (not Supabase Auth), so policies
---    allow all authenticated requests by default. The real auth gate
---    is in the application layer. Storage bucket RLS is separate.
+-- 6. Grant table privileges to anon + authenticated roles (bypasses RLS for dev)
+--    The app uses custom bcrypt auth (not Supabase Auth), so the anon key is used
+--    for all requests. RLS policies scoped to 'authenticated' would block anon.
+--    Instead, we grant direct table access and disable RLS on dev tables so the
+--    app can function without Supabase Auth sessions.
 
+GRANT ALL ON ALL TABLES IN SCHEMA dev TO anon, authenticated;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA dev TO anon, authenticated;
+
+-- 7. Enable RLS for consistency (optional), but add policies that allow anon too
 ALTER TABLE dev.items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE dev.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE dev.transactions ENABLE ROW LEVEL SECURITY;
@@ -95,18 +105,20 @@ ALTER TABLE dev.audit_log ENABLE ROW LEVEL SECURITY;
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'dev' AND tablename = 'items') THEN
-        CREATE POLICY "dev_items_all" ON dev.items FOR ALL TO authenticated USING (true) WITH CHECK (true);
+        CREATE POLICY "dev_items_all" ON dev.items FOR ALL TO anon, authenticated USING (true) WITH CHECK (true);
+        CREATE POLICY "dev_items_select" ON dev.items FOR SELECT TO anon USING (true);
     END IF;
     IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'dev' AND tablename = 'users') THEN
-        CREATE POLICY "dev_users_all" ON dev.users FOR ALL TO authenticated USING (true) WITH CHECK (true);
+        CREATE POLICY "dev_users_all" ON dev.users FOR ALL TO anon, authenticated USING (true) WITH CHECK (true);
+        CREATE POLICY "dev_users_select" ON dev.users FOR SELECT TO anon USING (true);
     END IF;
     IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'dev' AND tablename = 'transactions') THEN
-        CREATE POLICY "dev_transactions_all" ON dev.transactions FOR ALL TO authenticated USING (true) WITH CHECK (true);
+        CREATE POLICY "dev_transactions_all" ON dev.transactions FOR ALL TO anon, authenticated USING (true) WITH CHECK (true);
     END IF;
     IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'dev' AND tablename = 'transaction_items') THEN
-        CREATE POLICY "dev_transaction_items_all" ON dev.transaction_items FOR ALL TO authenticated USING (true) WITH CHECK (true);
+        CREATE POLICY "dev_transaction_items_all" ON dev.transaction_items FOR ALL TO anon, authenticated USING (true) WITH CHECK (true);
     END IF;
     IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'dev' AND tablename = 'audit_log') THEN
-        CREATE POLICY "dev_audit_log_all" ON dev.audit_log FOR ALL TO authenticated USING (true) WITH CHECK (true);
+        CREATE POLICY "dev_audit_log_all" ON dev.audit_log FOR ALL TO anon, authenticated USING (true) WITH CHECK (true);
     END IF;
 END $$;

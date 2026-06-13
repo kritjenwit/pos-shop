@@ -22,7 +22,7 @@ export default function PublicRoutes() {
       >
         Skip to content
       </a>
-      <div id="public-content">
+      <main id="public-content" tabIndex={-1}>
         <Suspense fallback={<PublicLoadingFallback />}>
           <Routes>
             <Route path="/menu" element={<MenuPage />} />
@@ -30,7 +30,7 @@ export default function PublicRoutes() {
             <Route path="/public/transactions/:id" element={<CustomerTransactionDetailPage />} />
           </Routes>
         </Suspense>
-      </div>
+      </main>
     </>
   );
 }
