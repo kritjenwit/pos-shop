@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { supabase, type Item, deleteImage } from '../lib/supabase';
 import { useAuth } from './AuthContext';
 import { getCache, setCache, invalidateCache } from '../lib/cache';
@@ -27,26 +27,6 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 const CACHE_KEY = 'items';
 
-const fetchItems = async (setItems: React.Dispatch<React.SetStateAction<Item[]>>, setLoading: React.Dispatch<React.SetStateAction<boolean>>, useCache = true) => {
-  if (useCache) {
-    const cached = getCache<Item[]>(CACHE_KEY);
-    if (cached) {
-      setItems(cached);
-      setLoading(false);
-      return;
-    }
-  }
-
-  const { data, error } = await supabase.from('items').select('*');
-  if (error) {
-    console.error('Error fetching items:', error);
-  } else {
-    setItems(data || []);
-    setCache(CACHE_KEY, data || []);
-  }
-  setLoading(false);
-};
-
 export function AppProvider({ children, basketKey = 'pos-shop-basket' }: { children: ReactNode; basketKey?: string }) {
   const { user } = useAuth();
   const [items, setItems] = useState<Item[]>([]);
@@ -64,8 +44,28 @@ export function AppProvider({ children, basketKey = 'pos-shop-basket' }: { child
     return new Map();
   });
 
+  const fetchItems = async (useCache = true) => {
+    if (useCache) {
+      const cached = getCache<Item[]>(CACHE_KEY);
+      if (cached) {
+        setItems(cached);
+        setLoading(false);
+        return;
+      }
+    }
+
+    const { data, error } = await supabase.from('items').select('*');
+    if (error) {
+      console.error('Error fetching items:', error);
+    } else {
+      setItems(data || []);
+      setCache(CACHE_KEY, data || []);
+    }
+    setLoading(false);
+  };
+
   useEffect(() => {
-    fetchItems(setItems, setLoading, true);
+    fetchItems(true);
   }, []);
 
   useEffect(() => {
@@ -216,7 +216,7 @@ export function AppProvider({ children, basketKey = 'pos-shop-basket' }: { child
   const refreshItems = async () => {
     setLoading(true);
     invalidateCache(CACHE_KEY);
-    await fetchItems(setItems, setLoading, false);
+    await fetchItems(false);
   };
 
   return (
