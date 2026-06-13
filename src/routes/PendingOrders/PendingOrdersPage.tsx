@@ -9,13 +9,16 @@ export default function PendingOrdersPage() {
   const [orders, setOrders] = useState<OrderSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState('');
 
   const fetchPendingOrders = async () => {
     setLoading(true);
-    const { data, error } = await getOrders({ status: 'pending' });
+    setError('');
+    const { data, error: fetchErr } = await getOrders({ status: 'pending' });
 
-    if (error) {
-      console.error('Error fetching pending orders:', error);
+    if (fetchErr) {
+      setError(typeof fetchErr === 'string' ? fetchErr : 'Failed to load pending orders');
+      console.error('Error fetching pending orders:', fetchErr);
     } else if (data) {
       setOrders(data);
     }
@@ -63,18 +66,33 @@ export default function PendingOrdersPage() {
 
   if (orders.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-16">
-        <Receipt size={48} style={{ color: COLORS.textSecondary }} />
-        <p className="text-lg mt-4 font-medium" style={{ color: COLORS.text }}>No pending orders</p>
-        <p className="text-sm mt-1" style={{ color: COLORS.textSecondary }}>
-          Orders from the public menu will appear here for approval
-        </p>
+      <div className="space-y-4 animate-fade-in">
+        {error && (
+          <div className="p-3 rounded-xl text-sm bg-red-50 text-red-600 border border-red-200">
+            {error}
+          </div>
+        )}
+        {!error && (
+          <div className="flex flex-col items-center justify-center py-16">
+            <Receipt size={48} style={{ color: COLORS.textSecondary }} />
+            <p className="text-lg mt-4 font-medium" style={{ color: COLORS.text }}>No pending orders</p>
+            <p className="text-sm mt-1" style={{ color: COLORS.textSecondary }}>
+              Orders from the public menu will appear here for approval
+            </p>
+          </div>
+        )}
       </div>
     );
   }
 
   return (
     <div className="space-y-4 animate-fade-in">
+      {error && (
+        <div className="p-3 rounded-xl text-sm bg-red-50 text-red-600 border border-red-200">
+          {error}
+        </div>
+      )}
+
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-bold font-heading" style={{ color: COLORS.text }}>
           Pending Orders ({orders.length})

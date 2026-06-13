@@ -11,6 +11,7 @@ export default function PendingOrderDetailPage() {
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [approving, setApproving] = useState(false);
+  const [error, setError] = useState('');
 
   const fetchOrder = async () => {
     if (!id) return;
@@ -41,18 +42,22 @@ export default function PendingOrderDetailPage() {
   const handleApprove = async () => {
     if (!order) return;
     setApproving(true);
+    setError('');
     try {
-      const { error } = await approveOrder(order.id);
+      const { error: approveErr } = await approveOrder(order.id);
 
-      if (error) {
-        console.error('Error approving order:', error);
+      if (approveErr) {
+        setError(typeof approveErr === 'string' ? approveErr : 'Failed to approve order');
+        console.error('Error approving order:', approveErr);
         return;
       }
 
       // Navigate to checkout with the approved order ID for QR payment
       navigate(`/checkout/${order.id}`);
-    } catch (error) {
-      console.error('Error approving order:', error);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to approve order';
+      setError(message);
+      console.error('Error approving order:', err);
     } finally {
       setApproving(false);
     }
@@ -60,9 +65,11 @@ export default function PendingOrderDetailPage() {
 
   const handleCancel = async () => {
     if (!order) return;
-    const { error } = await cancelOrder(order.id);
-    if (error) {
-      console.error('Error cancelling order:', error);
+    setError('');
+    const { error: cancelErr } = await cancelOrder(order.id);
+    if (cancelErr) {
+      setError(typeof cancelErr === 'string' ? cancelErr : 'Failed to cancel order');
+      console.error('Error cancelling order:', cancelErr);
     } else {
       navigate('/pending-orders');
     }
@@ -184,6 +191,12 @@ export default function PendingOrderDetailPage() {
           </span>
         </div>
       </div>
+
+      {error && (
+        <div className="mt-4 p-3 rounded-xl text-sm bg-red-50 text-red-600 border border-red-200">
+          {error}
+        </div>
+      )}
 
       {/* Action Buttons */}
       <div className="flex gap-3 mt-6">

@@ -311,6 +311,27 @@ describe('CheckoutPage', () => {
       expect(screen.getByText('Processing...')).toBeInTheDocument();
     });
 
+    it('should show error when confirm payment fails', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      mockOrdersGetOrderDetail.mockResolvedValue({ data: mockOrderDetail, error: null });
+      mockOrdersConfirmPayment.mockResolvedValue({ data: null, error: 'Payment error' });
+
+      renderCheckout(['/checkout/tx-1']);
+
+      await waitFor(() => {
+        expect(screen.getByText('Confirm Payment')).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByText('Confirm Payment'));
+
+      await waitFor(() => {
+        expect(screen.getByText('Payment error')).toBeInTheDocument();
+      });
+
+      expect(consoleSpy).toHaveBeenCalledWith('Error confirming order:', 'Payment error');
+      consoleSpy.mockRestore();
+    });
+
     it('should navigate to pending-orders on back', async () => {
       mockOrdersGetOrderDetail.mockResolvedValue({ data: mockOrderDetail, error: null });
       renderCheckout(['/checkout/tx-1']);

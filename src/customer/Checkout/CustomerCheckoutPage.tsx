@@ -10,20 +10,24 @@ export default function CustomerCheckoutPage() {
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [additionalDetail, setAdditionalDetail] = useState('');
+  const [error, setError] = useState('');
   const [createdOrder, setCreatedOrder] = useState<{ id: string, order_id: string, total_amount: number } | null>(null);
 
   const handleCompleteOrder = async () => {
     if (!customerName.trim()) return;
 
     setCompleting(true);
+    setError('');
     try {
       const data = await createPendingOrder(customerName, customerPhone || undefined, additionalDetail || undefined);
       if (data) {
         setCreatedOrder(data as { id: string, order_id: string, total_amount: number });
       }
       setOrderComplete(true);
-    } catch (error) {
-      console.error('Error creating pending order:', error);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to create order';
+      setError(message);
+      console.error('Error creating pending order:', err);
     } finally {
       setCompleting(false);
     }
@@ -270,6 +274,12 @@ export default function CustomerCheckoutPage() {
                 <div className="text-2xl font-black text-primary font-heading">฿{total.toLocaleString()}</div>
               </div>
             </div>
+
+            {error && (
+              <div className="mt-4 p-3 rounded-xl text-sm bg-red-50 text-red-600 border border-red-200">
+                {error}
+              </div>
+            )}
 
             <button
               onClick={handleCompleteOrder}

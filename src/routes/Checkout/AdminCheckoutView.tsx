@@ -19,6 +19,7 @@ export default function AdminCheckoutView({ orderId }: AdminCheckoutViewProps) {
   const [promptPayTarget, setPromptPayTarget] = useState('');
   const [completing, setCompleting] = useState(false);
   const [orderComplete, setOrderComplete] = useState(false);
+  const [error, setError] = useState('');
   const [createdOrder, setCreatedOrder] = useState<{ id: string; order_id: string; total_amount: number } | null>(null);
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
@@ -96,15 +97,17 @@ export default function AdminCheckoutView({ orderId }: AdminCheckoutViewProps) {
 
   const handleCompleteOrder = async () => {
     setCompleting(true);
+    setError('');
     try {
-      const { error } = await orders.confirmPayment(orderId, {
+      const { error: confirmErr } = await orders.confirmPayment(orderId, {
         customerName: customerName || undefined,
         customerPhone: customerPhone || undefined,
         additionalDetail: additionalDetail || undefined,
       });
 
-      if (error) {
-        console.error('Error confirming order:', error);
+      if (confirmErr) {
+        setError(typeof confirmErr === 'string' ? confirmErr : 'Failed to confirm payment');
+        console.error('Error confirming order:', confirmErr);
         return;
       }
 
@@ -114,8 +117,10 @@ export default function AdminCheckoutView({ orderId }: AdminCheckoutViewProps) {
         total_amount: adminOrder?.total_amount || 0,
       });
       setOrderComplete(true);
-    } catch (error) {
-      console.error('Error confirming order:', error);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to confirm payment';
+      setError(message);
+      console.error('Error confirming order:', err);
     } finally {
       setCompleting(false);
     }
@@ -378,6 +383,12 @@ export default function AdminCheckoutView({ orderId }: AdminCheckoutViewProps) {
           </div>
         )}
       </div>
+
+      {error && (
+        <div className="mb-4 p-3 rounded-lg text-sm bg-red-50 text-red-600 border border-red-200">
+          {error}
+        </div>
+      )}
 
       <button
         onClick={handleCompleteOrder}

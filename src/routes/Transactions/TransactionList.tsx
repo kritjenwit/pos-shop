@@ -17,6 +17,7 @@ export default function TransactionListPage() {
   const [transactions, setTransactions] = useState<OrderSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [sellerQuery, setSellerQuery] = useState('');
@@ -54,10 +55,12 @@ export default function TransactionListPage() {
     }
 
     setLoading(true);
-    const { data, error } = await getOrders();
+    setError('');
+    const { data, error: fetchErr } = await getOrders();
 
-    if (error) {
-      console.error('Error fetching transactions:', error);
+    if (fetchErr) {
+      setError(typeof fetchErr === 'string' ? fetchErr : 'Failed to load transactions');
+      console.error('Error fetching transactions:', fetchErr);
       setLoading(false);
       return;
     }
@@ -264,6 +267,12 @@ export default function TransactionListPage() {
           </div>
         </div>
       </div>
+
+      {error && (
+        <div className="p-3 rounded-xl text-sm bg-red-50 text-red-600 border border-red-200">
+          {error}
+        </div>
+      )}
 
       {loading ? (
         <div className="space-y-2">

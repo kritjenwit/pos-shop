@@ -16,6 +16,7 @@ export default function CustomerCheckoutView() {
   const [orderComplete, setOrderComplete] = useState(false);
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
+  const [error, setError] = useState('');
   const [createdOrder, setCreatedOrder] = useState<{ id: string; order_id: string; total_amount: number } | null>(null);
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
@@ -49,14 +50,17 @@ export default function CustomerCheckoutView() {
 
   const handleCompleteOrder = async () => {
     setCompleting(true);
+    setError('');
     try {
       const data = await completeOrder(receiptFile, 'completed', customerName || null, customerPhone || null, additionalDetail || null);
       if (data) {
         setCreatedOrder(data as { id: string; order_id: string; total_amount: number });
       }
       setOrderComplete(true);
-    } catch (error) {
-      console.error('Error completing order:', error);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to complete order';
+      setError(message);
+      console.error('Error completing order:', err);
     } finally {
       setCompleting(false);
     }
@@ -290,6 +294,12 @@ export default function CustomerCheckoutView() {
           </div>
         )}
       </div>
+
+      {error && (
+        <div className="mb-4 p-3 rounded-lg text-sm bg-red-50 text-red-600 border border-red-200">
+          {error}
+        </div>
+      )}
 
       <button
         onClick={handleCompleteOrder}

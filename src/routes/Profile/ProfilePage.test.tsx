@@ -180,9 +180,10 @@ describe('ProfilePage', () => {
 
     renderPage();
     await waitFor(() => {
-      expect(consoleSpy).toHaveBeenCalledWith('Error fetching profile:', { message: 'Profile fetch error' });
+      expect(screen.getByText('Failed to load profile')).toBeInTheDocument();
     });
 
+    expect(consoleSpy).toHaveBeenCalledWith('Error fetching profile:', { message: 'Profile fetch error' });
     consoleSpy.mockRestore();
   });
 });

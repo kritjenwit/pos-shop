@@ -65,6 +65,20 @@ describe('PendingOrdersPage', () => {
     expect(screen.getByText(/ORD-001/)).toBeInTheDocument();
   });
 
+  it('should show error when fetch fails', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    mockGetOrders.mockResolvedValue({ data: null, error: 'Fetch error' });
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText('Fetch error')).toBeInTheDocument();
+    });
+
+    expect(consoleSpy).toHaveBeenCalledWith('Error fetching pending orders:', 'Fetch error');
+    consoleSpy.mockRestore();
+  });
+
   it('should render order with customer info when no user info', async () => {
     const orders = [
       {

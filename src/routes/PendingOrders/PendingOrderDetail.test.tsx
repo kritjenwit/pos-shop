@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import PendingOrderDetailPage from './PendingOrderDetail';
 
@@ -108,6 +108,79 @@ describe('PendingOrderDetailPage', () => {
     expect(screen.getByText('Cola')).toBeInTheDocument();
     expect(screen.getByText('Approve & View QR')).toBeInTheDocument();
     expect(screen.getByText('Cancel')).toBeInTheDocument();
+  });
+
+  it('should show error when approve fails', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const order = {
+      id: 'order-1',
+      totalAmount: 500,
+      status: 'pending',
+      createdAt: '2026-05-23T10:00:00Z',
+      orderId: 'ORD-001',
+      customerName: null,
+      customerPhone: null,
+      additionalDetail: null,
+      receiptUrl: null,
+      items: [],
+      sellerName: null,
+      sellerEmail: null,
+      sellerPhone: null,
+    };
+
+    mockGetOrderDetail.mockResolvedValue({ data: order, error: null });
+    mockApproveOrder.mockResolvedValue({ data: null, error: 'Approve error' });
+
+    renderWithRouter('order-1');
+    await waitFor(() => {
+      expect(screen.getByText('Approve & View QR')).toBeInTheDocument();
+    });
+
+    const approveBtn = screen.getByText('Approve & View QR');
+    fireEvent.click(approveBtn);
+
+    await waitFor(() => {
+      expect(screen.getByText('Approve error')).toBeInTheDocument();
+    });
+
+    expect(consoleSpy).toHaveBeenCalledWith('Error approving order:', 'Approve error');
+    consoleSpy.mockRestore();
+  });
+
+  it('should show error when cancel fails', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const order = {
+      id: 'order-1',
+      totalAmount: 500,
+      status: 'pending',
+      createdAt: '2026-05-23T10:00:00Z',
+      orderId: 'ORD-001',
+      customerName: null,
+      customerPhone: null,
+      additionalDetail: null,
+      receiptUrl: null,
+      items: [],
+      sellerName: null,
+      sellerEmail: null,
+      sellerPhone: null,
+    };
+
+    mockGetOrderDetail.mockResolvedValue({ data: order, error: null });
+    mockCancelOrder.mockResolvedValue({ data: null, error: 'Cancel error' });
+
+    renderWithRouter('order-1');
+    await waitFor(() => {
+      expect(screen.getByText('Order Details')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText('Cancel'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Cancel error')).toBeInTheDocument();
+    });
+
+    expect(consoleSpy).toHaveBeenCalledWith('Error cancelling order:', 'Cancel error');
+    consoleSpy.mockRestore();
   });
 
   it('should render without order_id when not present', async () => {

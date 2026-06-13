@@ -26,6 +26,7 @@ export default function ProfilePage() {
         .single();
 
       if (error) {
+        setMessage({ type: 'error', text: 'Failed to load profile' });
         console.error('Error fetching profile:', error);
       } else {
         setProfile(data);

@@ -161,8 +161,10 @@ describe('CustomerCheckoutPage', () => {
     fireEvent.click(screen.getByText('Place Order'));
 
     await waitFor(() => {
-      expect(consoleSpy).toHaveBeenCalledWith('Error creating pending order:', expect.any(Error));
+      expect(screen.getByText('Network error')).toBeInTheDocument();
     });
+
+    expect(consoleSpy).toHaveBeenCalledWith('Error creating pending order:', expect.any(Error));
 
     consoleSpy.mockRestore();
   });

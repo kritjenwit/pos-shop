@@ -83,9 +83,10 @@ describe('TransactionListPage', () => {
     render(<MemoryRouter><TransactionListPage /></MemoryRouter>);
 
     await waitFor(() => {
-      expect(screen.getByText('No transactions found')).toBeInTheDocument();
+      expect(screen.getByText('Fetch error')).toBeInTheDocument();
     });
 
+    expect(consoleSpy).toHaveBeenCalledWith('Error fetching transactions:', 'Fetch error');
     consoleSpy.mockRestore();
   });
 
