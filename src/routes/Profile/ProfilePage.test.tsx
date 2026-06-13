@@ -14,18 +14,10 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
-const { mockSingle, mockFrom } = vi.hoisted(() => {
-  const mockSingle = vi.fn().mockResolvedValue({ data: null, error: null });
-  const mockEq = vi.fn(() => ({ single: mockSingle }));
-  const mockSelect = vi.fn(() => ({ eq: mockEq }));
-  const mockFrom = vi.fn(() => ({ select: mockSelect }));
-  return { mockSingle, mockFrom };
-});
+const mockGetProfile = vi.hoisted(() => vi.fn());
 
-vi.mock('../../shared/lib/supabase', () => ({
-  supabase: {
-    from: mockFrom,
-  },
+vi.mock('../../shared/lib/profiles', () => ({
+  getProfile: mockGetProfile,
 }));
 
 vi.mock('../../shared/lib/auth', () => ({
@@ -58,7 +50,7 @@ describe('ProfilePage', () => {
     vi.clearAllMocks();
     mockNavigate.mockClear();
     mockUpdateUserPhone.mockResolvedValue({ error: null });
-    mockSingle.mockResolvedValue({
+    mockGetProfile.mockResolvedValue({
       data: { id: 'test-user-id', email: 'test@example.com', full_name: 'Test User', phone: '0812345678' },
       error: null,
     });
@@ -73,7 +65,7 @@ describe('ProfilePage', () => {
   };
 
   it('should render loading skeleton initially', () => {
-    mockSingle.mockResolvedValue(new Promise(() => {}));
+    mockGetProfile.mockResolvedValue(new Promise(() => {}));
     renderPage();
     expect(document.querySelector('.skeleton')).toBeInTheDocument();
   });
@@ -101,7 +93,7 @@ describe('ProfilePage', () => {
   });
 
   it('should show display name fallback when full_name is null', async () => {
-    mockSingle.mockResolvedValue({
+    mockGetProfile.mockResolvedValue({
       data: { id: 'test-user-id', email: 'anon@example.com', full_name: null, phone: null },
       error: null,
     });
@@ -176,7 +168,7 @@ describe('ProfilePage', () => {
 
   it('should handle error when fetching profile', async () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    mockSingle.mockResolvedValue({ data: null, error: { message: 'Profile fetch error' } });
+    mockGetProfile.mockResolvedValue({ data: null, error: { message: 'Profile fetch error' } });
 
     renderPage();
     await waitFor(() => {

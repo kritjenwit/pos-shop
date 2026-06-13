@@ -5,13 +5,7 @@ import { COLORS } from '../../shared/constants';
 import { getCache, setCache, invalidateCache } from '../../shared/lib/cache';
 import { getOrders } from '../../shared/lib/orders';
 import type { OrderSummary } from '../../shared/lib/orders';
-import { supabase } from '../../shared/lib/supabase';
-
-interface UserOption {
-  id: string;
-  email: string;
-  full_name: string | null;
-}
+import { searchSellers as searchSellerProfiles, type SellerOption } from '../../shared/lib/profiles';
 
 export default function TransactionListPage() {
   const [transactions, setTransactions] = useState<OrderSummary[]>([]);
@@ -21,8 +15,8 @@ export default function TransactionListPage() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [sellerQuery, setSellerQuery] = useState('');
-  const [sellerOptions, setSellerOptions] = useState<UserOption[]>([]);
-  const [selectedSeller, setSelectedSeller] = useState<UserOption | null>(null);
+  const [sellerOptions, setSellerOptions] = useState<SellerOption[]>([]);
+  const [selectedSeller, setSelectedSeller] = useState<SellerOption | null>(null);
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -87,11 +81,7 @@ export default function TransactionListPage() {
   };
 
   const searchSellers = async () => {
-    const { data } = await supabase
-      .from('users')
-      .select('id, email, full_name')
-      .or(`email.ilike.%${sellerQuery}%,full_name.ilike.%${sellerQuery}%`)
-      .limit(10);
+    const { data } = await searchSellerProfiles(sellerQuery);
     setSellerOptions(data || []);
   };
 
@@ -138,7 +128,7 @@ export default function TransactionListPage() {
     }
   };
 
-  const getSellerDisplayName = (seller: UserOption) => {
+  const getSellerDisplayName = (seller: SellerOption) => {
     return seller.full_name || seller.email;
   };
 

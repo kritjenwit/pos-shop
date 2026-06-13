@@ -7,7 +7,7 @@ const mockGetOrders = vi.hoisted(() => vi.fn());
 const mockGetCache = vi.hoisted(() => vi.fn<(key: string) => unknown>(() => null));
 const mockSetCache = vi.hoisted(() => vi.fn());
 const mockInvalidateCache = vi.hoisted(() => vi.fn());
-const mockSupabaseFrom = vi.hoisted(() => vi.fn());
+const mockSearchSellers = vi.hoisted(() => vi.fn());
 
 vi.mock('../../shared/lib/orders', () => ({
   getOrders: mockGetOrders,
@@ -19,8 +19,8 @@ vi.mock('../../shared/lib/cache', () => ({
   invalidateCache: mockInvalidateCache,
 }));
 
-vi.mock('../../shared/lib/supabase', () => ({
-  supabase: { from: mockSupabaseFrom },
+vi.mock('../../shared/lib/profiles', () => ({
+  searchSellers: mockSearchSellers,
 }));
 
 describe('TransactionListPage', () => {
@@ -327,13 +327,10 @@ describe('TransactionListPage', () => {
 
   it('should search sellers when typing in seller filter', async () => {
     mockGetOrders.mockResolvedValue({ data: [], error: null });
-
-    const mockOr = vi.fn();
-    const mockLimit = vi.fn();
-    const mockSelect = vi.fn(() => ({ or: mockOr }));
-    mockOr.mockReturnValue({ limit: mockLimit });
-    mockLimit.mockResolvedValue({ data: [{ id: 'u1', email: 'seller@shop.com', full_name: 'Shop Seller' }], error: null });
-    mockSupabaseFrom.mockReturnValue({ select: mockSelect });
+    mockSearchSellers.mockResolvedValue({
+      data: [{ id: 'u1', email: 'seller@shop.com', full_name: 'Shop Seller' }],
+      error: null,
+    });
 
     render(<MemoryRouter><TransactionListPage /></MemoryRouter>);
 

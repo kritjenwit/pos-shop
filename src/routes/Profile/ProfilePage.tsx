@@ -3,7 +3,8 @@ import { User, Mail, Phone } from 'lucide-react';
 import { useAuth } from '../../shared/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { updateUserPhone } from '../../shared/lib/auth';
-import { supabase, type User as UserType } from '../../shared/lib/supabase';
+import { getProfile } from '../../shared/lib/profiles';
+import type { User as UserType } from '../../shared/lib/supabase';
 import { COLORS } from '../../shared/constants';
 
 export default function ProfilePage() {
@@ -19,16 +20,12 @@ export default function ProfilePage() {
     if (!authUser) return;
 
     const fetchProfile = async () => {
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', authUser.id)
-        .single();
+      const { data, error } = await getProfile(authUser.id);
 
       if (error) {
         setMessage({ type: 'error', text: 'Failed to load profile' });
         console.error('Error fetching profile:', error);
-      } else {
+      } else if (data) {
         setProfile(data);
         setPhone(data.phone || '');
       }
