@@ -313,6 +313,22 @@ describe('AppContext', () => {
     expect(result.current.basket.size).toBe(0);
   });
 
+  it('should complete order with receipt file', async () => {
+    const receiptFile = new File([''], 'receipt.jpg', { type: 'image/jpeg' });
+
+    const { result } = renderAppHook();
+
+    act(() => result.current.addToBasket('item-1'));
+
+    await act(async () => {
+      const data = await result.current.completeOrder(receiptFile);
+      expect(data).toBeDefined();
+    });
+
+    expect(mockOrdersCreateOrder).toHaveBeenCalled();
+    expect(mockOrdersCreateOrder.mock.calls[0][3].receiptFile).toBe(receiptFile);
+  });
+
   it('should create pending order via orders module', async () => {
     const { result } = renderAppHook();
 
@@ -333,5 +349,18 @@ describe('AppContext', () => {
       return await result.current.createPendingOrder();
     });
     expect(data).toBeUndefined();
+  });
+
+  it('should throw on createPendingOrder error', async () => {
+    mockOrdersCreatePendingOrder.mockResolvedValue({ data: null, error: 'Create error' });
+
+    const { result } = renderAppHook();
+    act(() => result.current.addToBasket('item-1'));
+
+    await expect(
+      act(async () => {
+        await result.current.createPendingOrder('Test', '0811111111');
+      })
+    ).rejects.toThrow();
   });
 });
