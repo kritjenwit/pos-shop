@@ -1,22 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { supabase } from '../../shared/lib/supabase';
 import { COLORS } from '../../shared/constants';
 import { Receipt, Check, ArrowLeft } from 'lucide-react';
-import type { Transaction, TransactionItem } from '../../shared/lib/supabase';
-
-interface TransactionWithUser extends Transaction {
-  user_email?: string;
-  user_full_name?: string | null;
-  user_phone?: string | null;
-  item_count?: number;
-}
+import { getOrderDetail, approveOrder, cancelOrder } from '../../shared/lib/orders';
+import type { OrderDetail } from '../../shared/lib/orders';
 
 export default function PendingOrderDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [order, setOrder] = useState<TransactionWithUser | null>(null);
-  const [items, setItems] = useState<TransactionItem[]>([]);
+  const [order, setOrder] = useState<OrderDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [approving, setApproving] = useState(false);
 
@@ -24,32 +16,21 @@ export default function PendingOrderDetailPage() {
     if (!id) return;
     setLoading(true);
 
-    const { data: txData, error: txError } = await supabase
-      .from('transactions')
-      .select('*, users(email, full_name, phone)')
-      .eq('id', id)
-      .single();
+    const { data, error } = await getOrderDetail(id);
 
-    if (txError) {
-      console.error('Error fetching order:', txError);
+    if (error || !data) {
+      console.error('Error fetching order:', error);
       navigate('/pending-orders');
       return;
     }
-
-    const { data: itemsData } = await supabase
-      .from('transaction_items')
-      .select('*')
-      .eq('transaction_id', id)
-      .order('id');
 
     // Only allow pending orders on this page
-    if (txData?.status !== 'pending') {
+    if (data.status !== 'pending') {
       navigate('/pending-orders');
       return;
     }
 
-    setOrder(txData);
-    setItems(itemsData || []);
+    setOrder(data);
     setLoading(false);
   };
 
@@ -61,10 +42,12 @@ export default function PendingOrderDetailPage() {
     if (!order) return;
     setApproving(true);
     try {
-      await supabase
-        .from('transactions')
-        .update({ status: 'approved' })
-        .eq('id', order.id);
+      const { error } = await approveOrder(order.id);
+
+      if (error) {
+        console.error('Error approving order:', error);
+        return;
+      }
 
       // Navigate to checkout with the approved order ID for QR payment
       navigate(`/checkout/${order.id}`);
@@ -77,14 +60,11 @@ export default function PendingOrderDetailPage() {
 
   const handleCancel = async () => {
     if (!order) return;
-    try {
-      await supabase
-        .from('transactions')
-        .update({ status: 'cancelled' })
-        .eq('id', order.id);
-      navigate('/pending-orders');
-    } catch (error) {
+    const { error } = await cancelOrder(order.id);
+    if (error) {
       console.error('Error cancelling order:', error);
+    } else {
+      navigate('/pending-orders');
     }
   };
 
@@ -154,25 +134,25 @@ export default function PendingOrderDetailPage() {
               >
                 {order.status}
               </span>
-              {order.order_id && (
-                <span className="text-[10px] font-mono font-bold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">
-                  {order.order_id}
-                </span>
-              )}
+{order.orderId && (
+                  <span className="text-[10px] font-mono font-bold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">
+                    {order.orderId}
+                  </span>
+                )}
             </div>
           </div>
           <span className="text-xl font-bold font-heading" style={{ color: COLORS.primary }}>
-            ฿{order.total_amount.toFixed(2)}
+            ฿{order.totalAmount.toFixed(2)}
           </span>
         </div>
 
         <div className="mt-4 border-t pt-4" style={{ borderColor: COLORS.border }}>
           <div className="text-sm" style={{ color: COLORS.textSecondary }}>
-            <div>By {order.user_full_name || order.user_email || 'Unknown'}</div>
-            {order.customer_name && <div>Customer: {order.customer_name}</div>}
-            {order.customer_phone && <div>Phone: {order.customer_phone}</div>}
-            {order.additional_detail && <div className="mt-2 text-xs italic">Note: {order.additional_detail}</div>}
-            <div>Placed: {formatDate(order.created_at)}</div>
+            <div>By {order.sellerName || order.sellerEmail || 'Unknown'}</div>
+            {order.customerName && <div>Customer: {order.customerName}</div>}
+            {order.customerPhone && <div>Phone: {order.customerPhone}</div>}
+            {order.additionalDetail && <div className="mt-2 text-xs italic">Note: {order.additionalDetail}</div>}
+            <div>Placed: {formatDate(order.createdAt)}</div>
           </div>
         </div>
       </div>
@@ -180,10 +160,10 @@ export default function PendingOrderDetailPage() {
       {/* Items List */}
       <div className="rounded-lg shadow-card p-5 mt-4" style={{ backgroundColor: COLORS.cardBackground }}>
         <h3 className="font-semibold mb-3 font-heading" style={{ color: COLORS.text }}>
-          Items ({items.length})
+          Items ({order.items.length})
         </h3>
         <div className="space-y-3">
-          {items.map((item) => (
+          {order.items.map((item) => (
             <div key={item.id} className="flex justify-between items-center py-2 border-b" style={{ borderColor: COLORS.border }}>
               <div>
                 <div className="text-sm font-medium" style={{ color: COLORS.text }}>{item.item_name}</div>
@@ -200,7 +180,7 @@ export default function PendingOrderDetailPage() {
         <div className="flex justify-between items-center mt-4 pt-4 border-t" style={{ borderColor: COLORS.border }}>
           <span className="text-sm font-semibold" style={{ color: COLORS.textSecondary }}>Total</span>
           <span className="text-lg font-bold font-heading" style={{ color: COLORS.primary }}>
-            ฿{order.total_amount.toFixed(2)}
+            ฿{order.totalAmount.toFixed(2)}
           </span>
         </div>
       </div>

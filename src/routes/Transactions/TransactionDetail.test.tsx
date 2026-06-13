@@ -13,35 +13,17 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
-const { mockSingle, mockItemsOrder, mockFrom, mockGetSignedImageUrl } = vi.hoisted(() => {
-  const mockItemsOrder = vi.fn().mockResolvedValue({ data: [], error: null });
-  const mockItemsEq = vi.fn(() => ({ order: mockItemsOrder }));
-  const mockSingle = vi.fn().mockResolvedValue({ data: null, error: null });
-  const mockTxEq = vi.fn(() => ({ single: mockSingle }));
-  const mockTxSelect = vi.fn(() => ({ eq: mockTxEq }));
-  const mockGetSignedImageUrl = vi.fn<(...args: unknown[]) => Promise<string | null>>();
-  const mockFrom = vi.fn((table: string) => {
-    if (table === 'transaction_items') {
-      return { select: vi.fn(() => ({ eq: mockItemsEq })) };
-    }
-    return { select: mockTxSelect };
-  });
-  return { mockSingle, mockItemsOrder, mockFrom, mockGetSignedImageUrl };
-});
+const mockGetOrderDetail = vi.hoisted(() => vi.fn());
 
-vi.mock('../../shared/lib/supabase', () => ({
-  supabase: {
-    from: mockFrom,
-  },
-  getSignedImageUrl: mockGetSignedImageUrl,
+vi.mock('../../shared/lib/orders', () => ({
+  getOrderDetail: mockGetOrderDetail,
 }));
 
 describe('TransactionDetailPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockNavigate.mockClear();
-    mockSingle.mockResolvedValue({ data: null, error: null });
-    mockItemsOrder.mockResolvedValue({ data: [], error: null });
+    mockGetOrderDetail.mockResolvedValue({ data: null, error: null });
   });
 
   const renderWithRouter = (transactionId = 'test-tx-id') => {
@@ -55,20 +37,23 @@ describe('TransactionDetailPage', () => {
   };
 
   it('should render loading skeleton initially', () => {
-    mockSingle.mockResolvedValue(new Promise(() => {}));
+    mockGetOrderDetail.mockResolvedValue(new Promise(() => {}));
     renderWithRouter();
     expect(document.querySelector('.skeleton')).toBeInTheDocument();
   });
 
-  it('should render transaction not found when no data and no error', async () => {
+  it('should navigate to transactions list when order not found', async () => {
+    mockGetOrderDetail.mockResolvedValue({ data: null, error: 'Order not found' });
+
     renderWithRouter();
+
     await waitFor(() => {
-      expect(screen.getByText('Transaction not found')).toBeInTheDocument();
+      expect(mockNavigate).toHaveBeenCalledWith('/transactions');
     });
   });
 
   it('should navigate back when fetch error occurs', async () => {
-    mockSingle.mockResolvedValue({ data: null, error: { message: 'Not found' } });
+    mockGetOrderDetail.mockResolvedValue({ data: null, error: 'Not found' });
 
     renderWithRouter();
 
@@ -80,21 +65,24 @@ describe('TransactionDetailPage', () => {
   it('should render transaction details when data is loaded', async () => {
     const tx = {
       id: 'tx-1',
-      total_amount: 500,
+      totalAmount: 500,
       status: 'completed',
-      created_by: 'user-1',
-      created_at: '2026-05-23T10:00:00Z',
-      order_id: 'ORD-001',
-      additional_detail: 'Extra spicy',
+      createdAt: '2026-05-23T10:00:00Z',
+      orderId: 'ORD-001',
+      additionalDetail: 'Extra spicy',
+      receiptUrl: null,
+      items: [
+        { id: 'item-1', transaction_id: 'tx-1', item_id: 'prod-1', item_name: 'Pizza', quantity: 2, unit_price: 200, subtotal: 400 },
+        { id: 'item-2', transaction_id: 'tx-1', item_id: 'prod-2', item_name: 'Cola', quantity: 1, unit_price: 100, subtotal: 100 },
+      ],
+      customerName: null,
+      customerPhone: null,
+      sellerName: null,
+      sellerEmail: null,
+      sellerPhone: null,
     };
 
-    const items = [
-      { id: 'item-1', transaction_id: 'tx-1', item_id: 'prod-1', item_name: 'Pizza', quantity: 2, unit_price: 200, subtotal: 400 },
-      { id: 'item-2', transaction_id: 'tx-1', item_id: 'prod-2', item_name: 'Cola', quantity: 1, unit_price: 100, subtotal: 100 },
-    ];
-
-    mockSingle.mockResolvedValue({ data: tx, error: null });
-    mockItemsOrder.mockResolvedValue({ data: items, error: null });
+    mockGetOrderDetail.mockResolvedValue({ data: tx, error: null });
 
     renderWithRouter('tx-1');
 
@@ -115,15 +103,21 @@ describe('TransactionDetailPage', () => {
   it('should render receipt when receipt_url is present', async () => {
     const tx = {
       id: 'tx-2',
-      total_amount: 300,
+      totalAmount: 300,
       status: 'completed',
-      created_by: 'user-1',
-      created_at: '2026-05-23T10:00:00Z',
-      receipt_url: 'receipts/abc.jpg',
+      createdAt: '2026-05-23T10:00:00Z',
+      orderId: null,
+      additionalDetail: null,
+      receiptUrl: 'https://example.com/receipt.jpg',
+      items: [],
+      customerName: null,
+      customerPhone: null,
+      sellerName: null,
+      sellerEmail: null,
+      sellerPhone: null,
     };
 
-    mockSingle.mockResolvedValue({ data: tx, error: null });
-    mockGetSignedImageUrl.mockResolvedValue('https://example.com/receipt.jpg');
+    mockGetOrderDetail.mockResolvedValue({ data: tx, error: null });
 
     renderWithRouter('tx-2');
 
@@ -137,13 +131,21 @@ describe('TransactionDetailPage', () => {
   it('should not show additional_detail section when not present', async () => {
     const tx = {
       id: 'tx-3',
-      total_amount: 200,
+      totalAmount: 200,
       status: 'completed',
-      created_by: 'user-1',
-      created_at: '2026-05-23T10:00:00Z',
+      createdAt: '2026-05-23T10:00:00Z',
+      orderId: null,
+      additionalDetail: null,
+      receiptUrl: null,
+      items: [],
+      customerName: null,
+      customerPhone: null,
+      sellerName: null,
+      sellerEmail: null,
+      sellerPhone: null,
     };
 
-    mockSingle.mockResolvedValue({ data: tx, error: null });
+    mockGetOrderDetail.mockResolvedValue({ data: tx, error: null });
 
     renderWithRouter('tx-3');
 
@@ -157,13 +159,21 @@ describe('TransactionDetailPage', () => {
   it('should render for different status colors', async () => {
     const tx = {
       id: 'tx-4',
-      total_amount: 150,
+      totalAmount: 150,
       status: 'cancelled',
-      created_by: 'user-1',
-      created_at: '2026-05-23T10:00:00Z',
+      createdAt: '2026-05-23T10:00:00Z',
+      orderId: null,
+      additionalDetail: null,
+      receiptUrl: null,
+      items: [],
+      customerName: null,
+      customerPhone: null,
+      sellerName: null,
+      sellerEmail: null,
+      sellerPhone: null,
     };
 
-    mockSingle.mockResolvedValue({ data: tx, error: null });
+    mockGetOrderDetail.mockResolvedValue({ data: tx, error: null });
 
     renderWithRouter('tx-4');
 

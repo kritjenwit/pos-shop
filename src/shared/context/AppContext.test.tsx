@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { AppProvider, useApp } from './AppContext';
 
-const { mockFrom, mockSelect, mockInsert, mockUpdate, mockDelete, mockEq, mockSingle, mockOrder } = vi.hoisted(() => {
+const { mockFrom, mockSelect, mockUpdate, mockDelete, mockEq, mockSingle, mockOrder } = vi.hoisted(() => {
   const mockSelect = vi.fn();
   const mockInsert = vi.fn();
   const mockUpdate = vi.fn();
@@ -24,7 +24,6 @@ const { mockFrom, mockSelect, mockInsert, mockUpdate, mockDelete, mockEq, mockSi
   }));
   mockInsert.mockImplementation(() => ({
     select: mockSelect,
-    single: mockSingle,
   }));
   mockUpdate.mockImplementation(() => ({
     eq: mockEq,
@@ -40,8 +39,13 @@ const { mockFrom, mockSelect, mockInsert, mockUpdate, mockDelete, mockEq, mockSi
     delete: mockDelete,
   }));
 
-  return { mockFrom, mockSelect, mockInsert, mockUpdate, mockDelete, mockEq, mockSingle, mockOrder };
+  return { mockFrom, mockSelect, mockUpdate, mockDelete, mockEq, mockSingle, mockOrder };
 });
+
+const mockOrdersCreateOrder = vi.hoisted(() => vi.fn());
+const mockOrdersCreatePendingOrder = vi.hoisted(() => vi.fn());
+const mockOrdersApproveOrder = vi.hoisted(() => vi.fn());
+const mockOrdersConfirmPayment = vi.hoisted(() => vi.fn());
 
 vi.mock('../lib/supabase', () => ({
   supabase: {
@@ -61,8 +65,11 @@ vi.mock('../lib/cache', () => ({
   invalidateCache: vi.fn(),
 }));
 
-vi.mock('../lib/util', () => ({
-  generateOrderId: vi.fn(() => 'ORD-20260523-TEST'),
+vi.mock('../lib/orders', () => ({
+  createOrder: mockOrdersCreateOrder,
+  createPendingOrder: mockOrdersCreatePendingOrder,
+  approveOrder: mockOrdersApproveOrder,
+  confirmPayment: mockOrdersConfirmPayment,
 }));
 
 describe('AppContext', () => {
@@ -73,6 +80,10 @@ describe('AppContext', () => {
     mockSingle.mockResolvedValue({ data: null, error: null });
     mockOrder.mockResolvedValue({ data: [], error: null });
     mockEq.mockResolvedValue({ error: null });
+    mockOrdersCreateOrder.mockResolvedValue({ data: { id: 'tx-1', orderId: 'ORD-001', totalAmount: 400 }, error: null });
+    mockOrdersCreatePendingOrder.mockResolvedValue({ data: { id: 'pending-1', orderId: 'ORD-PENDING', totalAmount: 200 }, error: null });
+    mockOrdersApproveOrder.mockResolvedValue({ data: null, error: null });
+    mockOrdersConfirmPayment.mockResolvedValue({ data: null, error: null });
   });
 
   const renderAppHook = () => {
@@ -215,16 +226,16 @@ describe('AppContext', () => {
     expect(mockDelete).toHaveBeenCalled();
   });
 
-  it('should approve order', async () => {
+  it('should approve order via orders module', async () => {
     const { result } = renderAppHook();
     await act(async () => {
       await result.current.approveOrder('order-1');
     });
-    expect(mockUpdate).toHaveBeenCalledWith({ status: 'approved' });
+    expect(mockOrdersApproveOrder).toHaveBeenCalledWith('order-1');
   });
 
   it('should throw on approve order error', async () => {
-    mockEq.mockResolvedValue({ error: { message: 'Approve error' } });
+    mockOrdersApproveOrder.mockResolvedValue({ data: null, error: 'Approve error' });
 
     const { result } = renderAppHook();
     await expect(
@@ -234,16 +245,16 @@ describe('AppContext', () => {
     ).rejects.toThrow();
   });
 
-  it('should confirm payment', async () => {
+  it('should confirm payment via orders module', async () => {
     const { result } = renderAppHook();
     await act(async () => {
       await result.current.confirmPayment('order-1');
     });
-    expect(mockUpdate).toHaveBeenCalledWith({ status: 'completed' });
+    expect(mockOrdersConfirmPayment).toHaveBeenCalledWith('order-1');
   });
 
   it('should throw on confirm payment error', async () => {
-    mockEq.mockResolvedValue({ error: { message: 'Confirm error' } });
+    mockOrdersConfirmPayment.mockResolvedValue({ data: null, error: 'Confirm error' });
 
     const { result } = renderAppHook();
     await expect(
@@ -275,16 +286,7 @@ describe('AppContext', () => {
     expect(data).toBeUndefined();
   });
 
-  it('should complete order with items in basket', async () => {
-    mockSelect.mockImplementation(() => {
-      const p = Object.assign(
-        Promise.resolve({ data: [] as unknown[], error: null }),
-        { single: mockSingle }
-      );
-      return p;
-    });
-    mockSingle.mockResolvedValue({ data: { id: 'tx-1', total_amount: 400, order_id: 'ORD-001' }, error: null });
-
+  it('should complete order via orders module', async () => {
     const { result } = renderAppHook();
 
     act(() => result.current.addToBasket('item-1'));
@@ -295,19 +297,11 @@ describe('AppContext', () => {
       expect(data).toBeDefined();
     });
 
+    expect(mockOrdersCreateOrder).toHaveBeenCalled();
     expect(result.current.basket.size).toBe(0);
   });
 
   it('should clear basket after completing order', async () => {
-    mockSelect.mockImplementation(() => {
-      const p = Object.assign(
-        Promise.resolve({ data: [] as unknown[], error: null }),
-        { single: mockSingle }
-      );
-      return p;
-    });
-    mockSingle.mockResolvedValue({ data: { id: 'tx-1', total_amount: 100, order_id: 'ORD-001' }, error: null });
-
     const { result } = renderAppHook();
 
     act(() => result.current.addToBasket('item-1'));
@@ -319,16 +313,7 @@ describe('AppContext', () => {
     expect(result.current.basket.size).toBe(0);
   });
 
-  it('should create pending order with items', async () => {
-    mockSelect.mockImplementation(() => {
-      const p = Object.assign(
-        Promise.resolve({ data: [] as unknown[], error: null }),
-        { single: mockSingle }
-      );
-      return p;
-    });
-    mockSingle.mockResolvedValue({ data: { id: 'pending-1', total_amount: 200, order_id: 'ORD-PENDING' }, error: null });
-
+  it('should create pending order via orders module', async () => {
     const { result } = renderAppHook();
 
     act(() => result.current.addToBasket('item-2'));
@@ -338,7 +323,7 @@ describe('AppContext', () => {
       expect(data).toBeDefined();
     });
 
-    expect(mockInsert).toHaveBeenCalled();
+    expect(mockOrdersCreatePendingOrder).toHaveBeenCalled();
     expect(result.current.basket.size).toBe(0);
   });
 

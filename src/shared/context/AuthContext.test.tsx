@@ -2,8 +2,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { AuthProvider, useAuth } from './AuthContext';
 
-const mockSignIn = vi.fn();
-const mockSignUp = vi.fn();
+const mockSignIn = vi.hoisted(() => vi.fn());
+const mockSignUp = vi.hoisted(() => vi.fn());
 
 vi.mock('../lib/auth', () => ({
   signIn: mockSignIn,

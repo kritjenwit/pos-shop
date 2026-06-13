@@ -10,9 +10,10 @@ const mockConfirmPayment = vi.fn();
 const mockUploadImage = vi.hoisted(() => vi.fn());
 const mockGetSignedImageUrl = vi.hoisted(() => vi.fn());
 const mockGenerateThaiQRPayment = vi.hoisted(() => vi.fn());
-const mockSupabaseFrom = vi.hoisted(() => vi.fn());
 const mockUseAppState = vi.hoisted(() => vi.fn());
 const mockUseAuthState = vi.hoisted(() => vi.fn());
+const mockOrdersGetOrderDetail = vi.hoisted(() => vi.fn());
+const mockOrdersConfirmPayment = vi.hoisted(() => vi.fn());
 
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
@@ -22,12 +23,16 @@ vi.mock('react-router-dom', async () => {
 vi.mock('../../shared/context/AppContext', () => ({ useApp: mockUseAppState }));
 vi.mock('../../shared/context/AuthContext', () => ({ useAuth: mockUseAuthState }));
 vi.mock('../../shared/lib/supabase', () => ({
-  supabase: { from: mockSupabaseFrom },
+  supabase: { from: vi.fn() },
   uploadImage: mockUploadImage,
   getSignedImageUrl: mockGetSignedImageUrl,
 }));
 vi.mock('../../shared/lib/thaiQR', () => ({
   generateThaiQRPayment: mockGenerateThaiQRPayment,
+}));
+vi.mock('../../shared/lib/orders', () => ({
+  getOrderDetail: mockOrdersGetOrderDetail,
+  confirmPayment: mockOrdersConfirmPayment,
 }));
 vi.mock('qrcode.react', () => ({
   QRCodeSVG: () => <div data-testid="qr-code">QR</div>,
@@ -79,6 +84,7 @@ describe('CheckoutPage', () => {
     mockGenerateThaiQRPayment.mockReturnValue('thai-qr-string');
     mockUploadImage.mockResolvedValue('receipts/test.jpg');
     mockGetSignedImageUrl.mockResolvedValue('https://example.com/img.jpg');
+    mockOrdersConfirmPayment.mockResolvedValue({ data: null, error: null });
 
     mockUseAppState.mockReturnValue({
       basket: makeBasket(),
@@ -169,8 +175,6 @@ describe('CheckoutPage', () => {
       expect(screen.getByText('Complete Order')).toBeInTheDocument();
     });
 
-
-
     it('should complete order on submit', async () => {
       renderCheckout();
       fireEvent.click(screen.getByText('Complete Order'));
@@ -218,76 +222,33 @@ describe('CheckoutPage', () => {
   });
 
   describe('Admin Mode', () => {
-    const mockTx = {
+    const mockOrderDetail = {
       id: 'tx-1',
-      order_id: 'ORD-001',
-      total_amount: 500,
-      customer_name: 'Customer A',
-      customer_phone: '0899999999',
-      additional_detail: 'No onions',
-      user_full_name: 'Staff User',
-      user_email: 'staff@shop.com',
-      user_phone: '0812345678',
+      totalAmount: 500,
       status: 'approved',
+      createdAt: '2026-05-23T10:00:00Z',
+      orderId: 'ORD-001',
+      customerName: 'Customer A',
+      customerPhone: '0899999999',
+      additionalDetail: 'No onions',
+      receiptUrl: null,
+      items: [
+        { id: 'ti-1', transaction_id: 'tx-1', item_id: 'item-1', item_name: 'Pizza', quantity: 2, unit_price: 200, subtotal: 400 },
+        { id: 'ti-2', transaction_id: 'tx-1', item_id: 'item-2', item_name: 'Cola', quantity: 1, unit_price: 100, subtotal: 100 },
+      ],
+      sellerName: 'Staff User',
+      sellerEmail: 'staff@shop.com',
+      sellerPhone: '0812345678',
     };
 
-    const mockTxItems = [
-      { id: 'ti-1', transaction_id: 'tx-1', item_id: 'item-1', item_name: 'Pizza', quantity: 2, unit_price: 200, subtotal: 400 },
-      { id: 'ti-2', transaction_id: 'tx-1', item_id: 'item-2', item_name: 'Cola', quantity: 1, unit_price: 100, subtotal: 100 },
-    ];
-
-    function makeAdminMocks(opts: { singleResolve?: boolean; includeUpdate?: boolean } = {}) {
-      const isPending = opts.singleResolve === false;
-
-      const singleResolve = isPending
-        ? new Promise(() => {})
-        : Promise.resolve({ data: mockTx, error: null });
-
-      const baseEq = vi.fn();
-      const baseSingle = vi.fn(() => singleResolve);
-      const baseUpdate = vi.fn(() => ({ eq: vi.fn().mockResolvedValue({ data: mockTx, error: null }) }));
-
-      const baseObj = {
-        eq: baseEq,
-        single: baseSingle,
-        ...(opts.includeUpdate ? { update: baseUpdate } : {}),
-      };
-      baseEq.mockReturnValue(baseObj);
-
-      const txSelect = vi.fn(() => baseObj);
-
-      const itemsOrder = vi.fn().mockResolvedValue({ data: mockTxItems, error: null });
-      const itemsEq = vi.fn(() => ({ order: itemsOrder }));
-
-      mockSupabaseFrom.mockImplementation((table: string) => {
-        if (table === 'transaction_items') {
-          return { select: vi.fn(() => ({ eq: itemsEq })) };
-        }
-        return {
-          select: txSelect,
-          ...(opts.includeUpdate ? { update: baseUpdate } : {}),
-        };
-      });
-    }
-
     it('should render loading skeleton', () => {
-      makeAdminMocks({ singleResolve: false });
+      mockOrdersGetOrderDetail.mockResolvedValue(new Promise(() => {}));
       renderCheckout(['/checkout/tx-1']);
       expect(document.querySelector('.skeleton')).toBeInTheDocument();
     });
 
     it('should redirect when order not found', async () => {
-      makeAdminMocks({ singleResolve: false });
-      vi.hoisted(() => ({ mockSingle: vi.fn() }));
-
-      const mockSingleFn = vi.fn();
-      const baseEq = vi.fn();
-      const baseObj = {
-        eq: baseEq,
-        single: mockSingleFn.mockResolvedValue({ data: null, error: { message: 'Not found' } }),
-      };
-      baseEq.mockReturnValue(baseObj);
-      mockSupabaseFrom.mockImplementation(() => ({ select: vi.fn(() => baseObj) }));
+      mockOrdersGetOrderDetail.mockResolvedValue({ data: null, error: 'Not found' });
 
       renderCheckout(['/checkout/tx-1']);
 
@@ -297,7 +258,7 @@ describe('CheckoutPage', () => {
     });
 
     it('should render payment view for approved order', async () => {
-      makeAdminMocks();
+      mockOrdersGetOrderDetail.mockResolvedValue({ data: mockOrderDetail, error: null });
       renderCheckout(['/checkout/tx-1']);
 
       await waitFor(() => {
@@ -310,7 +271,7 @@ describe('CheckoutPage', () => {
     });
 
     it('should set customer phone as PromptPay target', async () => {
-      makeAdminMocks();
+      mockOrdersGetOrderDetail.mockResolvedValue({ data: mockOrderDetail, error: null });
       renderCheckout(['/checkout/tx-1']);
 
       await waitFor(() => {
@@ -320,7 +281,7 @@ describe('CheckoutPage', () => {
     });
 
     it('should confirm payment on submit', async () => {
-      makeAdminMocks({ includeUpdate: true });
+      mockOrdersGetOrderDetail.mockResolvedValue({ data: mockOrderDetail, error: null });
       renderCheckout(['/checkout/tx-1']);
 
       await waitFor(() => {
@@ -330,15 +291,15 @@ describe('CheckoutPage', () => {
       fireEvent.click(screen.getByText('Confirm Payment'));
 
       await waitFor(() => {
-        expect(mockConfirmPayment).toHaveBeenCalledWith('tx-1');
+        expect(mockOrdersConfirmPayment).toHaveBeenCalledWith('tx-1', expect.objectContaining({}));
       });
 
       expect(screen.getByText('Payment Confirmed')).toBeInTheDocument();
     });
 
     it('should show processing state on confirm payment', async () => {
-      makeAdminMocks({ includeUpdate: true });
-      mockConfirmPayment.mockImplementation(() => new Promise(() => {}));
+      mockOrdersGetOrderDetail.mockResolvedValue({ data: mockOrderDetail, error: null });
+      mockOrdersConfirmPayment.mockImplementation(() => new Promise(() => {}));
       renderCheckout(['/checkout/tx-1']);
 
       await waitFor(() => {
@@ -351,7 +312,7 @@ describe('CheckoutPage', () => {
     });
 
     it('should navigate to pending-orders on back', async () => {
-      makeAdminMocks();
+      mockOrdersGetOrderDetail.mockResolvedValue({ data: mockOrderDetail, error: null });
       renderCheckout(['/checkout/tx-1']);
 
       await waitFor(() => {

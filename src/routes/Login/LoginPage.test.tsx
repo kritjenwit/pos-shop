@@ -3,8 +3,8 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import LoginPage from './LoginPage';
 import { AuthProvider } from '../../shared/context/AuthContext';
 
-const mockSignIn = vi.fn();
-const mockSignUp = vi.fn();
+const mockSignIn = vi.hoisted(() => vi.fn());
+const mockSignUp = vi.hoisted(() => vi.fn());
 
 vi.mock('../../shared/lib/auth', () => ({
   signIn: mockSignIn,

@@ -2,17 +2,16 @@ import { useState, useEffect } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import { Share2, Copy, Check, Receipt, ImageOff } from 'lucide-react';
-import { supabase, type Transaction, type TransactionItem, getSignedImageUrl } from '../../shared/lib/supabase';
 import { COLORS, PAYMENT } from '../../shared/constants';
+import { getOrderDetail } from '../../shared/lib/orders';
+import type { OrderDetail } from '../../shared/lib/orders';
 
 export default function CustomerTransactionDetailPage() {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
   const navigate = useNavigate();
-  const [transaction, setTransaction] = useState<Transaction | null>(null);
-  const [items, setItems] = useState<TransactionItem[]>([]);
+  const [transaction, setTransaction] = useState<OrderDetail | null>(null);
   const [loading, setLoading] = useState(true);
-  const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [showQR, setShowQR] = useState(false);
 
@@ -21,32 +20,16 @@ export default function CustomerTransactionDetailPage() {
 
   const fetchTransaction = async () => {
     if (!id) return;
-    const { data: txData, error: txError } = await supabase
-      .from('transactions')
-      .select('*')
-      .eq('id', id)
-      .single();
 
-    if (txError) {
-      console.error('Error fetching transaction:', txError);
+    const { data, error } = await getOrderDetail(id);
+
+    if (error || !data) {
+      console.error('Error fetching transaction:', error);
       navigate('/public/transactions');
       return;
     }
 
-    const { data: itemsData } = await supabase
-      .from('transaction_items')
-      .select('*')
-      .eq('transaction_id', id)
-      .order('id');
-
-    setTransaction(txData);
-    setItems(itemsData || []);
-
-    if (txData?.receipt_url) {
-      const signedUrl = await getSignedImageUrl(txData.receipt_url);
-      setReceiptUrl(signedUrl);
-    }
-
+    setTransaction(data);
     setLoading(false);
   };
 
@@ -104,7 +87,7 @@ export default function CustomerTransactionDetailPage() {
         <div className="text-center mb-6">
           <div className="flex items-center justify-center gap-2 mb-2">
             <span className="text-3xl font-bold font-heading" style={{ color: COLORS.text }}>
-              ฿{transaction.total_amount.toFixed(2)}
+              ฿{transaction.totalAmount.toFixed(2)}
             </span>
             <span
               className="text-xs px-2 py-1 rounded-full font-semibold"
@@ -114,11 +97,11 @@ export default function CustomerTransactionDetailPage() {
             </span>
           </div>
           <div className="text-sm" style={{ color: COLORS.textSecondary }}>
-            {formatDate(transaction.created_at)}
+            {formatDate(transaction.createdAt)}
           </div>
-          {transaction.order_id && (
+          {transaction.orderId && (
             <div className="text-xs font-mono font-bold mt-2 text-gray-400">
-              {transaction.order_id}
+              {transaction.orderId}
             </div>
           )}
         </div>
@@ -127,7 +110,7 @@ export default function CustomerTransactionDetailPage() {
           <h3 className="font-semibold mb-3 font-heading" style={{ color: COLORS.text }}>
             Items
           </h3>
-          {items.map((item) => (
+          {transaction.items.map((item) => (
             <div key={item.id} className="flex justify-between py-2" style={{ color: COLORS.textSecondary }}>
               <span className="font-medium">{item.item_name} x {item.quantity}</span>
               <span className="font-heading">฿{item.subtotal.toFixed(2)}</span>
@@ -136,23 +119,23 @@ export default function CustomerTransactionDetailPage() {
           </div>
         </div>
 
-        {transaction.additional_detail && (
+        {transaction.additionalDetail && (
           <div className="rounded-lg shadow-card p-5" style={{ backgroundColor: COLORS.cardBackground }}>
             <h3 className="font-semibold mb-2 font-heading" style={{ color: COLORS.text }}>
               Additional Detail
             </h3>
             <p className="text-sm whitespace-pre-wrap" style={{ color: COLORS.textSecondary }}>
-              {transaction.additional_detail}
+              {transaction.additionalDetail}
             </p>
           </div>
         )}
 
-        {receiptUrl ? (
+        {transaction.receiptUrl ? (
         <div className="rounded-lg shadow-card p-5" style={{ backgroundColor: COLORS.cardBackground }}>
           <h3 className="font-semibold mb-3 font-heading" style={{ color: COLORS.text }}>
             Receipt
           </h3>
-          <img src={receiptUrl} alt="Receipt" className="w-full rounded-lg" style={{ maxHeight: '400px', objectFit: 'contain' }} />
+          <img src={transaction.receiptUrl} alt="Receipt" className="w-full rounded-lg" style={{ maxHeight: '400px', objectFit: 'contain' }} />
         </div>
       ) : (
         <div className="rounded-lg shadow-card p-5" style={{ backgroundColor: COLORS.cardBackground }}>

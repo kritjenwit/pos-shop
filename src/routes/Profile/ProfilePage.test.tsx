@@ -4,7 +4,7 @@ import { MemoryRouter } from 'react-router-dom';
 import ProfilePage from './ProfilePage';
 
 const mockNavigate = vi.fn();
-const mockUpdateUserPhone = vi.fn();
+const mockUpdateUserPhone = vi.hoisted(() => vi.fn());
 
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');

@@ -5,7 +5,7 @@ import ItemListPage from './ItemList';
 import { AppProvider } from '../../shared/context/AppContext';
 import { AuthProvider } from '../../shared/context/AuthContext';
 
-const mockGetSignedImageUrl = vi.fn(() => Promise.resolve(null));
+const mockGetSignedImageUrl = vi.hoisted(() => vi.fn(() => Promise.resolve(null)));
 
 vi.mock('../../shared/lib/supabase', () => ({
   supabase: {

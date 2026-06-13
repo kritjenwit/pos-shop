@@ -1,34 +1,23 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { supabase } from '../../shared/lib/supabase';
 import { COLORS } from '../../shared/constants';
 import { Receipt, RefreshCw, Eye } from 'lucide-react';
-import type { Transaction } from '../../shared/lib/supabase';
-
-interface TransactionWithUser extends Transaction {
-  user_email?: string;
-  user_full_name?: string | null;
-  user_phone?: string | null;
-  item_count?: number;
-}
+import { getOrders } from '../../shared/lib/orders';
+import type { OrderSummary } from '../../shared/lib/orders';
 
 export default function PendingOrdersPage() {
-  const [orders, setOrders] = useState<TransactionWithUser[]>([]);
+  const [orders, setOrders] = useState<OrderSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchPendingOrders = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('transactions')
-      .select('*, users(email, full_name)')
-      .eq('status', 'pending')
-      .order('created_at', { ascending: false });
+    const { data, error } = await getOrders({ status: 'pending' });
 
     if (error) {
       console.error('Error fetching pending orders:', error);
-    } else {
-      setOrders(data || []);
+    } else if (data) {
+      setOrders(data);
     }
     setLoading(false);
   };
@@ -114,7 +103,7 @@ export default function PendingOrdersPage() {
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <span className="font-semibold font-heading" style={{ color: COLORS.text }}>
-                  ฿{order.total_amount.toFixed(2)}
+                  ฿{order.totalAmount.toFixed(2)}
                 </span>
                 <span
                   className="text-xs px-2 py-0.5 rounded-full font-semibold"
@@ -122,34 +111,34 @@ export default function PendingOrdersPage() {
                 >
                   {order.status}
                 </span>
-                {order.order_id && (
+                {order.orderId && (
                   <span className="text-[10px] font-mono font-bold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">
-                    {order.order_id}
+                    {order.orderId}
                   </span>
                 )}
               </div>
               <div className="text-sm" style={{ color: COLORS.textSecondary }}>
-                {order.item_count} items • {order.user_full_name || order.user_email || 'Unknown'}
-                {order.customer_name && (
+                {order.itemsCount} items • {order.sellerName || order.sellerEmail || 'Unknown'}
+                {order.customerName && (
                   <span className="ml-2 text-xs" style={{ color: COLORS.textSecondary }}>
-                    ({order.customer_name})
+                    ({order.customerName})
                   </span>
                 )}
-                {order.customer_phone && (
+                {order.customerPhone && (
                   <span className="ml-2 text-xs" style={{ color: COLORS.textSecondary }}>
-                    ({order.customer_phone})
+                    ({order.customerPhone})
                   </span>
                 )}
               </div>
-              {order.additional_detail && (
+              {order.additionalDetail && (
                 <div className="text-xs mt-1 truncate max-w-xs" style={{ color: COLORS.textSecondary }}>
-                  {order.additional_detail}
+                  {order.additionalDetail}
                 </div>
               )}
             </div>
             <div className="flex items-center gap-2">
               <span className="text-xs" style={{ color: COLORS.textSecondary }}>
-                {formatDate(order.created_at)}
+                {formatDate(order.createdAt)}
               </span>
               <Link
                 to={`/pending-orders/${order.id}`}

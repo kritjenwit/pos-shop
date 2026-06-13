@@ -3,24 +3,16 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import PendingOrdersPage from './PendingOrdersPage';
 
-const { mockOrder, mockFrom } = vi.hoisted(() => {
-  const mockOrder = vi.fn().mockResolvedValue({ data: [], error: null });
-  const mockEq = vi.fn(() => ({ order: mockOrder }));
-  const mockSelect = vi.fn(() => ({ eq: mockEq }));
-  const mockFrom = vi.fn(() => ({ select: mockSelect }));
-  return { mockOrder, mockFrom };
-});
+const mockGetOrders = vi.hoisted(() => vi.fn());
 
-vi.mock('../../shared/lib/supabase', () => ({
-  supabase: {
-    from: mockFrom,
-  },
+vi.mock('../../shared/lib/orders', () => ({
+  getOrders: mockGetOrders,
 }));
 
 describe('PendingOrdersPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockOrder.mockResolvedValue({ data: [], error: null });
+    mockGetOrders.mockResolvedValue({ data: [], error: null });
   });
 
   const renderPage = () => {
@@ -28,7 +20,7 @@ describe('PendingOrdersPage', () => {
   };
 
   it('should render loading skeleton initially', () => {
-    mockOrder.mockResolvedValue(new Promise(() => {}));
+    mockGetOrders.mockResolvedValue(new Promise(() => {}));
     renderPage();
     expect(document.querySelectorAll('.skeleton').length).toBeGreaterThan(0);
   });
@@ -45,20 +37,22 @@ describe('PendingOrdersPage', () => {
     const orders = [
       {
         id: 'order-1',
-        total_amount: 250,
+        totalAmount: 250,
         status: 'pending',
-        created_at: '2026-05-23T10:00:00Z',
-        order_id: 'ORD-001',
-        customer_name: 'John',
-        customer_phone: '0812345678',
-        additional_detail: 'No onions',
-        item_count: 3,
-        user_email: 'staff@shop.com',
-        user_full_name: 'Staff One',
+        createdAt: '2026-05-23T10:00:00Z',
+        orderId: 'ORD-001',
+        customerName: 'John',
+        customerPhone: '0812345678',
+        additionalDetail: 'No onions',
+        itemsCount: 3,
+        sellerEmail: 'staff@shop.com',
+        sellerName: 'Staff One',
+        sellerId: 'user-1',
+        receiptUrl: null,
       },
     ];
 
-    mockOrder.mockResolvedValue({ data: orders, error: null });
+    mockGetOrders.mockResolvedValue({ data: orders, error: null });
 
     renderPage();
 
@@ -75,15 +69,22 @@ describe('PendingOrdersPage', () => {
     const orders = [
       {
         id: 'order-1',
-        total_amount: 100,
+        totalAmount: 100,
         status: 'pending',
-        created_at: '2026-05-23T10:00:00Z',
-        item_count: 1,
-        customer_name: 'Walk-in Customer',
+        createdAt: '2026-05-23T10:00:00Z',
+        orderId: null,
+        itemsCount: 1,
+        customerName: 'Walk-in Customer',
+        customerPhone: null,
+        additionalDetail: null,
+        sellerName: null,
+        sellerEmail: null,
+        sellerId: 'user-1',
+        receiptUrl: null,
       },
     ];
 
-    mockOrder.mockResolvedValue({ data: orders, error: null });
+    mockGetOrders.mockResolvedValue({ data: orders, error: null });
 
     renderPage();
 

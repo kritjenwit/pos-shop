@@ -4,12 +4,13 @@ import { QRCodeSVG } from 'qrcode.react';
 import { CheckCircle, ShoppingCart, Upload, ArrowLeft, Receipt } from 'lucide-react';
 import { useApp } from '../../shared/context/AppContext';
 import { useAuth } from '../../shared/context/AuthContext';
-import { supabase, uploadImage, getSignedImageUrl } from '../../shared/lib/supabase';
+import { getSignedImageUrl } from '../../shared/lib/supabase';
 import { generateThaiQRPayment } from '../../shared/lib/thaiQR';
 import { COLORS, PAYMENT } from '../../shared/constants';
+import * as orders from '../../shared/lib/orders';
 
 export default function CheckoutPage() {
-  const { basket, items, completeOrder, confirmPayment } = useApp();
+  const { basket, items, completeOrder } = useApp();
   const { user } = useAuth();
   const { orderId } = useParams<{ orderId?: string }>();
   const navigate = useNavigate();
@@ -54,52 +55,41 @@ export default function CheckoutPage() {
   const loadAdminOrder = async () => {
     setAdminLoading(true);
     try {
-      const { data: tx, error } = await supabase
-        .from('transactions')
-        .select('*, users(email, full_name, phone)')
-        .eq('id', orderId)
-        .eq('status', 'approved')
-        .single();
+      const { data: tx, error } = await orders.getOrderDetail(orderId || '');
 
-      if (error || !tx) {
+      if (error || !tx || tx.status !== 'approved') {
         console.error('Error fetching admin order:', error);
         navigate('/pending-orders');
         return;
       }
 
-      const { data: txItems } = await supabase
-        .from('transaction_items')
-        .select('*')
-        .eq('transaction_id', tx.id)
-        .order('id');
-
       setAdminOrder({
         id: tx.id,
-        order_id: tx.order_id || '',
-        total_amount: tx.total_amount,
-        customer_name: tx.customer_name,
-        customer_phone: tx.customer_phone,
-        items: txItems?.map((ti) => ({
+        order_id: tx.orderId || '',
+        total_amount: tx.totalAmount,
+        customer_name: tx.customerName,
+        customer_phone: tx.customerPhone,
+        items: tx.items.map((ti) => ({
           item_name: ti.item_name,
           quantity: ti.quantity,
           unit_price: ti.unit_price,
           subtotal: ti.subtotal,
-        })) || [],
-        user_email: tx.user_email,
-        user_full_name: tx.user_full_name,
-        user_phone: tx.user_phone,
-        additional_detail: tx.additional_detail,
+        })),
+        user_email: tx.sellerEmail || '',
+        user_full_name: tx.sellerName,
+        user_phone: tx.sellerPhone,
+        additional_detail: tx.additionalDetail,
       });
 
-      setCustomerName(tx.customer_name || '');
-      setCustomerPhone(tx.customer_phone || '');
-      setAdditionalDetail(tx.additional_detail || '');
+      setCustomerName(tx.customerName || '');
+      setCustomerPhone(tx.customerPhone || '');
+      setAdditionalDetail(tx.additionalDetail || '');
 
       // Set prompt pay target to customer's phone if available
-      if (tx.customer_phone) {
-        setPromptPayTarget(tx.customer_phone);
-      } else if (tx.user_phone) {
-        setPromptPayTarget(tx.user_phone);
+      if (tx.customerPhone) {
+        setPromptPayTarget(tx.customerPhone);
+      } else if (tx.sellerPhone) {
+        setPromptPayTarget(tx.sellerPhone);
       }
     } finally {
       setAdminLoading(false);
@@ -135,23 +125,18 @@ export default function CheckoutPage() {
       // Admin mode: confirm payment for approved order
       setCompleting(true);
       try {
-        await supabase
-          .from('transactions')
-          .update({
-            customer_name: customerName || null,
-            customer_phone: customerPhone || null,
-            additional_detail: additionalDetail || null,
-          })
-          .eq('id', orderId);
+        const { error } = await orders.confirmPayment(orderId, {
+          receiptFile: receiptFile || undefined,
+          customerName: customerName || undefined,
+          customerPhone: customerPhone || undefined,
+          additionalDetail: additionalDetail || undefined,
+        });
 
-        if (receiptFile) {
-          const receiptUrl = await uploadImage(receiptFile);
-          await supabase
-            .from('transactions')
-            .update({ receipt_url: receiptUrl })
-            .eq('id', orderId);
+        if (error) {
+          console.error('Error confirming order:', error);
+          return;
         }
-        await confirmPayment(orderId);
+
         setCreatedOrder({
           id: orderId,
           order_id: adminOrder?.order_id || '',

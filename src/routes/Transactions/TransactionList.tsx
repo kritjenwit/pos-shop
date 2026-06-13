@@ -1,23 +1,11 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { Calendar, ChevronRight, X, Search, Receipt, RefreshCw } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { supabase } from '../../shared/lib/supabase';
 import { COLORS } from '../../shared/constants';
 import { getCache, setCache, invalidateCache } from '../../shared/lib/cache';
-
-interface TransactionWithItems {
-  id: string;
-  total_amount: number;
-  status: string;
-  created_by: string;
-  created_at: string;
-  user_email?: string;
-  user_full_name?: string;
-  item_count?: number;
-  receipt_url?: string | null;
-  order_id?: string | null;
-  additional_detail?: string | null;
-}
+import { getOrders } from '../../shared/lib/orders';
+import type { OrderSummary } from '../../shared/lib/orders';
+import { supabase } from '../../shared/lib/supabase';
 
 interface UserOption {
   id: string;
@@ -26,7 +14,7 @@ interface UserOption {
 }
 
 export default function TransactionListPage() {
-  const [transactions, setTransactions] = useState<TransactionWithItems[]>([]);
+  const [transactions, setTransactions] = useState<OrderSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [startDate, setStartDate] = useState('');
@@ -43,13 +31,13 @@ export default function TransactionListPage() {
     let filtered = transactions;
 
     if (startDate) {
-      filtered = filtered.filter(t => t.created_at >= `${startDate}T00:00:00`);
+      filtered = filtered.filter(t => t.createdAt >= `${startDate}T00:00:00`);
     }
     if (endDate) {
-      filtered = filtered.filter(t => t.created_at <= `${endDate}T23:59:59`);
+      filtered = filtered.filter(t => t.createdAt <= `${endDate}T23:59:59`);
     }
     if (selectedSeller) {
-      filtered = filtered.filter(t => t.created_by === selectedSeller.id);
+      filtered = filtered.filter(t => t.sellerId === selectedSeller.id);
     }
 
     return filtered;
@@ -57,7 +45,7 @@ export default function TransactionListPage() {
 
   const fetchTransactions = async (useCache = true) => {
     if (useCache) {
-      const cached = getCache<TransactionWithItems[]>(CACHE_KEY);
+      const cached = getCache<OrderSummary[]>(CACHE_KEY);
       if (cached) {
         setTransactions(cached);
         setLoading(false);
@@ -66,10 +54,7 @@ export default function TransactionListPage() {
     }
 
     setLoading(true);
-    const { data, error } = await supabase
-      .from('transactions')
-      .select('*, users(email, full_name), receipt_url')
-      .order('created_at', { ascending: false });
+    const { data, error } = await getOrders();
 
     if (error) {
       console.error('Error fetching transactions:', error);
@@ -77,23 +62,10 @@ export default function TransactionListPage() {
       return;
     }
 
-    const withCounts = await Promise.all(
-      (data || []).map(async (t) => {
-        const { count } = await supabase
-          .from('transaction_items')
-          .select('*', { count: 'exact', head: true })
-          .eq('transaction_id', t.id);
-        return {
-          ...t,
-          user_email: (t.users as { email?: string })?.email,
-          user_full_name: (t.users as { full_name?: string | null })?.full_name,
-          item_count: count || 0,
-        };
-      })
-    );
-
-    setCache(CACHE_KEY, withCounts);
-    setTransactions(withCounts);
+    if (data) {
+      setCache(CACHE_KEY, data);
+      setTransactions(data);
+    }
     setLoading(false);
   };
 
@@ -328,43 +300,43 @@ export default function TransactionListPage() {
                 textDecoration: 'none',
               }}
             >
-               <div className="flex justify-between items-start">
-                 <div>
-                   <div className="flex items-center gap-2 mb-1">
-                     <span className="font-semibold font-heading" style={{ color: COLORS.text }}>
-                       ฿{t.total_amount.toFixed(2)}
-                     </span>
-                     <span
-                       className="text-xs px-2 py-0.5 rounded-full font-semibold"
-                       style={getStatusStyle(t.status)}
-                     >
-                       {t.status}
-                     </span>
-                     {t.order_id && (
-                       <span className="text-[10px] font-mono font-bold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">
-                         {t.order_id}
-                       </span>
-                     )}
-                     {t.receipt_url && (
-                       <Receipt size={14} style={{ color: COLORS.primary }} />
-                     )}
-                   </div>
-                    <div className="text-sm" style={{ color: COLORS.textSecondary }}>
-                      {t.item_count} items • {t.user_full_name || t.user_email || 'Unknown'}
-                    </div>
-                    {t.additional_detail && (
-                      <div className="text-xs mt-1 truncate max-w-xs" style={{ color: COLORS.textSecondary }}>
-                        {t.additional_detail}
-                      </div>
-                    )}
-                 </div>
-                 <div className="flex items-center gap-2">
-                   <span className="text-xs" style={{ color: COLORS.textSecondary }}>
-                     {formatDate(t.created_at)}
-                   </span>
-                   <ChevronRight size={16} style={{ color: COLORS.textSecondary }} />
-                 </div>
-               </div>
+                     <div className="flex justify-between items-start">
+                       <div>
+                         <div className="flex items-center gap-2 mb-1">
+                           <span className="font-semibold font-heading" style={{ color: COLORS.text }}>
+                             ฿{t.totalAmount.toFixed(2)}
+                           </span>
+                           <span
+                             className="text-xs px-2 py-0.5 rounded-full font-semibold"
+                             style={getStatusStyle(t.status)}
+                           >
+                             {t.status}
+                           </span>
+                           {t.orderId && (
+                             <span className="text-[10px] font-mono font-bold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">
+                               {t.orderId}
+                             </span>
+                           )}
+                           {t.receiptUrl && (
+                             <Receipt size={14} style={{ color: COLORS.primary }} />
+                           )}
+                         </div>
+                         <div className="text-sm" style={{ color: COLORS.textSecondary }}>
+                           {t.itemsCount} items • {t.sellerName || t.sellerEmail || 'Unknown'}
+                         </div>
+                         {t.additionalDetail && (
+                           <div className="text-xs mt-1 truncate max-w-xs" style={{ color: COLORS.textSecondary }}>
+                             {t.additionalDetail}
+                           </div>
+                         )}
+                       </div>
+                       <div className="flex items-center gap-2">
+                         <span className="text-xs" style={{ color: COLORS.textSecondary }}>
+                           {formatDate(t.createdAt)}
+                         </span>
+                         <ChevronRight size={16} style={{ color: COLORS.textSecondary }} />
+                       </div>
+                     </div>
             </Link>
           ))}
         </div>

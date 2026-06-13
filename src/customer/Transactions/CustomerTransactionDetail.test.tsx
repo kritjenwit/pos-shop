@@ -1,31 +1,29 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import CustomerTransactionDetailPage from './CustomerTransactionDetail';
 
-// Use vi.hoisted to create mock functions accessible in both factory and tests
-const { mockSingle, mockFrom, mockGetSignedImageUrl } = vi.hoisted(() => {
-  const mockSingle = vi.fn().mockResolvedValue({ data: null, error: null });
-  const mockOrder = vi.fn().mockResolvedValue({ data: [], error: null });
-  const mockEq = vi.fn(() => ({ single: mockSingle, order: mockOrder }));
-  const mockSelect = vi.fn(() => ({ eq: mockEq }));
-  const mockFrom = vi.fn(() => ({ select: mockSelect }));
-  const mockGetSignedImageUrl = vi.fn(() => Promise.resolve(null));
-  return { mockSingle, mockOrder, mockEq, mockSelect, mockFrom, mockGetSignedImageUrl };
-});
+const mockNavigate = vi.fn();
 
-vi.mock('../../shared/lib/supabase', () => {
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
   return {
-    supabase: {
-      from: mockFrom,
-    },
-    getSignedImageUrl: mockGetSignedImageUrl,
+    ...actual,
+    useNavigate: () => mockNavigate,
   };
 });
+
+const mockGetOrderDetail = vi.hoisted(() => vi.fn());
+
+vi.mock('../../shared/lib/orders', () => ({
+  getOrderDetail: mockGetOrderDetail,
+}));
 
 describe('CustomerTransactionDetailPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockNavigate.mockClear();
+    mockGetOrderDetail.mockResolvedValue({ data: null, error: null });
   });
 
   const renderWithRouter = (transactionId = 'test-tx-id') => {
@@ -33,6 +31,7 @@ describe('CustomerTransactionDetailPage', () => {
       <MemoryRouter initialEntries={[`/public/transactions/${transactionId}`]}>
         <Routes>
           <Route path="/public/transactions/:id" element={<CustomerTransactionDetailPage />} />
+          <Route path="/public/transactions" element={<div>Public Transactions</div>} />
         </Routes>
       </MemoryRouter>
     );
@@ -43,13 +42,13 @@ describe('CustomerTransactionDetailPage', () => {
     expect(document.querySelector('.skeleton')).toBeInTheDocument();
   });
 
-  it('should render transaction not found when no data', async () => {
-    mockSingle.mockResolvedValue({ data: null, error: null });
+  it('should navigate to public transactions when order not found', async () => {
+    mockGetOrderDetail.mockResolvedValue({ data: null, error: 'Order not found' });
 
     renderWithRouter();
-    
+
     await waitFor(() => {
-      expect(screen.getByText('Transaction not found')).toBeInTheDocument();
-    }, { timeout: 3000 });
+      expect(mockNavigate).toHaveBeenCalledWith('/public/transactions');
+    });
   });
 });

@@ -5,9 +5,9 @@ import ItemManagementPage from './ItemManagement';
 const mockAddItem = vi.fn();
 const mockUpdateItem = vi.fn();
 const mockDeleteItem = vi.fn();
-const mockUploadImage = vi.fn();
-const mockDeleteImage = vi.fn();
-const mockGetSignedImageUrl = vi.fn();
+const mockUploadImage = vi.hoisted(() => vi.fn());
+const mockDeleteImage = vi.hoisted(() => vi.fn());
+const mockGetSignedImageUrl = vi.hoisted(() => vi.fn());
 
 const mockItems = [
   { id: 'item-1', name: 'Pizza', price: 200, image: '', quantity: 10 },
