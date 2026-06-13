@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import type { ReactNode } from 'react';
 
@@ -229,5 +229,79 @@ describe('StaffLayout', () => {
     );
 
     expect(container.innerHTML).toBe('');
+  });
+
+  it('activates POS nav link when clicked', () => {
+    mockUseAuth.mockReturnValue({
+      user: { id: 'user-1', email: 'test@example.com', full_name: 'Test User' },
+      signOut: vi.fn(),
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/transactions']}>
+        <StaffLayout />
+      </MemoryRouter>
+    );
+
+    const posLink = screen.getByText('POS');
+    expect(posLink).toHaveStyle({ color: '#666666' });
+
+    fireEvent.click(posLink);
+    expect(posLink).toHaveStyle({ color: '#111111' });
+  });
+
+  it('activates Transactions nav link when clicked', () => {
+    mockUseAuth.mockReturnValue({
+      user: { id: 'user-1', email: 'test@example.com', full_name: 'Test User' },
+      signOut: vi.fn(),
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <StaffLayout />
+      </MemoryRouter>
+    );
+
+    const transactionsLink = screen.getByText('Transactions');
+    expect(transactionsLink).toHaveStyle({ color: '#666666' });
+
+    fireEvent.click(transactionsLink);
+    expect(transactionsLink).toHaveStyle({ color: '#111111' });
+  });
+
+  it('activates Pending Orders nav link when clicked', async () => {
+    mockUseAuth.mockReturnValue({
+      user: { id: 'user-1', email: 'test@example.com', full_name: 'Test User' },
+      signOut: vi.fn(),
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <StaffLayout />
+      </MemoryRouter>
+    );
+
+    const pendingOrdersLink = screen.getByText('Pending Orders');
+    expect(pendingOrdersLink).toHaveStyle({ color: '#666666' });
+
+    fireEvent.click(pendingOrdersLink);
+    await waitFor(() => {
+      expect(screen.getByText('Pending Orders')).toHaveStyle({ color: '#111111' });
+    });
+  });
+
+  it('renders route content for the current path', () => {
+    mockUseAuth.mockReturnValue({
+      user: { id: 'user-1', email: 'test@example.com', full_name: 'Test User' },
+      signOut: vi.fn(),
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <StaffLayout />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText('ItemListPage')).toBeInTheDocument();
   });
 });

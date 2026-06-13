@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent, act } from '@testing-library/react';
 import TransactionDetailView from './TransactionDetailView';
 
 const mockNavigate = vi.fn();
@@ -55,6 +55,14 @@ describe('TransactionDetailView', () => {
     });
   });
 
+  it('should navigate to / when errorRedirectUrl is external', async () => {
+    mockGetOrderDetail.mockResolvedValue({ data: null, error: 'Not found' });
+    render(<TransactionDetailView transactionId="tx-1" shareUrl="https://example.com/tx/1" errorRedirectUrl="https://external.com/error" />);
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith('/');
+    });
+  });
+
   it('should render transaction data', async () => {
     mockGetOrderDetail.mockResolvedValue({ data: baseTx, error: null });
     render(<TransactionDetailView transactionId="tx-1" shareUrl="https://example.com/tx/1" errorRedirectUrl="/" />);
@@ -95,6 +103,20 @@ describe('TransactionDetailView', () => {
     expect(await screen.findByText('cancelled')).toBeInTheDocument();
   });
 
+  it('should show completed status color', async () => {
+    mockGetOrderDetail.mockResolvedValue({ data: baseTx, error: null });
+    render(<TransactionDetailView transactionId="tx-1" shareUrl="https://example.com/tx/1" errorRedirectUrl="/" showStatusColors />);
+
+    expect(await screen.findByText('completed')).toBeInTheDocument();
+  });
+
+  it('should show default status color for unknown status', async () => {
+    mockGetOrderDetail.mockResolvedValue({ data: { ...baseTx, status: 'unknown-status' }, error: null });
+    render(<TransactionDetailView transactionId="tx-1" shareUrl="https://example.com/tx/1" errorRedirectUrl="/" showStatusColors />);
+
+    expect(await screen.findByText('unknown-status')).toBeInTheDocument();
+  });
+
   it('should show QR code and handle copy link', async () => {
     const writeText = vi.fn(() => Promise.resolve());
     Object.assign(navigator, { clipboard: { writeText } });
@@ -112,6 +134,21 @@ describe('TransactionDetailView', () => {
     fireEvent.click(screen.getByText('Copy Link'));
     expect(writeText).toHaveBeenCalledWith('https://example.com/share');
     expect(await screen.findByText('Copied!')).toBeInTheDocument();
+  });
+
+  it('should handle clipboard copy failure gracefully', async () => {
+    const writeText = vi.fn(() => Promise.reject(new Error('Clipboard blocked')));
+    Object.assign(navigator, { clipboard: { writeText } });
+
+    mockGetOrderDetail.mockResolvedValue({ data: baseTx, error: null });
+    render(<TransactionDetailView transactionId="tx-1" shareUrl="https://example.com/share" errorRedirectUrl="/" />);
+
+    await screen.findByText(/500\.00/);
+    fireEvent.click(screen.getByLabelText('Show QR Code'));
+    await screen.findByText('Copy Link');
+    fireEvent.click(screen.getByText('Copy Link'));
+
+    expect(screen.getByText('Copy Link')).toBeInTheDocument();
   });
 
   it('should render receipt when receiptUrl is present', async () => {
@@ -189,5 +226,73 @@ describe('TransactionDetailView', () => {
     fireEvent.change(fileInput, { target: { files: [file] } });
 
     expect(await screen.findByText('Upload failed')).toBeInTheDocument();
+  });
+
+  it('should show uploading state while uploading a receipt', async () => {
+    let resolveUpload: (value: unknown) => void;
+    const uploadPromise = new Promise((resolve) => { resolveUpload = resolve; });
+    const mockUpload = vi.fn().mockReturnValue(uploadPromise);
+
+    mockGetOrderDetail.mockResolvedValue({ data: baseTx, error: null });
+    render(<TransactionDetailView transactionId="tx-1" shareUrl="https://example.com/tx/1" errorRedirectUrl="/" allowUpload onUpload={mockUpload} />);
+
+    await screen.findByText('Upload Receipt');
+    fireEvent.click(screen.getByText('Upload Receipt'));
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    fireEvent.change(fileInput, { target: { files: [new File([''], 'rec.jpg', { type: 'image/jpeg' })] } });
+
+    expect(await screen.findByText('Uploading...')).toBeInTheDocument();
+
+    await act(async () => {
+      resolveUpload!({ data: { receiptUrl: 'https://example.com/new.jpg' }, error: null });
+    });
+  });
+
+  it('should show uploading state while replacing a receipt', async () => {
+    let resolveUpload: (value: unknown) => void;
+    const uploadPromise = new Promise((resolve) => { resolveUpload = resolve; });
+    const mockUpload = vi.fn().mockReturnValue(uploadPromise);
+
+    mockGetOrderDetail.mockResolvedValue({ data: { ...baseTx, receiptUrl: 'https://example.com/old.jpg' }, error: null });
+    render(<TransactionDetailView transactionId="tx-1" shareUrl="https://example.com/tx/1" errorRedirectUrl="/" allowUpload onUpload={mockUpload} />);
+
+    await screen.findByText('Replace Receipt');
+    fireEvent.click(screen.getByText('Replace Receipt'));
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    fireEvent.change(fileInput, { target: { files: [new File([''], 'rec.jpg', { type: 'image/jpeg' })] } });
+
+    expect(await screen.findByText('Uploading...')).toBeInTheDocument();
+
+    await act(async () => {
+      resolveUpload!({ data: { receiptUrl: 'https://example.com/new.jpg' }, error: null });
+    });
+  });
+
+  it('should show error when onUpload throws an Error', async () => {
+    const mockUpload = vi.fn().mockRejectedValue(new Error('Network error'));
+    mockGetOrderDetail.mockResolvedValue({ data: baseTx, error: null });
+    render(<TransactionDetailView transactionId="tx-1" shareUrl="https://example.com/tx/1" errorRedirectUrl="/" allowUpload onUpload={mockUpload} />);
+
+    await screen.findByText('Upload Receipt');
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    fireEvent.change(fileInput, { target: { files: [new File([''], 'rec.jpg', { type: 'image/jpeg' })] } });
+
+    expect(await screen.findByText('Network error')).toBeInTheDocument();
+  });
+
+  it('should show generic error when onUpload throws non-Error', async () => {
+    const mockUpload = vi.fn().mockRejectedValue('string error');
+    mockGetOrderDetail.mockResolvedValue({ data: baseTx, error: null });
+    render(<TransactionDetailView transactionId="tx-1" shareUrl="https://example.com/tx/1" errorRedirectUrl="/" allowUpload onUpload={mockUpload} />);
+
+    await screen.findByText('Upload Receipt');
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    fireEvent.change(fileInput, { target: { files: [new File([''], 'rec.jpg', { type: 'image/jpeg' })] } });
+
+    expect(await screen.findByText('Failed to upload receipt')).toBeInTheDocument();
   });
 });

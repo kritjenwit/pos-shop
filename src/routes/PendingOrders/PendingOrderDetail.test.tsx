@@ -210,4 +210,111 @@ describe('PendingOrderDetailPage', () => {
 
     expect(screen.queryByText(/ORD-/)).not.toBeInTheDocument();
   });
+
+  it('should navigate back when cancel succeeds', async () => {
+    const order = {
+      id: 'order-1',
+      totalAmount: 500,
+      status: 'pending',
+      createdAt: '2026-05-23T10:00:00Z',
+      orderId: null,
+      customerName: null,
+      customerPhone: null,
+      additionalDetail: null,
+      receiptUrl: null,
+      items: [],
+      sellerName: null,
+      sellerEmail: null,
+      sellerPhone: null,
+    };
+
+    mockGetOrderDetail.mockResolvedValue({ data: order, error: null });
+    mockCancelOrder.mockResolvedValue({ error: null });
+
+    renderWithRouter('order-1');
+    await waitFor(() => {
+      expect(screen.getByText('Order Details')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText('Cancel'));
+
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith('/pending-orders');
+    });
+  });
+
+  it('should navigate back when back button is clicked while loading', () => {
+    mockGetOrderDetail.mockResolvedValue(new Promise(() => {}));
+    renderWithRouter();
+
+    fireEvent.click(screen.getByText('Back to Pending Orders'));
+
+    expect(mockNavigate).toHaveBeenCalledWith('/pending-orders');
+  });
+
+  it('should navigate back when back button is clicked in order view', async () => {
+    const order = {
+      id: 'order-1',
+      totalAmount: 300,
+      status: 'pending',
+      createdAt: '2026-05-23T10:00:00Z',
+      orderId: null,
+      customerName: null,
+      customerPhone: null,
+      additionalDetail: null,
+      receiptUrl: null,
+      items: [],
+      sellerName: null,
+      sellerEmail: null,
+      sellerPhone: null,
+    };
+
+    mockGetOrderDetail.mockResolvedValue({ data: order, error: null });
+
+    renderWithRouter('order-1');
+    await waitFor(() => {
+      expect(screen.getByText('Order Details')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText('Back to Pending Orders'));
+
+    expect(mockNavigate).toHaveBeenCalledWith('/pending-orders');
+  });
+
+  it('should show error when approve throws an exception', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const order = {
+      id: 'order-1',
+      totalAmount: 500,
+      status: 'pending',
+      createdAt: '2026-05-23T10:00:00Z',
+      orderId: null,
+      customerName: null,
+      customerPhone: null,
+      additionalDetail: null,
+      receiptUrl: null,
+      items: [],
+      sellerName: null,
+      sellerEmail: null,
+      sellerPhone: null,
+    };
+
+    mockGetOrderDetail.mockResolvedValue({ data: order, error: null });
+    mockApproveOrder.mockRejectedValue(new Error('Network error'));
+
+    renderWithRouter('order-1');
+    await waitFor(() => {
+      expect(screen.getByText('Approve & View QR')).toBeInTheDocument();
+    });
+
+    const approveBtn = screen.getByText('Approve & View QR');
+    fireEvent.click(approveBtn);
+
+    await waitFor(() => {
+      expect(screen.getByText('Network error')).toBeInTheDocument();
+    });
+
+    expect(consoleSpy).toHaveBeenCalledWith('Error approving order:', expect.any(Error));
+    consoleSpy.mockRestore();
+  });
 });

@@ -290,4 +290,48 @@ describe('ItemManagementPage', () => {
 
     expect(screen.queryByText(/Are you sure/)).not.toBeInTheDocument();
   });
+
+  it('should show error when updateItem fails', async () => {
+    mockUpdateItem.mockRejectedValue(new Error('Update failed'));
+    render(<ItemManagementPage />);
+    const editButton = screen.getByLabelText('Edit Pizza');
+    fireEvent.click(editButton);
+
+    fireEvent.change(screen.getByDisplayValue('Pizza'), { target: { value: 'Pizza Updated' } });
+    fireEvent.click(screen.getByText('Update'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Update failed')).toBeInTheDocument();
+    });
+  });
+
+  it('should delete old image and upload new when editing item with existing image', async () => {
+    render(<ItemManagementPage />);
+    const editButton = screen.getByLabelText('Edit Burger');
+    fireEvent.click(editButton);
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    const file = new File(['dummy'], 'new-burger.png', { type: 'image/png' });
+    fireEvent.change(fileInput, { target: { files: [file] } });
+
+    fireEvent.click(screen.getByText('Update'));
+
+    await waitFor(() => {
+      expect(mockDeleteImage).toHaveBeenCalledWith('burger.jpg');
+    });
+    expect(mockUploadImage).toHaveBeenCalledWith(file);
+    expect(mockUpdateItem).toHaveBeenCalledWith('item-2', expect.objectContaining({ image: 'uploaded-path' }));
+  });
+
+  it('should close delete confirmation on Escape key', () => {
+    render(<ItemManagementPage />);
+    const deleteButton = screen.getByLabelText('Delete Pizza');
+    fireEvent.click(deleteButton);
+    expect(screen.getByText(/Are you sure/)).toBeInTheDocument();
+
+    const backdrop = document.querySelector('.modal-backdrop')!;
+    fireEvent.keyDown(backdrop, { key: 'Escape' });
+
+    expect(screen.queryByText(/Are you sure/)).not.toBeInTheDocument();
+  });
 });

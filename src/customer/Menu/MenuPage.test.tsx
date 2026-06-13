@@ -206,4 +206,65 @@ describe('MenuPage', () => {
     const threes = screen.getAllByText('3');
     expect(threes.length).toBeGreaterThan(0);
   });
+
+  it('should handle image onLoad event', () => {
+    const { container } = renderPage();
+    const images = container.querySelectorAll('img');
+    expect(images.length).toBe(3);
+    fireEvent.load(images[0]);
+  });
+
+  it('should call addToBasket via quick add overlay when basketQty is 0', () => {
+    mockGetBasketQuantity.mockReturnValue(0);
+    const { container } = renderPage();
+
+    const overlayButtons = container.querySelectorAll('.absolute.inset-0 button');
+    expect(overlayButtons.length).toBe(3);
+    fireEvent.click(overlayButtons[0]);
+    expect(mockAddToBasket).toHaveBeenCalledWith('item-1');
+  });
+
+  it('should call removeFromBasket when minus button clicked', () => {
+    mockState.basket = new Map([['item-1', 2]]);
+    mockGetBasketQuantity.mockImplementation((id: string) => id === 'item-1' ? 2 : 0);
+
+    renderPage();
+    fireEvent.click(screen.getByLabelText('Remove one Pizza from basket'));
+    expect(mockRemoveFromBasket).toHaveBeenCalledWith('item-1');
+  });
+
+  it('should call addToBasket via quantity control plus when basketQty > 0', () => {
+    mockState.basket = new Map([['item-1', 2]]);
+    mockGetBasketQuantity.mockImplementation((id: string) => id === 'item-1' ? 2 : 0);
+
+    renderPage();
+    fireEvent.click(screen.getByLabelText('Add one Pizza to basket'));
+    expect(mockAddToBasket).toHaveBeenCalledWith('item-1');
+  });
+
+  it('should clear search from empty state button and show all items again', () => {
+    renderPage();
+    const searchInput = screen.getByPlaceholderText('Search items...');
+    fireEvent.change(searchInput, { target: { value: 'xyz' } });
+
+    expect(screen.getByText(/We couldn't find anything matching/)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByText('Clear search'));
+
+    expect(searchInput).toHaveValue('');
+    expect(screen.getByText('Pizza')).toBeInTheDocument();
+    expect(screen.getByText('Cola')).toBeInTheDocument();
+    expect(screen.getByText('Burger')).toBeInTheDocument();
+  });
+
+  it('should show basket controls instead of add-to-cart when item is in basket', () => {
+    mockState.basket = new Map([['item-1', 1]]);
+    mockGetBasketQuantity.mockImplementation((id: string) => id === 'item-1' ? 1 : 0);
+
+    renderPage();
+
+    expect(screen.getAllByLabelText('Add to cart').length).toBe(2);
+    expect(screen.getByLabelText('Remove one Pizza from basket')).toBeInTheDocument();
+    expect(screen.getByLabelText('Add one Pizza to basket')).toBeInTheDocument();
+  });
 });
