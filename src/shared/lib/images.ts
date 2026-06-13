@@ -52,7 +52,6 @@ export const getSignedImageUrl = async (filePath: string | null): Promise<string
     .createSignedUrl(filePath, 3600);
 
   if (error) {
-    console.error('Error getting signed URL:', error);
     return null;
   }
 

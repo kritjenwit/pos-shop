@@ -38,6 +38,10 @@ export const PAYMENT = {
   qrLevel: 'H' as const,
 } as const;
 
+export const ROUTES = {
+  menu: '/menu',
+} as const;
+
 export const VALIDATION = {
   maxItemNameLength: 200,
   maxCustomerNameLength: 200,

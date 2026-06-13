@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import { ArrowLeft, Share2, Copy, Check, Receipt, ImageOff, Upload } from 'lucide-react';
 import { COLORS, PAYMENT } from '../constants';
-import { getOrderDetail } from '../lib/orders';
 import type { OrderDetail } from '../lib/orders';
+import { getOrderDetail as defaultGetOrderDetail } from '../lib/orders';
 
 interface TransactionDetailViewProps {
   transactionId: string;
@@ -15,6 +15,7 @@ interface TransactionDetailViewProps {
   showStatusColors?: boolean;
   allowUpload?: boolean;
   onUpload?: (id: string, file: File) => Promise<{ data: { receiptUrl: string } | null; error: string | null }>;
+  fetchTransaction?: (id: string) => Promise<{ data: OrderDetail | null; error: string | null }>;
 }
 
 export default function TransactionDetailView({
@@ -26,6 +27,7 @@ export default function TransactionDetailView({
   showStatusColors = false,
   allowUpload = false,
   onUpload,
+  fetchTransaction: fetchTransactionProp,
 }: TransactionDetailViewProps) {
   const navigate = useNavigate();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -41,10 +43,10 @@ export default function TransactionDetailView({
     if (!transactionId) return;
     setFetchError('');
 
+    const getOrderDetail = fetchTransactionProp || defaultGetOrderDetail;
     const { data, error } = await getOrderDetail(transactionId);
 
     if (error || !data) {
-      console.error('Error fetching transaction:', error);
       setFetchError(error || 'Transaction not found');
       setLoading(false);
       return;
@@ -65,8 +67,8 @@ export default function TransactionDetailView({
       await navigator.clipboard.writeText(shareUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error('Failed to copy:', err);
+    } catch {
+      /* clipboard access blocked — fail silently */
     }
   };
 

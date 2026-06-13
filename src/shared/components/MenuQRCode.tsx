@@ -1,12 +1,12 @@
 import { QRCodeSVG } from 'qrcode.react';
-import { COLORS, PAYMENT } from '../constants';
+import { COLORS, PAYMENT, ROUTES } from '../constants';
 
 interface MenuQRCodeProps {
   size?: number;
 }
 
 export default function MenuQRCode({ size = PAYMENT.qrSize }: MenuQRCodeProps) {
-  const menuUrl = `${window.location.origin}/menu`;
+  const menuUrl = `${window.location.origin}${ROUTES.menu}`;
 
   return (
     <div className="text-center">

@@ -120,9 +120,20 @@ Implement a customer self-ordering menu feature that allows customers to browse 
 - Admin approval required for all public menu orders before processing
 - Input validation for customer name and mobile number fields
 - UI/UX Details:
-  - Public menu accessible at `/menu` route
+  - Public menu accessible at `/menu` route (defined in `ROUTES.menu` constant)
   - Item display: Full item cards with images, names, prices, and quantity controls
   - Customer info collection: Optional name and mobile number fields before checkout
   - Order confirmation: Show order summary and clear basket after completion
   - Admin pending orders: Separate page showing all orders with status 'pending'
   - Order status styles: Pending (accent color), completed (primary color), cancelled (danger color)
+
+### Architecture Improvements (P0/P1)
+- **AppContext split**: Monolithic context split into `ItemContext` (items CRUD/cache), `BasketContext` (basket/totals/localStorage), `OrderContext` (order lifecycle). `AppContext` is now a thin shell nesting all three, exporting backward-compatible `useApp()`.
+- **`useFetchData` hook**: Extracted fetch/loading/error/refetch pattern into `src/shared/lib/useFetchData.ts` with ref-based cancellation. Used by route pages to eliminate 30-line boilerplate.
+- **orders.ts split**: Separated into `orders.queries.ts` (reads) and `orders.commands.ts` (writes) with barrel re-export. `buildTransactionItemsFromDb` extracted as `validateBasketPrices` into `items.ts`.
+- **Dead param removed**: `_allItems` removed from `createOrder` / `createPendingOrder` and all 9 call sites.
+- **`console.error` standardized**: Removed from `images.ts` (caller handles null gracefully) and `TransactionDetailView.tsx` clipboard handler (silent failure).
+- **`TransactionDetailView` prop**: Added optional `fetchTransaction` prop; falls back to `getOrderDetail` import when not provided.
+- **`MenuQRCode` constant**: Hard-coded `/menu` path replaced with `ROUTES.menu` from constants.
+- **`ROUTES` constant**: Added `ROUTES.menu` to `src/shared/constants/index.ts`.
+
