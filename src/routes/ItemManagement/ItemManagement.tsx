@@ -40,6 +40,19 @@ function ItemForm({
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const nameRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    nameRef.current?.focus();
+  }, []);
+
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [onClose]);
 
   useEffect(() => {
     if (item?.image) {
@@ -99,8 +112,15 @@ function ItemForm({
   };
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+    <div
+      className="modal-backdrop"
+      onClick={onClose}
+      onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}
+      role="dialog"
+      aria-modal="true"
+      aria-label={item ? 'Edit item' : 'Add new item'}
+    >
+      <div className="modal-content" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
         <div className="flex justify-between items-center px-4 py-3 border-b -mx-4 -mt-4 mb-4" style={{ borderColor: COLORS.border }}>
           <h2 className="text-lg font-semibold font-heading" style={{ color: COLORS.text }}>
             {item ? 'Edit Item' : 'Add New Item'}
@@ -120,6 +140,7 @@ function ItemForm({
             </label>
             <input
               id="itemName"
+              ref={nameRef}
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -171,7 +192,7 @@ function ItemForm({
           </div>
 
           {error && (
-            <div className="p-3 rounded text-sm" style={{ backgroundColor: '#FEF2F2', color: '#DC2626', border: '1px solid #FECACA' }}>
+            <div className="p-3 rounded text-sm" style={{ backgroundColor: '#FEF2F2', color: '#DC2626', border: '1px solid #FECACA' }} role="alert">
               {error}
             </div>
           )}
@@ -322,8 +343,15 @@ export default function ItemManagementPage() {
       {showModal && <ItemForm item={editingItem} onClose={closeModal} />}
 
       {deletingItem && (
-        <div className="modal-backdrop" onClick={() => setDeletingItem(undefined)}>
-          <div className="modal-content text-center max-w-sm" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="modal-backdrop"
+          onClick={() => setDeletingItem(undefined)}
+          onKeyDown={(e) => { if (e.key === 'Escape') setDeletingItem(undefined); }}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Delete confirmation"
+        >
+          <div className="modal-content text-center max-w-sm" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
             <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: '#FEE2E2' }}>
               <Trash2 size={24} style={{ color: COLORS.danger }} />
             </div>

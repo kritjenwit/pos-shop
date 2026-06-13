@@ -200,6 +200,7 @@ export default function TransactionDetailView({
             className="p-2 rounded-lg text-sm transition-all duration-200 cursor-pointer hover:shadow-sm active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             style={{ backgroundColor: COLORS['primary-15'], color: COLORS.primary }}
             aria-label={showQR ? 'Hide QR Code' : 'Show QR Code'}
+            aria-expanded={showQR}
           >
             <Share2 size={18} />
           </button>

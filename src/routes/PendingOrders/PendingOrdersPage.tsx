@@ -68,7 +68,7 @@ export default function PendingOrdersPage() {
     return (
       <div className="space-y-4 animate-fade-in">
         {error && (
-          <div className="p-3 rounded-xl text-sm bg-red-50 text-red-600 border border-red-200">
+          <div className="p-3 rounded-xl text-sm bg-red-50 text-red-600 border border-red-200" role="alert">
             {error}
           </div>
         )}

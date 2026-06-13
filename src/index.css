@@ -111,10 +111,6 @@
     @apply block text-xs font-semibold mb-1;
   }
 
-  .card-base {
-    @apply rounded-lg shadow-card;
-  }
-
   .modal-backdrop {
     @apply fixed inset-0 z-50 flex items-center justify-center;
     @apply bg-black/50 backdrop-blur-sm;

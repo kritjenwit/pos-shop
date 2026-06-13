@@ -249,13 +249,13 @@ export default function CustomerCheckoutPage() {
 
             <div className="border-t border-dashed border-gray-200 pt-6 space-y-3">
               <div>
-                <label htmlFor="additionalDetail" className="block text-xs font-black text-gray-400 uppercase tracking-wider mb-2 ml-1">
+                <label htmlFor="additionalDetail-summary" className="block text-xs font-black text-gray-400 uppercase tracking-wider mb-2 ml-1">
                   Additional Detail
                 </label>
                 <div className="relative group">
                   <MessageSquare className="absolute left-4 top-4 text-gray-400 group-focus-within:text-primary transition-colors" size={18} />
                   <textarea
-                    id="additionalDetail"
+                    id="additionalDetail-summary"
                     value={additionalDetail}
                     onChange={(e) => setAdditionalDetail(e.target.value)}
                     placeholder="e.g. No onions, extra spicy..."
@@ -277,11 +277,11 @@ export default function CustomerCheckoutPage() {
               </div>
             </div>
 
-            {error && (
-              <div className="mt-4 p-3 rounded-xl text-sm bg-red-50 text-red-600 border border-red-200">
-                {error}
-              </div>
-            )}
+      {error && (
+        <div className="p-3 rounded-lg text-sm bg-red-50 text-red-600 border border-red-200" role="alert">
+          {error}
+        </div>
+      )}
 
             <button
               onClick={handleCompleteOrder}

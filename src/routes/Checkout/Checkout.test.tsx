@@ -223,6 +223,34 @@ describe('CheckoutPage', () => {
       fireEvent.click(screen.getByText('New Order'));
       expect(screen.getByText('Checkout')).toBeInTheDocument();
     });
+
+    it('should show validation error when name exceeds max length', () => {
+      renderCheckout();
+      fireEvent.change(screen.getByLabelText('Customer Name'), { target: { value: 'A'.repeat(201) } });
+      fireEvent.click(screen.getByText('Complete Order'));
+      expect(screen.getByText('One or more fields exceed maximum length')).toBeInTheDocument();
+    });
+
+    it('should show validation error when phone exceeds max length', () => {
+      renderCheckout();
+      fireEvent.change(screen.getByLabelText('Phone Number'), { target: { value: '0'.repeat(31) } });
+      fireEvent.click(screen.getByText('Complete Order'));
+      expect(screen.getByText('One or more fields exceed maximum length')).toBeInTheDocument();
+    });
+
+    it('should show error when completeOrder throws', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      mockCompleteOrder.mockRejectedValue(new Error('Network error'));
+      renderCheckout();
+      fireEvent.click(screen.getByText('Complete Order'));
+
+      await waitFor(() => {
+        expect(screen.getByText('Network error')).toBeInTheDocument();
+      });
+
+      expect(consoleSpy).toHaveBeenCalledWith('Error completing order:', expect.any(Error));
+      consoleSpy.mockRestore();
+    });
   });
 
   describe('Admin Mode', () => {
@@ -399,6 +427,41 @@ describe('CheckoutPage', () => {
       await waitFor(() => {
         expect(screen.getByText('Payment Confirmed')).toBeInTheDocument();
       });
+    });
+
+    it('should show validation error when fields exceed max length', async () => {
+      mockOrdersGetOrderDetail.mockResolvedValue({ data: mockOrderDetail, error: null });
+      renderCheckout(['/checkout/tx-1']);
+
+      await waitFor(() => {
+        expect(screen.getByText('Confirm Payment')).toBeInTheDocument();
+      });
+
+      fireEvent.change(screen.getByLabelText('Customer Name'), { target: { value: 'A'.repeat(201) } });
+      fireEvent.click(screen.getByText('Confirm Payment'));
+
+      expect(screen.getByText('One or more fields exceed maximum length')).toBeInTheDocument();
+    });
+
+    it('should show error when confirmPayment throws', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      mockOrdersGetOrderDetail.mockResolvedValue({ data: mockOrderDetail, error: null });
+      mockOrdersConfirmPayment.mockRejectedValue(new Error('API error'));
+
+      renderCheckout(['/checkout/tx-1']);
+
+      await waitFor(() => {
+        expect(screen.getByText('Confirm Payment')).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByText('Confirm Payment'));
+
+      await waitFor(() => {
+        expect(screen.getByText('API error')).toBeInTheDocument();
+      });
+
+      expect(consoleSpy).toHaveBeenCalledWith('Error confirming order:', expect.any(Error));
+      consoleSpy.mockRestore();
     });
   });
 });

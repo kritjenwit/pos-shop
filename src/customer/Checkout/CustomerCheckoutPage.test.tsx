@@ -180,7 +180,7 @@ describe('CustomerCheckoutPage', () => {
       target: { value: '0812345678' },
     });
 
-    fireEvent.change(screen.getByLabelText(/Additional Detail/), {
+    fireEvent.change(screen.getAllByLabelText(/Additional Detail/)[0], {
       target: { value: 'No onions' },
     });
 

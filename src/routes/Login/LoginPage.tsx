@@ -97,7 +97,7 @@ export default function LoginPage() {
                 />
                 <button
                   type="button"
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 cursor-pointer focus-visible:outline-none"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded"
                   onClick={() => setShowPassword(!showPassword)}
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
@@ -107,7 +107,7 @@ export default function LoginPage() {
             </div>
 
             {error && (
-              <div className="p-3 rounded text-sm" style={{ backgroundColor: '#FEF2F2', color: '#DC2626', border: '1px solid #FECACA' }}>
+              <div className="p-3 rounded text-sm" style={{ backgroundColor: '#FEF2F2', color: '#DC2626', border: '1px solid #FECACA' }} role="alert">
                 {error}
               </div>
             )}
@@ -134,7 +134,7 @@ export default function LoginPage() {
               {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
               <button
                 type="button"
-                className="font-semibold cursor-pointer hover:underline focus-visible:outline-none"
+                className="font-semibold cursor-pointer hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded"
                 style={{ color: COLORS.primary }}
                 onClick={() => {
                   setIsSignUp(!isSignUp);

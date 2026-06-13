@@ -212,7 +212,7 @@ export default function TransactionListPage() {
                       setSelectedSeller(null);
                       setSellerQuery('');
                     }}
-                    className="p-1 hover:bg-white/50 rounded transition-colors duration-200 cursor-pointer focus-visible:outline-none"
+                    className="p-1 hover:bg-white/50 rounded transition-colors duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                     aria-label="Clear seller filter"
                   >
                     <X size={14} style={{ color: COLORS.textSecondary }} />
@@ -259,7 +259,7 @@ export default function TransactionListPage() {
       </div>
 
       {error && (
-        <div className="p-3 rounded-xl text-sm bg-red-50 text-red-600 border border-red-200">
+        <div className="mb-4 p-3 rounded-lg text-sm bg-red-50 text-red-600 border border-red-200" role="alert">
           {error}
         </div>
       )}

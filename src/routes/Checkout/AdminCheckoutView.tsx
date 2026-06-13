@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import { CheckCircle, ArrowLeft, Receipt } from 'lucide-react';
@@ -12,7 +12,7 @@ interface AdminCheckoutViewProps {
   orderId: string;
 }
 
-export default function AdminCheckoutView({ orderId }: AdminCheckoutViewProps) {
+const AdminCheckoutView = /*#__PURE__*/memo(function AdminCheckoutView({ orderId }: AdminCheckoutViewProps) {
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -136,9 +136,15 @@ export default function AdminCheckoutView({ orderId }: AdminCheckoutViewProps) {
 
   const total = adminOrder?.total_amount || 0;
 
-  const qrValue = promptPayTarget && total > 0
+  const basketDetails = useMemo(() => (adminOrder?.items || []).map((item) => ({
+    name: item.item_name,
+    qty: item.quantity,
+    price: item.unit_price,
+  })), [adminOrder]);
+
+  const qrValue = useMemo(() => promptPayTarget && total > 0
     ? generateThaiQRPayment(promptPayTarget, total)
-    : '';
+    : '', [promptPayTarget, total]);
 
   useEffect(() => {
     if (!qrValue) {
@@ -205,12 +211,6 @@ export default function AdminCheckoutView({ orderId }: AdminCheckoutViewProps) {
       </div>
     );
   }
-
-  const basketDetails = (adminOrder.items || []).map((item) => ({
-    name: item.item_name,
-    qty: item.quantity,
-    price: item.unit_price,
-  }));
 
   return (
     <div className="max-w-md mx-auto">
@@ -389,7 +389,7 @@ export default function AdminCheckoutView({ orderId }: AdminCheckoutViewProps) {
       </div>
 
       {error && (
-        <div className="mb-4 p-3 rounded-lg text-sm bg-red-50 text-red-600 border border-red-200">
+        <div className="mb-4 p-3 rounded-lg text-sm bg-red-50 text-red-600 border border-red-200" role="alert">
           {error}
         </div>
       )}
@@ -411,4 +411,6 @@ export default function AdminCheckoutView({ orderId }: AdminCheckoutViewProps) {
       </button>
     </div>
   );
-}
+});
+
+export default AdminCheckoutView;

@@ -160,6 +160,7 @@ export default function ProfilePage() {
               color: message.type === 'success' ? '#065F46' : '#DC2626',
               border: `1px solid ${message.type === 'success' ? COLORS.border : '#FECACA'}`,
             }}
+            role={message.type === 'error' ? 'alert' : 'status'}
           >
             {message.text}
           </div>

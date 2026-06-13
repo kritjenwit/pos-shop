@@ -192,11 +192,11 @@ export default function PendingOrderDetailPage() {
         </div>
       </div>
 
-      {error && (
-        <div className="mt-4 p-3 rounded-xl text-sm bg-red-50 text-red-600 border border-red-200">
-          {error}
-        </div>
-      )}
+        {error && (
+          <div className="mb-4 p-3 rounded-lg text-sm bg-red-50 text-red-600 border border-red-200" role="alert">
+            {error}
+          </div>
+        )}
 
       {/* Action Buttons */}
       <div className="flex gap-3 mt-6">

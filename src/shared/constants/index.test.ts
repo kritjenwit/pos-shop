@@ -4,7 +4,7 @@ vi.stubGlobal('import.meta', {
   env: {},
 });
 
-import { APP, UI, COLORS, BREAKPOINTS, GRID, PAYMENT } from './index';
+import { APP, UI, COLORS, PAYMENT } from './index';
 
 describe('constants', () => {
   describe('APP', () => {
@@ -42,26 +42,6 @@ describe('constants', () => {
     
     it('should have text color reference', () => {
       expect(COLORS.text).toBe('var(--color-text)');
-    });
-  });
-
-  describe('BREAKPOINTS', () => {
-    it('should have sm breakpoint', () => {
-      expect(BREAKPOINTS.sm).toBe('640px');
-    });
-
-    it('should have md breakpoint', () => {
-      expect(BREAKPOINTS.md).toBe('768px');
-    });
-
-    it('should have lg breakpoint', () => {
-      expect(BREAKPOINTS.lg).toBe('1024px');
-    });
-  });
-
-  describe('GRID', () => {
-    it('should have cols configuration', () => {
-      expect(GRID.cols).toEqual({ sm: 2, md: 3, lg: 4 });
     });
   });
 

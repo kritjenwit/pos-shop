@@ -3,13 +3,7 @@ export const APP = {
   environment: import.meta.env.VITE_ENVIRONMENT || 'development',
 } as const;
 
-export const API = {
-  supabaseUrl: import.meta.env.VITE_SUPABASE_URL,
-  supabaseKey: import.meta.env.VITE_SUPABASE_KEY,
-} as const;
-
 export const UI = {
-  headerHeight: 'auto' as const,
   stickyTop: '100px' as const,
   borderRadius: '8px' as const,
   borderRadiusSm: '4px' as const,
@@ -37,20 +31,6 @@ export const COLORS = {
   'danger-15': 'var(--color-danger-15)',
   'danger-30': 'var(--color-danger-30)',
   'textSecondary-15': 'var(--color-text-secondary-15)',
-} as const;
-
-export const BREAKPOINTS = {
-  sm: '640px',
-  md: '768px',
-  lg: '1024px',
-} as const;
-
-export const GRID = {
-  cols: {
-    sm: 2,
-    md: 3,
-    lg: 4,
-  },
 } as const;
 
 export const PAYMENT = {

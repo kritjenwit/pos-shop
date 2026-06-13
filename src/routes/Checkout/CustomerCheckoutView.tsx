@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo, useMemo } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { CheckCircle, ShoppingCart, Upload } from 'lucide-react';
 import { useApp } from '../../shared/context/AppContext';
@@ -8,7 +8,7 @@ import { generateThaiQRPayment } from '../../shared/lib/thaiQR';
 import { COLORS, PAYMENT, VALIDATION } from '../../shared/constants';
 import { resetFormState } from '../../shared/lib/util';
 
-export default function CustomerCheckoutView() {
+function CustomerCheckoutView() {
   const { basket, items, completeOrder, total } = useApp();
   const { user } = useAuth();
 
@@ -78,18 +78,18 @@ export default function CustomerCheckoutView() {
     setReceiptPreview(null);
   };
 
-  const basketDetails = Array.from(basket.entries())
+  const basketDetails = useMemo(() => Array.from(basket.entries())
     .map(([itemId, qty]) => {
       const item = items.find((i) => i.id === itemId);
       return { name: item?.name || '', qty, price: item?.price || 0 };
     })
-    .filter((i) => i.qty > 0);
+    .filter((i) => i.qty > 0), [basket, items]);
 
   const totalAmount = total;
 
-  const qrValue = promptPayTarget && totalAmount > 0
+  const qrValue = useMemo(() => promptPayTarget && totalAmount > 0
     ? generateThaiQRPayment(promptPayTarget, totalAmount)
-    : '';
+    : '', [promptPayTarget, totalAmount]);
 
   useEffect(() => {
     if (!qrValue) {
@@ -297,7 +297,7 @@ export default function CustomerCheckoutView() {
       </div>
 
       {error && (
-        <div className="mb-4 p-3 rounded-lg text-sm bg-red-50 text-red-600 border border-red-200">
+        <div className="mb-4 p-3 rounded-lg text-sm bg-red-50 text-red-600 border border-red-200" role="alert">
           {error}
         </div>
       )}
@@ -320,3 +320,5 @@ export default function CustomerCheckoutView() {
     </div>
   );
 }
+
+export default memo(CustomerCheckoutView);
