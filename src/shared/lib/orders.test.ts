@@ -48,8 +48,9 @@ describe('orders', () => {
       const mockSelect = vi.fn(() => ({ eq: mockEq, order: mockOrderFn, gte: mockGte, lte: mockLte }));
       mockFrom.mockReturnValue({ select: mockSelect });
 
-      const mockCountEq = vi.fn().mockResolvedValue({ count: 3, error: null });
-      const mockCountSelect = vi.fn(() => ({ eq: mockCountEq }));
+      const mockCountIn = vi.fn().mockResolvedValue({ data: [{ transaction_id: 'tx-1' }, { transaction_id: 'tx-1' }, { transaction_id: 'tx-1' }], error: null });
+      const mockCountSelect = vi.fn(() => ({ in: mockCountIn }));
+
       mockFrom.mockImplementation((table: string) => {
         if (table === 'transaction_items') {
           return { select: mockCountSelect };
@@ -70,12 +71,7 @@ describe('orders', () => {
       const mockEq = vi.fn();
       const mockOrderFn = vi.fn().mockResolvedValue({ data: [], error: null });
       const mockSelect = vi.fn(() => ({ eq: mockEq, order: mockOrderFn }));
-      mockFrom.mockImplementation((table: string) => {
-        if (table === 'transaction_items') {
-          return { select: vi.fn(() => ({ eq: vi.fn().mockResolvedValue({ count: 0 }) })) };
-        }
-        return { select: mockSelect };
-      });
+      mockFrom.mockReturnValue({ select: mockSelect });
 
       await getOrders({ status: 'pending' });
 
@@ -85,12 +81,8 @@ describe('orders', () => {
 
     it('should return null with error on failure', async () => {
       const mockOrderFn = vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } });
-      mockFrom.mockImplementation((table: string) => {
-        if (table === 'transaction_items') {
-          return { select: vi.fn(() => ({ eq: vi.fn().mockResolvedValue({ count: 0 }) })) };
-        }
-        return { select: vi.fn(() => ({ eq: vi.fn(), order: mockOrderFn })) };
-      });
+      const mockSelect = vi.fn(() => ({ eq: vi.fn(), order: mockOrderFn }));
+      mockFrom.mockReturnValue({ select: mockSelect });
 
       const { data, error } = await getOrders();
 
@@ -102,12 +94,7 @@ describe('orders', () => {
       const mockOrderFn = vi.fn().mockResolvedValue({ data: [], error: null });
       const mockEq = vi.fn(() => ({ order: mockOrderFn }));
       const mockSelect = vi.fn(() => ({ eq: mockEq, order: mockOrderFn }));
-      mockFrom.mockImplementation((table: string) => {
-        if (table === 'transaction_items') {
-          return { select: vi.fn(() => ({ eq: vi.fn().mockResolvedValue({ count: 0 }) })) };
-        }
-        return { select: mockSelect };
-      });
+      mockFrom.mockReturnValue({ select: mockSelect });
 
       await getOrders({ sellerId: 'user-1' });
 
@@ -118,12 +105,7 @@ describe('orders', () => {
       const mockOrderFn = vi.fn().mockResolvedValue({ data: [], error: null });
       const mockGte = vi.fn(() => ({ order: mockOrderFn }));
       const mockSelect = vi.fn(() => ({ eq: vi.fn(), gte: mockGte, order: mockOrderFn }));
-      mockFrom.mockImplementation((table: string) => {
-        if (table === 'transaction_items') {
-          return { select: vi.fn(() => ({ eq: vi.fn().mockResolvedValue({ count: 0 }) })) };
-        }
-        return { select: mockSelect };
-      });
+      mockFrom.mockReturnValue({ select: mockSelect });
 
       await getOrders({ dateRange: { start: '2026-01-01' } });
 
@@ -134,12 +116,7 @@ describe('orders', () => {
       const mockOrderFn = vi.fn().mockResolvedValue({ data: [], error: null });
       const mockLte = vi.fn(() => ({ order: mockOrderFn }));
       const mockSelect = vi.fn(() => ({ eq: vi.fn(), lte: mockLte, order: mockOrderFn }));
-      mockFrom.mockImplementation((table: string) => {
-        if (table === 'transaction_items') {
-          return { select: vi.fn(() => ({ eq: vi.fn().mockResolvedValue({ count: 0 }) })) };
-        }
-        return { select: mockSelect };
-      });
+      mockFrom.mockReturnValue({ select: mockSelect });
 
       await getOrders({ dateRange: { end: '2026-12-31' } });
 
@@ -197,6 +174,25 @@ describe('orders', () => {
 
       expect(data).toBeNull();
       expect(error).toBe('Not found');
+    });
+
+    it('should return error when order data is null', async () => {
+      const mockSingle = vi.fn().mockResolvedValue({ data: null, error: null });
+      mockFrom.mockReturnValue({ select: vi.fn(() => ({ eq: vi.fn(() => ({ single: mockSingle })), single: mockSingle })) });
+
+      const { data, error } = await getOrderDetail('tx-1');
+
+      expect(data).toBeNull();
+      expect(error).toBe('Order not found');
+    });
+
+    it('should handle thrown error in getOrderDetail', async () => {
+      mockFrom.mockImplementation(() => { throw new Error('Network error'); });
+
+      const { data, error } = await getOrderDetail('tx-1');
+
+      expect(data).toBeNull();
+      expect(error).toBe('Network error');
     });
   });
 
@@ -273,6 +269,30 @@ describe('orders', () => {
       expect(data).toBeNull();
       expect(error).toBe('Insert failed');
     });
+
+    it('should return error when items insert fails', async () => {
+      const { mockInsert } = makeInsertMock({ id: 'tx-new', order_id: 'ORD-001', total_amount: 450 });
+      const itemInsertMock = vi.fn().mockResolvedValue({ error: { message: 'Items insert failed' } });
+      mockFrom.mockImplementation((table: string) => {
+        if (table === 'transactions') return { insert: mockInsert };
+        if (table === 'transaction_items') return { insert: itemInsertMock };
+        return { insert: vi.fn() };
+      });
+
+      const { data, error } = await createOrder(basket, items, 'user-1');
+
+      expect(data).toBeNull();
+      expect(error).toBe('Items insert failed');
+    });
+
+    it('should handle thrown error in createOrder', async () => {
+      mockFrom.mockImplementation(() => { throw new Error('Network error'); });
+
+      const { data, error } = await createOrder(basket, items, 'user-1');
+
+      expect(data).toBeNull();
+      expect(error).toBe('Network error');
+    });
   });
 
   describe('createPendingOrder', () => {
@@ -320,6 +340,43 @@ describe('orders', () => {
 
       expect(data).toBeNull();
       expect(error).toBe('Basket is empty');
+    });
+
+    it('should return error on insert failure', async () => {
+      const mockSingle = vi.fn().mockResolvedValue({ data: null, error: { message: 'Insert failed' } });
+      const mockSelect = vi.fn(() => {
+        const p = Promise.resolve({ data: null, error: { message: 'Insert failed' } });
+        (p as unknown as { single: typeof mockSingle }).single = mockSingle;
+        return p;
+      });
+      const mockInsert = vi.fn(() => ({ select: mockSelect }));
+      mockFrom.mockReturnValue({ insert: mockInsert });
+
+      const { data, error } = await createPendingOrder(
+        new Map([['item-1', 2]]),
+        [{ id: 'item-1', name: 'Pizza', price: 200, image: '', quantity: 10 }],
+      );
+
+      expect(data).toBeNull();
+      expect(error).toBe('Insert failed');
+    });
+
+    it('should return error when items insert fails', async () => {
+      const { mockInsert } = makeInsertMock({ id: 'tx-pending', order_id: 'ORD-PND', total_amount: 400 });
+      const itemInsertMock = vi.fn().mockResolvedValue({ error: { message: 'Items insert failed' } });
+      mockFrom.mockImplementation((table: string) => {
+        if (table === 'transactions') return { insert: mockInsert };
+        if (table === 'transaction_items') return { insert: itemInsertMock };
+        return { insert: vi.fn() };
+      });
+
+      const { data, error } = await createPendingOrder(
+        new Map([['item-1', 2]]),
+        [{ id: 'item-1', name: 'Pizza', price: 200, image: '', quantity: 10 }],
+      );
+
+      expect(data).toBeNull();
+      expect(error).toBe('Items insert failed');
     });
 
     it('should handle thrown error in createPendingOrder', async () => {
@@ -516,9 +573,9 @@ describe('orders', () => {
       const listLte = vi.fn();
       const listEq = vi.fn(() => ({ order: listOrder }));
       const listSelect = vi.fn(() => ({ eq: listEq, order: listOrder, gte: listGte, lte: listLte }));
-      const countEq = vi.fn().mockResolvedValue({ count: 2, error: null });
+      const countIn = vi.fn().mockResolvedValue({ data: [{ transaction_id: txId }, { transaction_id: txId }], error: null });
       mockFrom.mockImplementation((table: string) => {
-        if (table === 'transaction_items') return { select: vi.fn(() => ({ eq: countEq })) };
+        if (table === 'transaction_items') return { select: vi.fn(() => ({ in: countIn })) };
         return { select: listSelect };
       });
 

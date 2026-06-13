@@ -147,12 +147,16 @@ export async function getOrders(query?: OrderQuery) {
 
     const batchCounts = new Map<string, number>();
     if (txIds.length > 0) {
-      for (const txId of txIds) {
-        const { count } = await supabase
-          .from('transaction_items')
-          .select('*', { count: 'exact', head: true })
-          .eq('transaction_id', txId);
-        batchCounts.set(txId, count || 0);
+      const { data: allItems } = await supabase
+        .from('transaction_items')
+        .select('transaction_id')
+        .in('transaction_id', txIds);
+
+      if (allItems) {
+        for (const item of allItems) {
+          const tid = item.transaction_id;
+          batchCounts.set(tid, (batchCounts.get(tid) || 0) + 1);
+        }
       }
     }
 
