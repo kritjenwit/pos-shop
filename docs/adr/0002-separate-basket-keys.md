@@ -1,0 +1,3 @@
+# ADR-0002: Separate localStorage Basket Keys for Customer and Staff
+
+`AppProvider` accepts an optional `basketKey` prop; customer and staff route trees in `App.tsx` pass different values (`pos-shop-customer-basket` and `pos-shop-staff-basket`). This prevents a logged-in staff member and a customer using the same browser from sharing basket state — items a staff member adds for a table would not appear in the customer's self-ordering menu, and vice versa. The single-key approach was the original design but proved confusing when both interfaces ran under the same origin. The `basketKey` prop keeps the change minimal: one optional string on the provider, zero impact on components that read/write the basket.
