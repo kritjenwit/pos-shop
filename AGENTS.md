@@ -86,6 +86,7 @@ A task is **not complete** until every item is checked:
 |---|---|---|
 | `/menu`, `/checkout`, `/public/transactions/:id` | ❌ No | Public routes, customer access |
 | `/`, `/transactions`, `/pending-orders`, `/profile`, `/checkout/:orderId` | ✅ Yes | Staff-only routes, behind auth gate |
+| `/analytics` | ✅ Yes | Sales dashboard |
 
 ---
 

@@ -129,6 +129,8 @@ Pages no longer import `supabase` directly for queries. All database operations 
 | `items.ts` | Item CRUD + cleanup of storage images on delete |
 | `profiles.ts` | User profile fetch (no password hash returned), seller search |
 | `images.ts` | Supabase storage upload/delete/signed URL (file type + size validation) |
+| `analytics.ts` | Sales summary, daily sales, top items |
+| `audit.ts` | Audit logging (sign-in, sign-up events) |
 
 All service functions return `{ data, error }` — never throw. Components handle errors via state + `console.error`.
 
@@ -151,6 +153,7 @@ All service functions return `{ data, error }` — never throw. Components handl
 | `/pending-orders`, `/pending-orders/:id` | ✅ Yes | Order approval workflow |
 | `/profile` | ✅ Yes | User profile |
 | `/checkout/:orderId` | ✅ Yes | Admin payment confirmation |
+| `/analytics` | ✅ Yes | Sales dashboard with charts |
 
 ## Security
 
@@ -197,6 +200,15 @@ All key decisions are documented in `docs/adr/`:
 
 | ADR | Decision |
 |---|---|
+| ADR | Decision |
+|---|---|---|
+| 0018 | Receipt upload after order |
+| 0017 | Audit logging module |
+| 0016 | Pagination for order list |
+| 0015 | Analytics dashboard |
+| 0014 | Basket price validation |
+| 0013 | Password policy enforcement |
+| 0012 | CSP headers + security headers |
 | 0011 | Items service module |
 | 0010 | AppContent routing split |
 | 0009 | Dark mode via CSS variables |
