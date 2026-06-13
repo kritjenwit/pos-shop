@@ -1,7 +1,8 @@
 import { lazy, Suspense } from 'react';
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
-import { LogOut, User, ShoppingCart } from 'lucide-react';
+import { LogOut, User, ShoppingCart, Moon, Sun } from 'lucide-react';
 import { useAuth } from '../shared/context/AuthContext';
+import { useTheme } from '../shared/context/ThemeContext';
 import { AppProvider } from '../shared/context/AppContext';
 import { APP, COLORS } from '../shared/constants';
 
@@ -67,6 +68,7 @@ function Navigation() {
 
 export default function StaffLayout() {
   const { user, signOut } = useAuth();
+  const { isDark, toggle: toggleTheme } = useTheme();
 
   if (!user) return null;
 
@@ -85,6 +87,14 @@ export default function StaffLayout() {
               {APP.name}
             </h1>
             <div className="flex items-center gap-2 sm:gap-4">
+              <button
+                onClick={toggleTheme}
+                className="flex items-center gap-2 text-sm hover:opacity-80 transition-all duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-md px-2 py-1"
+                style={{ color: COLORS.textSecondary }}
+                aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+              >
+                {isDark ? <Sun size={16} /> : <Moon size={16} />}
+              </button>
               <Link to="/profile" className="flex items-center gap-2 text-sm hover:opacity-80 transition-all duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-md px-2 py-1" style={{ color: COLORS.textSecondary }}>
                 <User size={16} />
                 <span className="hidden sm:inline">{user.full_name || user.email}</span>

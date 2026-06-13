@@ -120,11 +120,11 @@ export default function TransactionListPage() {
 
   const getStatusStyle = (status: string) => {
     switch (status) {
-      case 'completed': return { bg: COLORS.primary + '15', color: COLORS.primary };
-      case 'approved': return { bg: COLORS.accent + '15', color: COLORS.accent };
-      case 'pending': return { bg: COLORS.textSecondary + '15', color: COLORS.textSecondary };
-      case 'cancelled': return { bg: COLORS.danger + '15', color: COLORS.danger };
-      default: return { bg: COLORS.textSecondary + '15', color: COLORS.textSecondary };
+      case 'completed': return { bg: COLORS['primary-15'], color: COLORS.primary };
+      case 'approved': return { bg: COLORS['accent-15'], color: COLORS.accent };
+      case 'pending': return { bg: COLORS['textSecondary-15'], color: COLORS.textSecondary };
+      case 'cancelled': return { bg: COLORS['danger-15'], color: COLORS.danger };
+      default: return { bg: COLORS['textSecondary-15'], color: COLORS.textSecondary };
     }
   };
 
@@ -145,7 +145,7 @@ export default function TransactionListPage() {
             onClick={handleRefresh}
             disabled={refreshing}
             className="flex items-center gap-1 text-sm px-3 py-1.5 rounded-lg transition-all duration-200 cursor-pointer hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50"
-            style={{ color: COLORS.primary, backgroundColor: COLORS.primary + '10' }}
+            style={{ color: COLORS.primary, backgroundColor: COLORS['primary-10'] }}
           >
             <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
             {refreshing ? 'Refreshing...' : 'Refresh'}
@@ -154,7 +154,7 @@ export default function TransactionListPage() {
             <button
               onClick={clearFilters}
               className="flex items-center gap-1 text-sm px-3 py-1.5 rounded-lg transition-all duration-200 cursor-pointer hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger"
-              style={{ color: COLORS.danger, backgroundColor: COLORS.danger + '10' }}
+              style={{ color: COLORS.danger, backgroundColor: COLORS['danger-10'] }}
             >
               <X size={14} />
               Clear Filters
@@ -204,7 +204,7 @@ export default function TransactionListPage() {
               {selectedSeller ? (
                 <div
                   className="flex-1 flex items-center justify-between px-3 py-2 border rounded text-sm transition-all duration-200"
-                  style={{ borderColor: COLORS.primary, backgroundColor: COLORS.primary + '10' }}
+                  style={{ borderColor: COLORS.primary, backgroundColor: COLORS['primary-10'] }}
                 >
                   <span className="truncate font-medium" style={{ color: COLORS.text }}>{getSellerDisplayName(selectedSeller)}</span>
                   <button
@@ -265,7 +265,7 @@ export default function TransactionListPage() {
       )}
 
       {loading ? (
-        <div className="space-y-2">
+        <div className="space-y-2" role="status" aria-label="Loading transactions">
           {Array.from({ length: 3 }).map((_, i) => (
             <div key={i} className="p-4 rounded-lg shadow-sm" style={{ backgroundColor: COLORS.cardBackground }}>
               <div className="flex justify-between items-start">

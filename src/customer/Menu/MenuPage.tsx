@@ -90,7 +90,7 @@ function ItemCard({ item, index }: ItemCardProps) {
                   removeFromBasket(item.id);
                 }}
                 className="w-7 h-7 rounded-full flex items-center justify-center bg-white shadow-sm hover:bg-gray-50 active:scale-90 transition-all"
-                aria-label="Remove"
+                aria-label={`Remove one ${item.name} from basket`}
               >
                 <Minus size={14} className="text-danger" />
               </button>
@@ -101,7 +101,7 @@ function ItemCard({ item, index }: ItemCardProps) {
                   addToBasket(item.id);
                 }}
                 className="w-7 h-7 rounded-full flex items-center justify-center bg-white shadow-sm hover:bg-gray-50 active:scale-90 transition-all"
-                aria-label="Add"
+                aria-label={`Add one ${item.name} to basket`}
               >
                 <Plus size={14} className="text-primary" />
               </button>
@@ -147,7 +147,7 @@ export default function MenuPage() {
     return (
       <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="h-10 w-48 skeleton mb-8"></div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6" role="status" aria-label="Loading menu items">
           {Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
               <div className="w-full aspect-square rounded-xl skeleton mb-4"></div>
@@ -190,6 +190,7 @@ export default function MenuPage() {
               <button
                 onClick={() => setSearchQuery('')}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                aria-label="Clear search"
               >
                 <X size={16} />
               </button>

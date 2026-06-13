@@ -96,7 +96,7 @@ export default function PendingOrderDetailPage() {
           <ArrowLeft size={16} />
           Back to Pending Orders
         </button>
-        <div className="rounded-lg shadow-card p-6" style={{ backgroundColor: COLORS.cardBackground }}>
+        <div className="rounded-lg shadow-card p-6" style={{ backgroundColor: COLORS.cardBackground }} role="status" aria-label="Loading order details">
           <div className="skeleton h-8 w-32 mb-4"></div>
           <div className="space-y-3">
             <div className="skeleton h-4 w-full"></div>
@@ -137,7 +137,7 @@ export default function PendingOrderDetailPage() {
             <div className="flex items-center gap-2 mt-1">
               <span
                 className="text-xs px-2 py-0.5 rounded-full font-semibold"
-                style={{ backgroundColor: COLORS.textSecondary + '15', color: COLORS.textSecondary }}
+                style={{ backgroundColor: COLORS['textSecondary-15'], color: COLORS.textSecondary }}
               >
                 {order.status}
               </span>
@@ -203,7 +203,7 @@ export default function PendingOrderDetailPage() {
         <button
           onClick={handleCancel}
           className="flex-1 py-3 rounded-xl font-medium transition-all duration-200 cursor-pointer hover:shadow-sm active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger"
-          style={{ backgroundColor: COLORS.danger + '15', color: COLORS.danger, border: `1px solid ${COLORS.danger + '30'}` }}
+          style={{ backgroundColor: COLORS['danger-15'], color: COLORS.danger, border: `1px solid ${COLORS['danger-30']}` }}
         >
           Cancel
         </button>
@@ -212,13 +212,13 @@ export default function PendingOrderDetailPage() {
           disabled={approving}
           className="flex-1 py-3 rounded-xl font-heading font-medium transition-all duration-200 cursor-pointer hover:shadow-sm active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50"
           style={{
-            backgroundColor: approving ? COLORS.primary + '80' : COLORS.primary,
+            backgroundColor: approving ? COLORS['primary-80'] : COLORS.primary,
             color: '#ffffff',
           }}
         >
           {approving ? (
             <span className="flex items-center justify-center gap-2">
-              <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+              <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
               </svg>

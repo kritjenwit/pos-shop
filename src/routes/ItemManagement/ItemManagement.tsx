@@ -262,7 +262,7 @@ export default function ItemManagementPage() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr style={{ backgroundColor: COLORS.primary + '08' }}>
+                <tr style={{ backgroundColor: COLORS['primary-08'] }}>
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase font-heading" style={{ color: COLORS.textSecondary }}>
                     Image
                   </th>
@@ -279,12 +279,12 @@ export default function ItemManagementPage() {
               </thead>
               <tbody>
                 {items.map((item, idx) => (
-                  <tr key={item.id} className="border-t transition-colors duration-150" style={{ borderColor: COLORS.border, backgroundColor: idx % 2 === 0 ? 'transparent' : COLORS.primary + '04' }}>
+                  <tr key={item.id} className="border-t transition-colors duration-150" style={{ borderColor: COLORS.border, backgroundColor: idx % 2 === 0 ? 'transparent' : COLORS['primary-04'] }}>
                     <td className="px-4 py-3">
                       {item.image ? (
                         <SignedImage filePath={item.image} alt={item.name} className="w-10 h-10 object-cover rounded-lg" />
                       ) : (
-                        <div className="w-10 h-10 rounded-lg flex items-center justify-center font-heading font-semibold text-sm" style={{ backgroundColor: COLORS.primary + '15', color: COLORS.primary }}>
+                        <div className="w-10 h-10 rounded-lg flex items-center justify-center font-heading font-semibold text-sm" style={{ backgroundColor: COLORS['primary-15'], color: COLORS.primary }}>
                           {item.name.charAt(0)}
                         </div>
                       )}

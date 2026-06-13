@@ -3,11 +3,63 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --color-background: #F5F5F5;
+    --color-primary: #111111;
+    --color-accent: #333333;
+    --color-danger: #EF4444;
+    --color-text: #111111;
+    --color-text-secondary: #666666;
+    --color-card-background: #FFFFFF;
+    --color-border: #E5E5E5;
+    --color-border-input: #D4D4D4;
+
+    --color-primary-04: rgba(17, 17, 17, 0.02);
+    --color-primary-08: rgba(17, 17, 17, 0.05);
+    --color-primary-10: rgba(17, 17, 17, 0.06);
+    --color-primary-15: rgba(17, 17, 17, 0.09);
+    --color-primary-20: rgba(17, 17, 17, 0.12);
+    --color-primary-30: rgba(17, 17, 17, 0.18);
+    --color-primary-80: rgba(17, 17, 17, 0.50);
+    --color-accent-15: rgba(51, 51, 51, 0.09);
+    --color-danger-10: rgba(239, 68, 68, 0.06);
+    --color-danger-15: rgba(239, 68, 68, 0.09);
+    --color-danger-30: rgba(239, 68, 68, 0.18);
+    --color-text-secondary-15: rgba(102, 102, 102, 0.09);
+  }
+
+  .dark {
+    --color-background: #1a1a2e;
+    --color-primary: #e5e5e5;
+    --color-accent: #888888;
+    --color-danger: #EF4444;
+    --color-text: #e5e5e5;
+    --color-text-secondary: #94a3b8;
+    --color-card-background: #2d2d3d;
+    --color-border: #3d3d4d;
+    --color-border-input: #4d4d5d;
+
+    --color-primary-04: rgba(229, 229, 229, 0.04);
+    --color-primary-08: rgba(229, 229, 229, 0.08);
+    --color-primary-10: rgba(229, 229, 229, 0.10);
+    --color-primary-15: rgba(229, 229, 229, 0.15);
+    --color-primary-20: rgba(229, 229, 229, 0.20);
+    --color-primary-30: rgba(229, 229, 229, 0.30);
+    --color-primary-80: rgba(229, 229, 229, 0.50);
+    --color-accent-15: rgba(136, 136, 136, 0.15);
+    --color-danger-10: rgba(239, 68, 68, 0.10);
+    --color-danger-15: rgba(239, 68, 68, 0.15);
+    --color-danger-30: rgba(239, 68, 68, 0.30);
+    --color-text-secondary-15: rgba(148, 163, 184, 0.15);
+  }
+
   html {
     font-family: 'Nunito Sans', sans-serif;
     font-size: 18px;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    background-color: var(--color-background);
+    color: var(--color-text);
   }
 
   h1, h2, h3, h4, h5, h6 {

@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - run: npm ci
+
+      - run: npm run lint
+
+      - run: npm run build
+
+      - run: npm run test:coverage
+        env:
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL || 'http://localhost:54321' }}
+          VITE_SUPABASE_KEY: ${{ vars.VITE_SUPABASE_KEY || 'dummy-key' }}
+          VITE_ENVIRONMENT: ${{ vars.VITE_ENVIRONMENT || 'development' }}
+          VITE_CACHE_DURATION_HOURS: ${{ vars.VITE_CACHE_DURATION_HOURS || '1' }}

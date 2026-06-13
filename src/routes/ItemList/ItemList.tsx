@@ -110,7 +110,7 @@ export default function ItemListPage() {
 
   if (itemsLoading) {
     return (
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4" role="status" aria-label="Loading items">
         {Array.from({ length: 8 }).map((_, i) => (
           <div key={i} className="rounded-lg p-3 shadow-sm" style={{ backgroundColor: COLORS.cardBackground }}>
             <div className="w-full aspect-square rounded skeleton mb-3"></div>
@@ -186,7 +186,7 @@ export default function ItemListPage() {
               onClick={handleRefresh}
               disabled={refreshing || itemsLoading}
               className="p-2 rounded-lg transition-all duration-200 cursor-pointer hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50"
-              style={{ color: COLORS.primary, backgroundColor: COLORS.primary + '10' }}
+              style={{ color: COLORS.primary, backgroundColor: COLORS['primary-10'] }}
               aria-label="Refresh items"
             >
               <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />

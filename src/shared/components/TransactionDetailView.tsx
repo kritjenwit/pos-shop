@@ -74,11 +74,11 @@ export default function TransactionDetailView({
 
   const getStatusStyle = (status: string) => {
     switch (status) {
-      case 'completed': return { backgroundColor: COLORS.primary + '15', color: COLORS.primary };
-      case 'approved': return { backgroundColor: COLORS.accent + '15', color: COLORS.accent };
-      case 'pending': return { backgroundColor: COLORS.textSecondary + '15', color: COLORS.textSecondary };
-      case 'cancelled': return { backgroundColor: COLORS.danger + '15', color: COLORS.danger };
-      default: return { backgroundColor: COLORS.textSecondary + '15', color: COLORS.textSecondary };
+      case 'completed': return { backgroundColor: COLORS['primary-15'], color: COLORS.primary };
+      case 'approved': return { backgroundColor: COLORS['accent-15'], color: COLORS.accent };
+      case 'pending': return { backgroundColor: COLORS['textSecondary-15'], color: COLORS.textSecondary };
+      case 'cancelled': return { backgroundColor: COLORS['danger-15'], color: COLORS.danger };
+      default: return { backgroundColor: COLORS['textSecondary-15'], color: COLORS.textSecondary };
     }
   };
 
@@ -124,7 +124,7 @@ export default function TransactionDetailView({
             </span>
             <span
               className="text-xs px-2 py-1 rounded-full font-semibold"
-              style={showStatusColors ? getStatusStyle(transaction.status) : { backgroundColor: COLORS.primary + '15', color: COLORS.primary }}
+              style={showStatusColors ? getStatusStyle(transaction.status) : { backgroundColor: COLORS['primary-15'], color: COLORS.primary }}
             >
               {transaction.status}
             </span>
@@ -194,7 +194,7 @@ export default function TransactionDetailView({
           <button
             onClick={() => setShowQR(!showQR)}
             className="p-2 rounded-lg text-sm transition-all duration-200 cursor-pointer hover:shadow-sm active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-            style={{ backgroundColor: COLORS.primary + '15', color: COLORS.primary }}
+            style={{ backgroundColor: COLORS['primary-15'], color: COLORS.primary }}
             aria-label={showQR ? 'Hide QR Code' : 'Show QR Code'}
           >
             <Share2 size={18} />
@@ -213,7 +213,7 @@ export default function TransactionDetailView({
               onClick={handleCopyLink}
               className="flex items-center gap-2 mx-auto text-sm px-3 py-1.5 rounded-lg transition-all duration-200 cursor-pointer hover:shadow-sm active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               style={{
-                backgroundColor: copied ? COLORS.primary + '15' : COLORS.primary + '15',
+                backgroundColor: copied ? COLORS['primary-15'] : COLORS['primary-15'],
                 color: copied ? COLORS.primary : COLORS.primary,
               }}
             >

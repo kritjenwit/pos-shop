@@ -28,20 +28,20 @@ describe('constants', () => {
   });
 
   describe('COLORS', () => {
-    it('should have primary color', () => {
-      expect(COLORS.primary).toBe('#111111');
+    it('should have primary color reference', () => {
+      expect(COLORS.primary).toBe('var(--color-primary)');
     });
     
-    it('should have accent color', () => {
-      expect(COLORS.accent).toBe('#333333');
+    it('should have accent color reference', () => {
+      expect(COLORS.accent).toBe('var(--color-accent)');
     });
     
-    it('should have danger color', () => {
-      expect(COLORS.danger).toBe('#EF4444');
+    it('should have danger color reference', () => {
+      expect(COLORS.danger).toBe('var(--color-danger)');
     });
     
-    it('should have text color', () => {
-      expect(COLORS.text).toBe('#111111');
+    it('should have text color reference', () => {
+      expect(COLORS.text).toBe('var(--color-text)');
     });
   });
 

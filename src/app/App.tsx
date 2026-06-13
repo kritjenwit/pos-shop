@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { AuthProvider, useAuth } from '../shared/context/AuthContext';
 import { AppProvider } from '../shared/context/AppContext';
+import { ThemeProvider } from '../shared/context/ThemeContext';
 import { BrowserRouter, useLocation } from 'react-router-dom';
 import { ErrorBoundary } from '../shared/components/ErrorBoundary';
 import LoadingScreen from './LoadingScreen';
@@ -41,13 +42,15 @@ function AppContent() {
 
 function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <ErrorBoundary>
-          <AppContent />
-        </ErrorBoundary>
-      </BrowserRouter>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <BrowserRouter>
+          <ErrorBoundary>
+            <AppContent />
+          </ErrorBoundary>
+        </BrowserRouter>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

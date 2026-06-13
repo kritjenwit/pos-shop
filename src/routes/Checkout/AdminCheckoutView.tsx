@@ -151,7 +151,7 @@ export default function AdminCheckoutView({ orderId }: AdminCheckoutViewProps) {
 
   if (adminLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[50vh] py-16">
+      <div className="flex flex-col items-center justify-center min-h-[50vh] py-16" role="status" aria-label="Loading">
         <div className="skeleton h-8 w-32 mb-4"></div>
         <div className="skeleton h-4 w-64 mb-2"></div>
       </div>
@@ -179,7 +179,7 @@ export default function AdminCheckoutView({ orderId }: AdminCheckoutViewProps) {
     return (
       <div className="max-w-md mx-auto px-4 py-8 animate-fade-in">
         <div className="rounded-lg shadow-card p-8 text-center animate-scale-in" style={{ backgroundColor: COLORS.cardBackground }}>
-          <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: COLORS.primary + '20' }}>
+          <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: COLORS['primary-20'] }}>
             <CheckCircle size={40} style={{ color: COLORS.primary }} />
           </div>
           <h1 className="text-2xl font-bold font-heading mb-2" style={{ color: COLORS.text }}>
@@ -210,7 +210,7 @@ export default function AdminCheckoutView({ orderId }: AdminCheckoutViewProps) {
 
   return (
     <div className="max-w-md mx-auto">
-      <div className="mb-6 p-4 rounded-lg" style={{ backgroundColor: COLORS.primary + '10' }}>
+      <div className="mb-6 p-4 rounded-lg" style={{ backgroundColor: COLORS['primary-10'] }}>
         <div className="flex justify-between items-center mb-2">
           <button
             onClick={handleReset}
@@ -221,7 +221,7 @@ export default function AdminCheckoutView({ orderId }: AdminCheckoutViewProps) {
           </button>
           <span
             className="text-xs px-2 py-0.5 rounded-full font-semibold"
-            style={{ backgroundColor: COLORS.accent + '15', color: COLORS.accent }}
+            style={{ backgroundColor: COLORS['accent-15'], color: COLORS.accent }}
           >
             Approved
           </span>
@@ -332,7 +332,7 @@ export default function AdminCheckoutView({ orderId }: AdminCheckoutViewProps) {
 
         {qrValue ? (
           <>
-            <div className="text-center py-4" style={{ backgroundColor: '#003D6B' }}>
+            <div className="text-center py-4" style={{ backgroundColor: '#003D6B' }} aria-hidden="true">
               {thaiQrLogoUrl && (
                 <img
                   src={thaiQrLogoUrl}
@@ -352,7 +352,7 @@ export default function AdminCheckoutView({ orderId }: AdminCheckoutViewProps) {
                 />
               )}
               <div className="relative inline-block">
-                <div className="inline-block p-4 rounded-lg shadow-sm" style={{ backgroundColor: '#ffffff' }}>
+                <div className="inline-block p-4 rounded-lg shadow-sm" style={{ backgroundColor: 'var(--color-card-background)' }}>
                   <QRCodeSVG value={qrValue} size={PAYMENT.qrSize} level={PAYMENT.qrLevel} />
                 </div>
                 {qrOverlayUrl && (
@@ -397,7 +397,7 @@ export default function AdminCheckoutView({ orderId }: AdminCheckoutViewProps) {
       >
         {completing ? (
           <span className="flex items-center justify-center gap-2">
-            <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+              <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
             </svg>

@@ -48,7 +48,7 @@ export default function PendingOrdersPage() {
 
   if (loading) {
     return (
-      <div className="space-y-2">
+      <div className="space-y-2" role="status" aria-label="Loading pending orders">
         {Array.from({ length: 3 }).map((_, i) => (
           <div key={i} className="p-4 rounded-lg shadow-sm" style={{ backgroundColor: COLORS.cardBackground }}>
             <div className="flex justify-between items-start">
@@ -101,7 +101,7 @@ export default function PendingOrdersPage() {
           onClick={handleRefresh}
           disabled={refreshing}
           className="flex items-center gap-1 text-sm px-3 py-1.5 rounded-lg transition-all duration-200 cursor-pointer hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50"
-          style={{ color: COLORS.primary, backgroundColor: COLORS.primary + '10' }}
+          style={{ color: COLORS.primary, backgroundColor: COLORS['primary-10'] }}
         >
           <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
           {refreshing ? 'Refreshing...' : 'Refresh'}
@@ -125,7 +125,7 @@ export default function PendingOrdersPage() {
                 </span>
                 <span
                   className="text-xs px-2 py-0.5 rounded-full font-semibold"
-                  style={{ backgroundColor: COLORS.textSecondary + '15', color: COLORS.textSecondary }}
+                  style={{ backgroundColor: COLORS['textSecondary-15'], color: COLORS.textSecondary }}
                 >
                   {order.status}
                 </span>
@@ -161,7 +161,7 @@ export default function PendingOrdersPage() {
               <Link
                 to={`/pending-orders/${order.id}`}
                 className="flex items-center gap-1 text-sm px-3 py-1.5 rounded-lg transition-all duration-200 hover:shadow-sm active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                style={{ color: COLORS.primary, backgroundColor: COLORS.primary + '10' }}
+                style={{ color: COLORS.primary, backgroundColor: COLORS['primary-10'] }}
               >
                 <Eye size={14} />
                 View
