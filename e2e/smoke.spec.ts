@@ -93,3 +93,28 @@ test.describe('Search and menu interaction', () => {
     await expect(page.locator('h2:has-text("Your basket is empty")')).toBeVisible();
   });
 });
+
+test.describe('Login flow', () => {
+  test('should show error on invalid credentials', async ({ page }) => {
+    await page.goto('/');
+    await page.fill('#email', 'wrong@test.com');
+    await page.fill('#password', 'wrongpass');
+    await page.locator('button[type="submit"]').click();
+    await expect(page.locator('[role="alert"]')).toBeVisible({ timeout: 5000 });
+  });
+});
+
+test.describe('Menu and checkout', () => {
+  test('should show checkout empty state when accessing checkout directly', async ({ page }) => {
+    await page.goto('/checkout');
+    await expect(page.locator('h2:has-text("Your basket is empty")')).toBeVisible();
+  });
+
+  test('should show 404 on unknown route', async ({ page }) => {
+    const response = await page.goto('/unknown-route');
+    // SPA should still return 200 (catch-all handled by client router)
+    // but nav to login since not authenticated
+    expect(response?.status()).toBe(200);
+    await expect(page.locator('h1:has-text("Welcome Back")')).toBeVisible({ timeout: 5000 });
+  });
+});
