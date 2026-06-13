@@ -347,5 +347,57 @@ describe('CheckoutPage', () => {
 
       expect(mockNavigate).toHaveBeenCalledWith('/pending-orders');
     });
+
+    it('should show order not found view when no data and no error', async () => {
+      mockOrdersGetOrderDetail.mockResolvedValue({ data: null, error: null });
+      renderCheckout(['/checkout/tx-1']);
+
+      await waitFor(() => {
+        expect(screen.getByText('Order not found')).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByText('Back to Pending Orders'));
+
+      expect(mockNavigate).toHaveBeenCalledWith('/pending-orders');
+    });
+
+    it('should update customer info fields on change', async () => {
+      mockOrdersGetOrderDetail.mockResolvedValue({ data: mockOrderDetail, error: null });
+      renderCheckout(['/checkout/tx-1']);
+
+      await waitFor(() => {
+        expect(screen.getByLabelText('Customer Name')).toBeInTheDocument();
+      });
+
+      const nameInput = screen.getByLabelText('Customer Name');
+      fireEvent.change(nameInput, { target: { value: 'New Name' } });
+      expect((nameInput as HTMLInputElement).value).toBe('New Name');
+
+      const phoneInput = screen.getByLabelText('Phone Number');
+      fireEvent.change(phoneInput, { target: { value: '0811111111' } });
+      expect((phoneInput as HTMLInputElement).value).toBe('0811111111');
+
+      const detailInput = screen.getByLabelText('Additional Detail');
+      fireEvent.change(detailInput, { target: { value: 'Extra notes' } });
+      expect((detailInput as HTMLTextAreaElement).value).toBe('Extra notes');
+    });
+
+    it('should show payment confirmed with order details on success', async () => {
+      mockOrdersGetOrderDetail.mockResolvedValue({ data: mockOrderDetail, error: null });
+      mockOrdersConfirmPayment.mockResolvedValue({ data: null, error: null });
+      mockGenerateThaiQRPayment.mockReturnValue('000201010211...');
+
+      renderCheckout(['/checkout/tx-1']);
+
+      await waitFor(() => {
+        expect(screen.getByText('Confirm Payment')).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByText('Confirm Payment'));
+
+      await waitFor(() => {
+        expect(screen.getByText('Payment Confirmed')).toBeInTheDocument();
+      });
+    });
   });
 });

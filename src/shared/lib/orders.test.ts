@@ -97,6 +97,63 @@ describe('orders', () => {
       expect(data).toBeNull();
       expect(error).toBe('DB error');
     });
+
+    it('should apply sellerId filter', async () => {
+      const mockOrderFn = vi.fn().mockResolvedValue({ data: [], error: null });
+      const mockEq = vi.fn(() => ({ order: mockOrderFn }));
+      const mockSelect = vi.fn(() => ({ eq: mockEq, order: mockOrderFn }));
+      mockFrom.mockImplementation((table: string) => {
+        if (table === 'transaction_items') {
+          return { select: vi.fn(() => ({ eq: vi.fn().mockResolvedValue({ count: 0 }) })) };
+        }
+        return { select: mockSelect };
+      });
+
+      await getOrders({ sellerId: 'user-1' });
+
+      expect(mockEq).toHaveBeenCalledWith('created_by', 'user-1');
+    });
+
+    it('should apply start date filter', async () => {
+      const mockOrderFn = vi.fn().mockResolvedValue({ data: [], error: null });
+      const mockGte = vi.fn(() => ({ order: mockOrderFn }));
+      const mockSelect = vi.fn(() => ({ eq: vi.fn(), gte: mockGte, order: mockOrderFn }));
+      mockFrom.mockImplementation((table: string) => {
+        if (table === 'transaction_items') {
+          return { select: vi.fn(() => ({ eq: vi.fn().mockResolvedValue({ count: 0 }) })) };
+        }
+        return { select: mockSelect };
+      });
+
+      await getOrders({ dateRange: { start: '2026-01-01' } });
+
+      expect(mockGte).toHaveBeenCalledWith('created_at', '2026-01-01');
+    });
+
+    it('should apply end date filter', async () => {
+      const mockOrderFn = vi.fn().mockResolvedValue({ data: [], error: null });
+      const mockLte = vi.fn(() => ({ order: mockOrderFn }));
+      const mockSelect = vi.fn(() => ({ eq: vi.fn(), lte: mockLte, order: mockOrderFn }));
+      mockFrom.mockImplementation((table: string) => {
+        if (table === 'transaction_items') {
+          return { select: vi.fn(() => ({ eq: vi.fn().mockResolvedValue({ count: 0 }) })) };
+        }
+        return { select: mockSelect };
+      });
+
+      await getOrders({ dateRange: { end: '2026-12-31' } });
+
+      expect(mockLte).toHaveBeenCalledWith('created_at', '2026-12-31');
+    });
+
+    it('should handle thrown error in getOrders', async () => {
+      mockFrom.mockImplementation(() => { throw new Error('Network error'); });
+
+      const { data, error } = await getOrders();
+
+      expect(data).toBeNull();
+      expect(error).toBe('Network error');
+    });
   });
 
   describe('getOrderDetail', () => {
@@ -264,6 +321,18 @@ describe('orders', () => {
       expect(data).toBeNull();
       expect(error).toBe('Basket is empty');
     });
+
+    it('should handle thrown error in createPendingOrder', async () => {
+      mockFrom.mockImplementation(() => { throw new Error('Network error'); });
+
+      const { data, error } = await createPendingOrder(
+        new Map([['item-1', 2]]),
+        [{ id: 'item-1', name: 'Pizza', price: 200, image: '', quantity: 10 }],
+      );
+
+      expect(data).toBeNull();
+      expect(error).toBe('Network error');
+    });
   });
 
   describe('approveOrder', () => {
@@ -286,6 +355,14 @@ describe('orders', () => {
 
       expect(error).toBe('Approve failed');
     });
+
+    it('should handle thrown error in approveOrder', async () => {
+      mockFrom.mockImplementation(() => { throw new Error('Network error'); });
+
+      const { error } = await approveOrder('order-1');
+
+      expect(error).toBe('Network error');
+    });
   });
 
   describe('cancelOrder', () => {
@@ -307,6 +384,14 @@ describe('orders', () => {
       const { error } = await cancelOrder('order-1');
 
       expect(error).toBe('Cancel failed');
+    });
+
+    it('should handle thrown error in cancelOrder', async () => {
+      mockFrom.mockImplementation(() => { throw new Error('Network error'); });
+
+      const { error } = await cancelOrder('order-1');
+
+      expect(error).toBe('Network error');
     });
   });
 

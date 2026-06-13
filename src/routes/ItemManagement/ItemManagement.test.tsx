@@ -228,4 +228,65 @@ describe('ItemManagementPage', () => {
     render(<ItemManagementPage />);
     expect(screen.getByText('No items yet')).toBeInTheDocument();
   });
+
+  it('should call addItem when creating new item', async () => {
+    render(<ItemManagementPage />);
+    fireEvent.click(screen.getByText('Add New'));
+
+    const nameInput = screen.getByLabelText('Name');
+    const priceInput = screen.getByLabelText('Price');
+
+    fireEvent.change(nameInput, { target: { value: 'New Item' } });
+    fireEvent.change(priceInput, { target: { value: '99' } });
+
+    const form = document.querySelector('form')!;
+    fireEvent.submit(form);
+
+    await waitFor(() => {
+      expect(mockAddItem).toHaveBeenCalledWith({ name: 'New Item', price: 99, image: '', quantity: 100 });
+    });
+  });
+
+  it('should show error when save fails', async () => {
+    mockAddItem.mockRejectedValue(new Error('Save failed'));
+    render(<ItemManagementPage />);
+    fireEvent.click(screen.getByText('Add New'));
+
+    const nameInput = screen.getByLabelText('Name');
+    const priceInput = screen.getByLabelText('Price');
+
+    fireEvent.change(nameInput, { target: { value: 'New Item' } });
+    fireEvent.change(priceInput, { target: { value: '99' } });
+
+    const form = document.querySelector('form')!;
+    fireEvent.submit(form);
+
+    await waitFor(() => {
+      expect(screen.getByText('Save failed')).toBeInTheDocument();
+    });
+  });
+
+  it('should trigger file input when upload button clicked', () => {
+    render(<ItemManagementPage />);
+    fireEvent.click(screen.getByText('Add New'));
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    const clickSpy = vi.spyOn(fileInput, 'click');
+
+    fireEvent.click(screen.getByText('Upload Image'));
+
+    expect(clickSpy).toHaveBeenCalled();
+  });
+
+  it('should close delete confirmation on backdrop click', () => {
+    render(<ItemManagementPage />);
+    const deleteButton = screen.getByLabelText('Delete Pizza');
+    fireEvent.click(deleteButton);
+    expect(screen.getByText(/Are you sure/)).toBeInTheDocument();
+
+    const backdrop = document.querySelector('.modal-backdrop')!;
+    fireEvent.click(backdrop);
+
+    expect(screen.queryByText(/Are you sure/)).not.toBeInTheDocument();
+  });
 });

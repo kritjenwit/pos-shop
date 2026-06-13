@@ -5,7 +5,7 @@ import { generateOrderId } from './util';
 export interface OrderQuery {
   status?: string;
   sellerId?: string;
-  dateRange?: { start: string; end: string };
+  dateRange?: { start?: string; end?: string };
 }
 
 export interface CustomerInfo {
