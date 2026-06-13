@@ -6,6 +6,7 @@ import { useAuth } from '../../shared/context/AuthContext';
 import { getSignedImageUrl } from '../../shared/lib/images';
 import { generateThaiQRPayment } from '../../shared/lib/thaiQR';
 import { COLORS, PAYMENT } from '../../shared/constants';
+import { resetFormState } from '../../shared/lib/util';
 
 export default function CustomerCheckoutView() {
   const { basket, items, completeOrder, total } = useApp();
@@ -67,12 +68,8 @@ export default function CustomerCheckoutView() {
   };
 
   const handleReset = () => {
-    setOrderComplete(false);
-    setCreatedOrder(null);
+    resetFormState({ setOrderComplete, setCreatedOrder, setCustomerName, setCustomerPhone, setAdditionalDetail });
     setPromptPayTarget(user?.phone || '');
-    setCustomerName('');
-    setCustomerPhone('');
-    setAdditionalDetail('');
     setReceiptFile(null);
     setReceiptPreview(null);
   };

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { CheckCircle, ShoppingCart, ArrowLeft, User, Phone, CreditCard, ShoppingBag, Loader2, MessageSquare } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../../shared/context/AppContext';
+import { resetFormState } from '../../shared/lib/util';
 
 export default function CustomerCheckoutPage() {
   const { total, basket, items, createPendingOrder } = useApp();
@@ -34,11 +35,7 @@ export default function CustomerCheckoutPage() {
   };
 
   const handleReset = () => {
-    setOrderComplete(false);
-    setCreatedOrder(null);
-    setCustomerName('');
-    setCustomerPhone('');
-    setAdditionalDetail('');
+    resetFormState({ setOrderComplete, setCreatedOrder, setCustomerName, setCustomerPhone, setAdditionalDetail });
   };
 
   const basketDetails = Array.from(basket.entries())

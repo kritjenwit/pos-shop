@@ -12,3 +12,17 @@ export const generateOrderId = (): string => {
   const randomPart = Math.random().toString(36).substring(2, 6).toUpperCase();
   return `ORD-${datePart}-${randomPart}`;
 };
+
+export function resetFormState(settlers: {
+  setOrderComplete: (v: boolean) => void;
+  setCreatedOrder: (v: null) => void;
+  setCustomerName: (v: string) => void;
+  setCustomerPhone: (v: string) => void;
+  setAdditionalDetail: (v: string) => void;
+}) {
+  settlers.setOrderComplete(false);
+  settlers.setCreatedOrder(null);
+  settlers.setCustomerName('');
+  settlers.setCustomerPhone('');
+  settlers.setAdditionalDetail('');
+}
