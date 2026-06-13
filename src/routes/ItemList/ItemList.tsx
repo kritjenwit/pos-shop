@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, useEffect, lazy, Suspense, memo, useMemo } from 'react';
 import { Minus, Plus, ShoppingBag, Package, CreditCard, ShoppingCart, RefreshCw } from 'lucide-react';
 import { useApp } from '../../shared/context/AppContext';
 import type { Item } from '../../shared/lib/supabase';
@@ -19,7 +19,7 @@ interface ItemCardProps {
   item: Item;
 }
 
-function ItemCard({ item }: ItemCardProps) {
+const ItemCard = memo(function ItemCard({ item }: ItemCardProps) {
   const { addToBasket, removeFromBasket, getBasketQuantity } = useApp();
   const basketQty = getBasketQuantity(item.id);
   const [imageSrc, setImageSrc] = useState<string | null>(null);
@@ -87,7 +87,7 @@ function ItemCard({ item }: ItemCardProps) {
       </div>
     </div>
   );
-}
+});
 
 type Tab = 'items' | 'management' | 'checkout';
 
@@ -95,7 +95,12 @@ export default function ItemListPage() {
   const { items, total, basket, loading: itemsLoading, refreshItems } = useApp();
   const [activeTab, setActiveTab] = useState<Tab>('items');
   const [refreshing, setRefreshing] = useState(false);
-  const totalItems = Array.from(basket.values()).reduce((a, b) => a + b, 0);
+  const totalItems = useMemo(() => Array.from(basket.values()).reduce((a, b) => a + b, 0), [basket]);
+
+  const itemCards = useMemo(
+    () => items.map((item) => <ItemCard key={item.id} item={item} />),
+    [items],
+  );
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -116,9 +121,9 @@ export default function ItemListPage() {
             </div>
           </div>
         ))}
-      </div>
-    );
-  }
+    </div>
+  );
+}
 
   const tabButtonClass = (tab: Tab) =>
     `flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 cursor-pointer font-heading font-medium ${
@@ -201,9 +206,7 @@ export default function ItemListPage() {
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-              {items.map((item) => (
-                <ItemCard key={item.id} item={item} />
-              ))}
+              {itemCards}
             </div>
           )}
         </>
